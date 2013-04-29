@@ -14,3 +14,6 @@ Build a simple web app for searching and visualizing NeXO DAG.
 
 ## Design
 This is a node.js based app.
+
+## Setup
+
