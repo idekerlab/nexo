@@ -13,7 +13,7 @@ Nat Biotechnol. 2013 Jan;31(1):38-45.
 Build a simple web app for searching and visualizing NeXO DAG.
 
 ## Design
-This is a node.js based app.
+This is a node.js + express based web app.
 
 ## Setup
 (Under construction...)
