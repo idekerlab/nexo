@@ -1,0 +1,27 @@
+doctype 5
+html(lang="en")
+    include header
+
+    body
+        div.navbar.navbar-fixed-top
+            div.navbar-inner
+                div.container
+                    a(data-toggle='collapse', data-target='.nav-collapse').btn.btn-navbar
+                        span.icon-bar
+                        span.icon-bar
+                        span.icon-bar
+                    a(href='/').brand #{brand}
+                    ul.nav
+                        ul.nav
+                        - var obj = { 'about':'About', 'download':'Download', 'webservice':'Web Service API', 'links':'Links' }
+                            - each val, key in obj
+                                li
+                                    a(href='/#{key}') #{val}
+
+
+        div.container
+
+            block content
+
+            include footer
+            include scripts
