@@ -35,7 +35,7 @@
                 <li><a href="#">About</a></li>
                 <li><a href="#">Download</a></li>
                 <li><a href="#">Web Service API</a></li>
-                <li><a href="#">Links</a></li>
+                <li><a href="result.html">Links</a></li>
             </ul>
         </div>
     </div>
@@ -56,49 +56,55 @@
         </form>
     </div>
 
-
     <table id="result" class="table table-striped"></table>
+</div>
 
-    <footer class="footer">
-        <div class="container">
-            <p>
-                <small>
-                    Code licensed under <a href="http://opensource.org/licenses/MIT" target="_blank">MIT License</a>,
-                    documentation under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
-                </small>
-            </p>
-        </div>
-    </footer>
-
-
-    <script id="termTemplate" type="text/template">
-        <ul>
-            <li><%= id %></li>
-            <li><%= description %></li>
-            <li><%= robustness %></li>
-        </ul>
-
-        <button class="delete">Go</button>
-    </script>
+<footer class="footer">
+    <div class="container">
+        <p>
+            <small>
+                Code licensed under <a href="http://opensource.org/licenses/MIT" target="_blank">MIT License</a>,
+                documentation under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
+            </small>
+        </p>
+    </div>
+</footer>
 
 
-    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-    <script>
-        var _gaq = [
-            ['_setAccount', 'UA-XXXXX-X'],
-            ['_trackPageview']
-        ];
-        (function (d, t) {
-            var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-            g.src = ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js';
-            s.parentNode.insertBefore(g, s)
-        }(document, 'script'));
-    </script>
+<script id="termTemplate" type="text/template">
+    <ul>
+        <li><%= id %></li>
+        <li><%= description %></li>
+        <li><%= robustness %></li>
+    </ul>
 
-    <script src="scripts/vendor.js"></script>
+    <button class="delete">Go</button>
+</script>
 
-    <script src="scripts/plugins.js"></script>
 
-    <script src="scripts/main.js"></script>
-</div></body>
+<!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+<script>
+    var _gaq = [
+        ['_setAccount', 'UA-XXXXX-X'],
+        ['_trackPageview']
+    ];
+    (function (d, t) {
+        var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        g.src = ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g, s)
+    }(document, 'script'));
+</script>
+
+<script src="scripts/vendor.js"></script>
+
+<script src="scripts/plugins.js"></script>
+
+<script src="scripts/main.js"></script>
+
+<script>
+    $(function () {
+        $("#tabs").tabs();
+    });
+</script>
+</body>
 </html>

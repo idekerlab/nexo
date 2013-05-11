@@ -37,6 +37,7 @@ app.get('/search/nexo/:query', nexo.getByQuery);
 app.get('/nexo/:id([0-9]+)', nexo.getByID);
 
 app.get('/nexo/:id([0-9]+)/path', nexo.getPath);
+app.get('/nexo/:id([0-9]+)/path.json', nexo.getPathCytoscape);
 app.get('/nexoview/:id([0-9]+)', nexoView.showSummary);
 
 http.createServer(app).listen(app.get('port'), function(){

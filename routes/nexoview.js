@@ -6,6 +6,10 @@
  * To change this template use File | Settings | File Templates.
  */
 
+var request = require("request");
+
 exports.showSummary = function (req, res) {
-    res.render('nexoview', { brand: 'NeXO', title: 'NeXO Term ID: ' + req.params.id, term: req.params.id });
+
+    res.render('nexoview', { brand: 'NeXO', title: 'NeXO Term ID ' + req.params.id });
+
 };

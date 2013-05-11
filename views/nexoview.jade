@@ -2,11 +2,20 @@ extends layout
 
 block content
     div.container
-        div.hero-unit
-            h3= title
+        div.svg-view
+            svg(width=0, height=0)
+                defs
+                    marker(id="arrowhead", viewBox="0 0 10 10", refX="8", refY="5", markerUnits="strokeWidth", markerWidth="10", markerHeight="8", orient="auto", style="fill: #777")
+                        path(d="M 0 0 L 10 5 L 0 10 z")
+        div#tabs
+            ul
+                li
+                    a(href="#summary-tab") Summary
+                li
+                    a(href="#children-tab") Children
+                li
+                    a(href="#annotation-tab") Protein Annotations
 
-        div.network-view
-
-        script(src='scripts/arbor.js')
-        script(src='scripts/cytoscape.min.js')
-        script(src='scripts/draw_graph.js')
+            div#summary-tab
+            div#children-tab
+            div#annotation-tab
