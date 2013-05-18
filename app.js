@@ -30,10 +30,10 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-//app.get('/', routes.index);
 app.get('/users', user.list);
 app.get('/result', result.index);
 app.get('/search/nexo/:query', nexo.getByQuery);
+app.get('/search/nexo/genes/:query', nexo.getByGeneQuery);
 app.get('/nexo/:id([0-9]+)', nexo.getByID);
 
 app.get('/nexo/:id([0-9]+)/path', nexo.getPath);

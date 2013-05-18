@@ -9,13 +9,15 @@
 var request = require("request");
 var _ = require("underscore");
 
+var BASE_URL = "http://localhost:8182/graphs/neo4j-nexo-dag/";
+
 //
-// Simply redirect the REST query
+// Get a term by ID.
 //
 exports.getByID = function (req, res) {
 
     var EMPTY_OBJ = {};
-    var fullUrl = "http://localhost:8182/graphs/neo4jnexo/vertices?key=name&value=NeXO:" + req.params.id;
+    var fullUrl = BASE_URL + "vertices/?key=name&value=" + req.params.id;
 
     console.log('URL = ' + fullUrl);
 
@@ -35,13 +37,16 @@ exports.getByID = function (req, res) {
 exports.getByQuery = function (req, res) {
 
     var EMPTY_ARRAY = [];
-    var fullUrl = "http://localhost:8182/graphs/neo4jnexo/tp/gremlin?script=g.V.filter{it.def.contains('%KEYWORD%')}";
 
     var query = req.params.query;
     console.log('Query = ' + query);
 
-    fullUrl = fullUrl.replace("%KEYWORD%", query);
+    var fullUrl = BASE_URL + "tp/gremlin?script=g.V.filter{" +
+        "it.'CC Definition'.contains('" + query + "')||it.'BP Definition'.contains('" + query + "')||" +
+        "it.'MF Definition'.contains('" + query + "')||it.'Assigned Orfs'.contains('" + query + "')||" +
+        "it.'Assigned Genes'.contains('" + query + "')}";
 
+    console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
             var results = JSON.parse(body);
@@ -55,12 +60,36 @@ exports.getByQuery = function (req, res) {
     });
 };
 
+exports.getByGeneQuery = function (req, res) {
+
+    var EMPTY_ARRAY = [];
+
+    var query = req.params.query;
+    console.log('Query = ' + query);
+
+    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex.Assigned Genes').query('Vertex.Assigned Genes','" + query + "')";
+
+    console.log('FULL URL = ' + fullUrl);
+    request.get(fullUrl, function (err, rest_res, body) {
+        if (!err) {
+            var results = JSON.parse(body);
+            var resultArray = results.results;
+            if (resultArray.length != 0) {
+                res.json(resultArray);
+            } else {
+                res.json(EMPTY_ARRAY);
+            }
+        }
+    });
+};
+
+
 exports.getPath = function (req, res) {
 
     var EMPTY_ARRAY = [];
-    var getGraphUrl = "http://localhost:8182/graphs/neo4jnexo/tp/gremlin?script=" +
-        "g.V.has('name','NeXO:" + req.params.id +
-        "').as('x').outE.inV.loop('x'){it.loops < 120}{it.object.name.equals('NeXO:joining_root')}.path";
+    var getGraphUrl = "http://localhost:8182/graphs/neo4j-nexo-dag/tp/gremlin?script=" +
+        "g.V.has('name', '" + req.params.id +
+        "').as('x').outE.inV.loop('x'){it.loops < 120}{it.object.name.equals('joining_root')}.path";
 
 
     console.log('URL = ' + getGraphUrl);
@@ -134,7 +163,7 @@ exports.getPathCytoscape = function (req, res) {
 
                 node.data = {};
                 node.data.id = graphObject.name;
-                if(graphObject.name === "NeXO:joining_root") {
+                if(graphObject.name === "joining_root") {
                     node.data["size"] = 50;
                     node.data["border"] = 5;
                     node.data["border-color"] = "rgb(51,10,10)";

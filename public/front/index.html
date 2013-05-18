@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>NeXO</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,user-scalable=no"/>
+
+
+    <link rel="stylesheet" type="text/css" href="js/fancybox/jquery.fancybox.css"/>
+    <link rel="stylesheet" href="css/style.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" media="screen and (max-height: 770px)" href="css/tablet.css"/>
+</head>
+
+<body>
+
+<!-- Main Network View -->
+<div class="sigma-parent">
+    <div class="sigma-expand" id="sigma-canvas"></div>
+</div>
+
+<!-- Overlay -->
+<div id="mainpanel">
+    <div class="col">
+        <div id="title"></div>
+        <div class="b1">
+            <form>
+                <div id="search" class="cf">
+                    <input type="text" name="search" value="Search by term name" class="empty"/>
+
+                    <div class="state"></div>
+                    <div class="results"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="information">
+    </div>
+</div>
+
+<!--<div id="resulttable">-->
+<!--</div>-->
+
+
+<!-- Navigation UI -->
+<div id="zoom">
+    <div class="z" rel="in"></div>
+    <div class="z" rel="out"></div>
+    <div class="z" rel="center"></div>
+</div>
+
+
+<!--Details for clicked node -->
+<div id="attributepane">
+    <div class="text">
+        <div title="Close" class="left-close returntext">
+            <div class="c cf"><span>Hide Summary</span></div>
+        </div>
+        <div class="headertext"></div>
+
+        <div id="node-details"></div>
+
+        <div class="nodeattributes">
+            <div class="name"></div>
+            <div class="data"></div>
+            <div class="p">Connections:</div>
+            <div class="link">
+                <ul>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+
+<script src="js/jquery/jquery.min.js"></script>
+<script src="js/sigma/sigma.min.js"></script>
+<script src="js/sigma/sigma.parseJson.js"></script>
+<script src="js/fancybox/jquery.fancybox.pack.js"></script>
+<script src="js/underscore.js/underscore.js"></script>
+<script src="js/backbone/backbone.js"></script>
+
+<script src="js/nexo.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+    "type": "network",
+    "data": "data/nexo.json",
+    "version": "1.0",
+    "logo": {
+        "file": "images/oii_brand.png",
+        "link": "http://www.oii.ox.ac.uk/",
+        "text": "Oxford Internet Institute"
+    },
+    "text": {
+        "title": "NeXO",
+        "intro": "Nexo test",
+        "more": "test"
+    },
+    "legend": {
+        "nodeLabel": "A twitter account.",
+        "edgeLabel": "A follower/followee relationship between two accounts",
+        "colorLabel": "Colour represents an automatic grouping of users according to who they are most connected to."
+    },
+    "features": {
+        "search": true,
+        "hoverBehavior": "default",
+        "groupSelectorAttribute": "color"
+    },
+    "informationPanel": {
+        "groupByEdgeDirection": false,
+        "imageAttribute": "Image File"
+    },
+    "sigma": {
+        "drawingProperties": {
+            "defaultLabelColor": "#eeeeee",
+            "defaultLabelSize": 18,
+            "defaultLabelBGColor": "#ddd",
+            "defaultHoverLabelBGColor": "#cccccc",
+            "defaultLabelHoverColor": "#555",
+            "labelThreshold": 7,
+            "defaultEdgeType": "curve",
+            "hoverFontStyle": "bold",
+            "fontStyle": "bold",
+            "activeFontStyle": "bold"
+        },
+        "graphProperties": {
+            "minNodeSize": 1,
+            "maxNodeSize": 20,
+            "minEdgeSize": 0.8,
+            "maxEdgeSize": 3.0
+        },
+        "mouseProperties": {
+            "minRatio": 0.75,
+            "maxRatio": 20
+        }
+    }
+
+}
