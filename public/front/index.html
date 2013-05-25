@@ -3,12 +3,10 @@
 <head>
     <title>NeXO</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,user-scalable=no"/>
 
-
-    <link rel="stylesheet" type="text/css" href="js/fancybox/jquery.fancybox.css"/>
-    <link rel="stylesheet" href="css/style.css" type="text/css" media="screen"/>
-    <link rel="stylesheet" media="screen and (max-height: 770px)" href="css/tablet.css"/>
+    <link rel="stylesheet" href="js/fancybox/jquery.fancybox.css"/>
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/style.css"/>
 </head>
 
 <body>
@@ -41,7 +39,7 @@
 <!--</div>-->
 
 
-<!-- Navigation UI -->
+<!-- Navigation UI: Zoom-in/out/reset -->
 <div id="zoom">
     <div class="z" rel="in"></div>
     <div class="z" rel="out"></div>
@@ -52,22 +50,27 @@
 <!--Details for clicked node -->
 <div id="attributepane">
     <div class="text">
-        <div title="Close" class="left-close returntext">
-            <div class="c cf"><span>Hide Summary</span></div>
+        <div class="left-close">
+            <button class="btn" type="button">Close</button>
         </div>
+
         <div class="headertext"></div>
 
-        <div id="node-details"></div>
-
-        <div class="nodeattributes">
-            <div class="name"></div>
-            <div class="data"></div>
-            <div class="p">Connections:</div>
-            <div class="link">
-                <ul>
-                </ul>
+        <div class="tabbable">
+            <ul id="myTab" class="nav nav-tabs">
+                <li class="active"><a href="#details" data-toggle="tab">Summary</a></li>
+                <li><a href="#genes" data-toggle="tab">Genes</a></li>
+                <li><a href="#children" data-toggle="tab">Children</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade in active" id="details"></div>
+                <div class="tab-pane fade in active" id="genes">Gene list will be here...</div>
+                <div class="tab-pane fade in active" id="children">children list will be here...</div>
             </div>
         </div>
+
+
+
     </div>
 </div>
 
@@ -79,8 +82,21 @@
 <script src="js/fancybox/jquery.fancybox.pack.js"></script>
 <script src="js/underscore.js/underscore.js"></script>
 <script src="js/backbone/backbone.js"></script>
+<script src="js/bootstrap.min.js"></script>
 
 <script src="js/nexo.js"></script>
+<script>
+
+    $('#myTab a').click(function(e) {
+        console.log("################## OK");
+        e.preventDefault();
+        $(this).tab('show');
+    });
+
+
+//    $('#myTab a:last').tab('show');
+
+</script>
 
 </body>
 </html>

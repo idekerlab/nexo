@@ -1,6 +1,6 @@
 {
     "type": "network",
-    "data": "data/nexo.json",
+    "data": "data/nexo2.json",
     "version": "1.0",
     "logo": {
         "file": "images/oii_brand.png",

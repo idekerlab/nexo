@@ -1,21 +1,3 @@
-* {
-    padding: 0px;
-    margin: 0px;
-}
-
-.cf:before, .cf:after {
-    content: "";
-    display: table;
-}
-
-.cf:after {
-    clear: both;
-}
-
-.cf {
-    zoom: 1;
-}
-
 html, body {
     width: 100%;
     height: 100%;
@@ -23,7 +5,6 @@ html, body {
     padding: 0px;
     font-size: 12px;
     font-family: "Helvetica Neue";
-    font-weight: 100;
     line-height: 1.25em;
 }
 
@@ -57,7 +38,6 @@ canvas#sigma_bg_1 {
 }
 
 #attributepane {
-    /*display: block;*/
     display: none;
     position: absolute;
     height: auto;
@@ -67,7 +47,8 @@ canvas#sigma_bg_1 {
     width: 640px;
     margin: 0;
     word-wrap: break-word;
-    background-color: rgba(255, 255, 255, 0.9);
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.95);
     padding: 0px 18px 0px 18px;
     z-index: 1;
 }
@@ -77,17 +58,16 @@ canvas#sigma_bg_1 {
 }
 
 #attributepane .headertext {
-    color: #000;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #999;
-    padding: 0px 0 10px 0;
-    font-size: 32px;
-    font: "Helvetica Neue";
+    color: #333333;
+    margin-top: 0.6em;
+    margin-bottom: 18px;
+    border-bottom: 2px solid #777777;
+    padding-bottom: 18px;
+    font-size: 36px;
     font-weight: 100;
 }
 
 #attributepane .returntext em {
-    background-image: url('../images/sprite.png');
     background-repeat: no-repeat;
     display: block;
     width: 20px;
@@ -112,7 +92,6 @@ canvas#sigma_bg_1 {
 }
 
 #attributepane .close em {
-    background-image: url('../images/sprite.png');
     background-repeat: no-repeat;
     background-position: -11px -13px;
     display: block;
@@ -173,17 +152,10 @@ canvas#sigma_bg_1 {
 }
 
 .left-close {
-    background-image: url('../images/fancybox_sprite.png');
-    margin-left: -37px;
+    float: right;
     z-index: 99999;
     cursor: pointer;
-    padding-left: 31px;
-    line-height: 36px;
-    background-repeat: no-repeat;
-    margin-bottom: 25px;
     font-weight: bold;
-    font-size: 14px;
-
 }
 
 #developercontainer {
@@ -191,32 +163,6 @@ canvas#sigma_bg_1 {
     margin-bottom: 25px;
     position: fixed;
     bottom: 0;
-}
-
-#jisc {
-    width: 71px;
-    height: 56px;
-    background-image: url('../images/jisc-logo-small.png');
-    background-repeat: no-repeat;
-    display: inline-block;
-}
-
-#jisc span {
-    display: none;
-}
-
-#oii {
-    width: 227px;
-    height: 56px;
-    background-image: url('../images/oii_text.png');
-    background-repeat: no-repeat;
-    display: inline-block;
-    margin-right: 10px;
-
-}
-
-#oii span {
-    display: none;
 }
 
 #maintitle {
@@ -602,3 +548,9 @@ canvas#sigma_bg_1 {
     width: 95%;
 }
 
+#details {
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.5em;
+    margin: 2em;
+}

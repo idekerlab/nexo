@@ -89,7 +89,7 @@ exports.getPath = function (req, res) {
     var EMPTY_ARRAY = [];
     var getGraphUrl = "http://localhost:8182/graphs/neo4j-nexo-dag/tp/gremlin?script=" +
         "g.V.has('name', '" + req.params.id +
-        "').as('x').outE.inV.loop('x'){it.loops < 120}{it.object.name.equals('joining_root')}.path";
+        "').as('x').inE.outV.loop('x'){it.loops < 120}{it.object.name.equals('joining_root')}.path";
 
 
     console.log('URL = ' + getGraphUrl);

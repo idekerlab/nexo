@@ -8,7 +8,7 @@
 (function () {
     "use strict";
 
-    var CONFIG_FILE = "config.json";
+    var CONFIG_FILE = "nexo-config.json";
 
     // Presets for sigma.js
     var DEF_DRAWING_PROPS = {
@@ -40,7 +40,7 @@
 
 
     // IDs & classes in the HTML document
-    var ID_NODE_DETAILS = "#node-details";
+    var ID_NODE_DETAILS = "#details";
 
 
     /////////// Models ///////////////////
@@ -61,7 +61,7 @@
 
             var summary = "<ul>";
 
-            for(var key in this.model.attributes) {
+            for (var key in this.model.attributes) {
                 summary += "<li>" + key + ': ' + this.model.get(key) + "</li>";
 
                 console.log(key + " == " + this.model.get(key));
@@ -110,9 +110,8 @@
             this.$el.append(rendered.$el);
         },
 
-        selected: function(selectedNode) {
-            var nexoId = selectedNode.label.split("|")[0].replace(" ", "");
-            var id = nexoId.split(":")[1];
+        selected: function (selectedNode) {
+            var id = selectedNode.id;
             console.log(" - Selected: " + id);
 
             var newNode = new Node();
@@ -130,10 +129,10 @@
 
             newNode.fetch({
 
-                success: function(data) {
+                success: function (data) {
 
                     var attr = data.attributes;
-                    for(var key in attr) {
+                    for (var key in attr) {
                         newNode.set(key, attr[key]);
                         console.log(key + " ----: " + newNode.get(key));
                     }
@@ -145,7 +144,6 @@
 
         }
     });
-
 
 
     // Inject dependency: Backbone MV
@@ -274,12 +272,20 @@
                         // Fit to window
                         sigmaView.position(0, 0, 1).draw();
                     } else {
-
+                        // Zoom in/out
                         var sigmaCore = sigmaView._core;
+                        var ratio = 1;
+
+                        if (zoomCommand === "in") {
+                            ratio = 1.5;
+                        } else if (zoomCommand === "out") {
+                            ratio = 0.5;
+                        }
+
                         sigmaView.zoomTo(
                             sigmaCore.domElements.nodes.width / 2,
                             sigmaCore.domElements.nodes.height / 2,
-                            sigmaCore.mousecaptor.ratio * ("in" === sigmaCore ? 1.5 : 0.5)
+                            sigmaCore.mousecaptor.ratio * ratio
                         );
                     }
 
@@ -544,6 +550,8 @@
 
 
     ///////////// Main ////////////
+
+
 
     var viewManager = new NodeListView();
     var nexo = new NexoApp(CONFIG_FILE, viewManager);

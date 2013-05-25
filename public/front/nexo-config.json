@@ -1,6 +1,6 @@
 {
     "type": "network",
-    "data": "data/nexo.json",
+    "data": "data/nexo2.json",
     "version": "1.0",
     "logo": {
         "file": "images/oii_brand.png",
@@ -29,25 +29,26 @@
     "sigma": {
         "drawingProperties": {
             "defaultLabelColor": "#eeeeee",
-            "defaultLabelSize": 18,
+            "defaultLabelSize": 24,
             "defaultLabelBGColor": "#ddd",
             "defaultHoverLabelBGColor": "#cccccc",
             "defaultLabelHoverColor": "#555",
-            "labelThreshold": 7,
+            "labelThreshold": 10,
+            "font": "Helvetica Neue",
             "defaultEdgeType": "curve",
-            "hoverFontStyle": "bold",
+            "hoverFontStyle": "normal",
             "fontStyle": "bold",
             "activeFontStyle": "bold"
         },
         "graphProperties": {
             "minNodeSize": 1,
-            "maxNodeSize": 20,
+            "maxNodeSize": 30,
             "minEdgeSize": 0.8,
             "maxEdgeSize": 3.0
         },
         "mouseProperties": {
             "minRatio": 0.75,
-            "maxRatio": 20
+            "maxRatio": 130
         }
     }
 

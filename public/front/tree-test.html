@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>How Selections Work</title>
+<style>
+
+    @import url(../style.css?20130411);
+
+    .join,
+    .link,
+    .node rect {
+        fill: none;
+        stroke: #636363;
+        stroke-width: 1.5px;
+    }
+
+    .link {
+        stroke: #969696;
+    }
+
+    .node rect {
+        fill: white;
+    }
+
+    .link path,
+    .node rect,
+    .node text,
+    .join {
+        -webkit-transition: all 500ms linear;
+        -moz-transition: all 500ms linear;
+        -ms-transition: all 500ms linear;
+        -o-transition: all 500ms linear;
+        transition: all 500ms linear;
+    }
+
+    .node .element rect {
+        fill: #bdbdbd;
+        stroke: none;
+    }
+
+    .node .null rect {
+        fill: none;
+        stroke: none;
+    }
+
+    .node .null text {
+        fill: #636363;
+    }
+
+    .node .selection rect {
+        stroke: #e6550d;
+    }
+
+    .node .data rect {
+        stroke: #3182bd;
+    }
+
+    .node .datum rect {
+        fill: #d9d9d9;
+        stroke: none;
+    }
+
+    .node .code text {
+        font-family: monospace;
+    }
+
+    .node .key rect {
+        fill: #a1d99b;
+        stroke: none;
+    }
+
+    .link .to-key,
+    .join {
+        stroke: #a1d99b;
+    }
+
+    .join {
+        stroke-dasharray: 2, 2;
+    }
+
+    .link .to-null {
+        stroke-dasharray: .5, 3.5;
+        stroke-linecap: round;
+    }
+
+    .link .from-data {
+        stroke: #3182bd;
+    }
+
+    .play circle {
+        fill: #fff;
+        stroke: #000;
+        stroke-width: 3px;
+    }
+
+    .play:hover path {
+        fill: #f00;
+    }
+
+    .play.mousedown circle {
+        fill: #f00;
+    }
+
+    .play.mousedown path {
+        fill: #fff;
+    }
+
+    .play rect {
+        fill: none;
+        pointer-events: all;
+        cursor: pointer;
+    }
+
+    code span {
+        -webkit-transition: background 250ms linear;
+        -moz-transition: background 250ms linear;
+        -ms-transition: background 250ms linear;
+        -o-transition: background 250ms linear;
+        transition: background 250ms linear;
+    }
+
+</style>
+
+<header>
+    <aside>April 26, 2013</aside>
+    <a href="../" rel="author">Mike Bostock</a>
+</header>
+
+<h1>How Selections Work</h1>
+
+<blockquote>
+    <q>Any sufficiently advanced technology is indistinguishable from magic.</q>
+    –Arthur C. Clarke
+</blockquote>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="js/tree2.js"></script>
+
+
+<p>In the past I have <a href="../d3/workshop/">presented</a> <a href="../join/">simplified</a> <a
+        href="http://mbostock.github.io/d3/tutorial/circle.html">descriptions</a> of <a href="http://d3js.org">D3</a>’s
+    selections, providing only enough detail to get started. This article takes a more comprehensive approach; rather
+    than saying how to <i>use</i> <a href="https://github.com/mbostock/d3/wiki/Selections">selections</a>, I will
+    explain how selections are <i>implemented</i>. This may take longer to read, but it should dispel any magic and help
+    you master data-driven documents.
+
+<p>The structure of this article may at first seem arbitrary. It describes the internal workings of selections rather
+    than the design motivations, so you may wonder why such mechanisms are needed. This is simply because it is easier
+    to lay all the pieces out first before explaining how everything works in tandem. By the time you read to the end,
+    the intent of the design as well as its function should be clear.
+
+<p>D3 is a visualization library, so this article incorporates visual explanations to accompany the text. In subsequent
+    diagrams, the left side of the diagram will show the structure of selections, while the right side will show the
+    structure of data:
+
+<p>
+    <svg width="740" height="120" style="margin:1em -10px;">
+        <g transform="translate(9.5,9.5)">
+            <rect fill="#eee" stroke="#ccc" stroke-dasharray="2,2" width="355" height="100"/>
+            <rect fill="#eee" stroke="#ccc" stroke-dasharray="2,2" x="365" width="355" height="100"/>
+            <rect fill="#a1d99b" fill-opacity=".8" stroke="#71a76c" stroke-dasharray="2,2" y="10" x="300" width="120"
+                  height="80"/>
+            <text x="178" text-anchor="middle" y="50" dy=".35em">selections will go here</text>
+            <text x="360" text-anchor="middle" y="50" dy=".35em">joiny bits will go here</text>
+            <text x="543" text-anchor="middle" y="50" dy=".35em">data will go here</text>
+        </g>
+    </svg>
+
+<p>Rounded rectangles such as <span style="display:inline-block;position:relative;width:55px;"><svg
+        style="position:absolute;top:-17px;" class="node" width="55" height="22">
+    <g transform="translate(1,1)" class="datum">
+        <rect rx="6" ry="6" width="53" height="20"/>
+        <text x="26" y="10" dy=".35em" text-anchor="middle">thing</text>
+    </g>
+</svg></span> indicate JavaScript objects of various types, ranging from literal objects (<code>{foo: 16}</code>),
+    primitive values (<code>"hello"</code>), arrays of numbers (<code>[1, 2, 3]</code>) to DOM elements. Certain special
+    object types are colored, including <span style="display:inline-block;position:relative;width:55px;"><svg
+            style="position:absolute;top:-17px;" class="node" width="55" height="22">
+        <g transform="translate(1,1)" class="selection">
+            <rect rx="6" ry="6" width="53" height="20"/>
+            <text x="26" y="10" dy=".35em" text-anchor="middle">selection</text>
+        </g>
+    </svg></span>, <span style="display:inline-block;position:relative;width:55px;"><svg
+            style="position:absolute;top:-17px;" class="node" width="55" height="22">
+        <g transform="translate(1,1)" class="array">
+            <rect rx="6" ry="6" width="53" height="20"/>
+            <text x="26" y="10" dy=".35em" text-anchor="middle">array</text>
+        </g>
+    </svg></span>, and <span style="display:inline-block;position:relative;width:55px;"><svg
+            style="position:absolute;top:-17px;" class="node" width="55" height="22">
+        <g transform="translate(1,1)" class="element">
+            <rect rx="6" ry="6" width="53" height="20"/>
+            <text x="26" y="10" dy=".35em" text-anchor="middle">element</text>
+        </g>
+    </svg></span>. References from one object to another are indicated with connecting lines (<span
+            style="display:inline-block;position:relative;width:55px;"><svg style="position:absolute;top:-17px;"
+                                                                            class="link" width="55" height="22">
+        <line x1="1" x2="54" y1="11" y2="11"/>
+    </svg></span>). For example, an array containing the number 42 looks like:
+
+<pre><code>var array = [42];</code></pre>
+
+<script>
+
+    tree(
+            {type: "array", name: "array", children: [
+                {type: "datum", name: "42"}
+            ]},
+            24 * 1
+    );
+
+</script>
+
+<p>Wherever possible, the code that generates the given selection appears immediately above the diagram. Opening your
+    browser’s JavaScript console and creating selections interactively is a great way to test your understanding of the
+    text!
+
+<p>Let’s begin.
+
+<h2><a href="#subclass" name="subclass">#</a>A Subclass of Array</h2>
+
+<aside>JavaScript doesn’t yet support array subclasses directly, so arrays are subclassed through <a
+        href="http://perfectionkills.com/how-ecmascript-5-still-does-not-allow-to-subclass-an-array/">prototype chain
+    injection</a>.
+</aside>
+
+<p>You were probably told that selections are arrays of DOM elements. False. For one, selections are a <i>subclass</i>
+    of array; this subclass provides methods to manipulate selected elements, such as setting <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-attr">attributes</a> and <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-style">styles</a>. Selections inherit native array
+    methods as well, such as <a
+            href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/forEach">array.forEach</a>
+    and
+    <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/forEach">array.map</a>.
+    However, you won’t often use native methods as D3 provides convenient alternatives, such as <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-each">selection.each</a>. (A few native methods
+    are overridden to adapt their behavior to selections, namely <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-filter">selection.filter</a> and <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-sort">selection.sort</a>.)
+
+<h2><a href="#group" name="group">#</a>Grouping Elements</h2>
+
+<p>Another reason selections aren’t literally arrays of elements is that they are <i>arrays of arrays</i> of elements: a
+    selection is an array of groups, and each group is an array of elements. For example, <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-d3_select">d3.select</a> returns a selection with
+    one group containing the selected element:
+
+<pre><code>var selection = d3.select("body");</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "body"}
+                ]}
+            ]},
+            24 * 1
+    );
+
+</script>
+
+<aside>In Chrome, you can open the console with the keyboard shortcut <span
+        style="font-family:'Lucida Grande';">⌥⌘J</span>.
+</aside>
+
+<p>In the <a href="https://developers.google.com/chrome-developer-tools/docs/console#opening_the_console">JavaScript
+    console</a>, try running this command and inspecting the group as <code>selection[0]</code> and the node as <code>selection[0][0]</code>.
+    While accessing a node directly is supported by D3’s API, for reasons that will soon be apparent it more common to
+    use <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-node">selection.node</a>.
+
+<p>Likewise, <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-d3_selectAll">d3.selectAll</a> returns a
+    selection with one group and any number of elements:
+
+<pre><code>d3.selectAll("h2");</code></pre>
+
+<aside>While the selection is a subclass of array, groups are plain arrays.</aside>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "h2"},
+                    {type: "element", name: "h2"},
+                    {type: "element", name: "h2"},
+                    {type: "element", name: "h2"}
+                ]}
+            ]},
+            24 * 4
+    );
+
+</script>
+
+<p>Selections returned by d3.select and d3.selectAll have exactly one group. The only way for you to obtain a selection
+    with multiple groups is <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-selectAll">selection.selectAll</a>. For example,
+    if you select all table rows and then select the rows’ cells, you’ll get a group of sibling cells for each row:
+
+<pre><code>d3.<span id="select-all-1-1">selectAll("tr")</span>.<span id="select-all-1-2">selectAll("td")</span>;</code></pre>
+
+<aside>Although this selection’s groups all have four elements, in general a selection’s groups can have different
+    numbers of elements. Some groups might even be empty!
+</aside>
+
+<script>
+
+    selectAllAnimation(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "tr"},
+                    {type: "element", name: "tr"},
+                    {type: "element", name: "tr"},
+                    {type: "element", name: "tr"}
+                ]}
+            ]},
+            24 * 4,
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]}
+            ]},
+            24 * 16
+    ).on("start",function () {
+                d3.select("#select-all-1-1").style("background", "#ff0");
+            }).on("middle",function () {
+                d3.select("#select-all-1-1").style("background", null);
+            }).on("end",function () {
+                d3.select("#select-all-1-2").style("background", "#ff0");
+            }).on("reset", function () {
+                d3.selectAll("#select-all-1-1,#select-all-1-2").style("background", null);
+            });
+
+</script>
+
+<p>With selectAll, <b>every element in the old selection becomes a group in the new selection</b>; each group contains
+    an old element’s matching descendant elements. So, if each table cell contained a <a
+            href="https://developer.mozilla.org/en-US/docs/HTML/Element/span">span</a> element, and you called selectAll
+    a third time, you’d get a selection with sixteen groups:
+
+<pre><code>d3.selectAll("tr").<span id="select-all-2-1">selectAll("td")</span>.<span id="select-all-2-2">selectAll("span")</span>;</code></pre>
+
+<script>
+
+    selectAllAnimation(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"},
+                    {type: "element", name: "td"}
+                ]}
+            ]},
+            24 * 16,
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]},
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "span"}
+                ]}
+            ]},
+            24 * 16
+    ).on("start",function () {
+                d3.select("#select-all-2-1").style("background", "#ff0");
+            }).on("middle",function () {
+                d3.select("#select-all-2-1").style("background", null);
+            }).on("end",function () {
+                d3.select("#select-all-2-2").style("background", "#ff0");
+            }).on("reset", function () {
+                d3.selectAll("#select-all-2-1,#select-all-2-2").style("background", null);
+            });
+
+</script>
+
+<aside>Try inspecting a selection in the JavaScript console to find the groups’ parent nodes. For more on this topic,
+    read my previous tutorial on <a href="../nest/">nested selections</a>.
+</aside>
+
+<p>Each group has a <code>parentNode</code> property which stores the shared parent of all the group’s elements. The
+    parent node is set when the group is created. Thus, if you call
+    <code>d3.selectAll("tr")&#8203;.selectAll("td")</code>, the returned selection contains groups of td elements, whose
+    parents are tr elements. For selections returned by d3.select and d3.selectAll, the parent element is the <a
+            href="https://developer.mozilla.org/en-US/docs/DOM/document.documentElement">document element</a>.
+
+<p>Most of the time, you can safely ignore that selections are grouped. When you use a function to define a
+    selection.attr or selection.style, the function is called for each element; the main difference with grouping is
+    that the second argument to your function (<code>i</code>) is the within-group index rather than the
+    within-selection index.
+
+    <!-- The killer feature for groups is <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-data">selection.data</a>, which allows you to define data per-group (rather than for the entire selection), and thus more easily create hierarchical DOM elements from hierarchical data. We’ll revisit this topic when we get to data joins. -->
+
+<h2><a href="#non-grouping" name="non-grouping">#</a>Non-Grouping Operations</h2>
+
+<p>Only selectAll has special behavior regarding grouping; <a
+        href="https://github.com/mbostock/d3/wiki/Selections#wiki-select">select</a> preserves the existing grouping.
+    The select method differs because there is exactly one element in the new selection for each element in the old
+    selection. Thus, select also propagates data from parent to child, whereas selectAll does not (hence the need for a
+    data-join)!
+
+<p>The <a href="https://github.com/mbostock/d3/blob/master/src/selection/append.js">append</a> and <a
+        href="https://github.com/mbostock/d3/blob/master/src/selection/insert.js">insert</a> methods are wrappers on top
+    of select, so they also preserve grouping and propagate data. For example, given a document with four sections:
+
+<pre><code>d3.selectAll("section");</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "section"},
+                    {type: "element", name: "section"},
+                    {type: "element", name: "section"},
+                    {type: "element", name: "section"}
+                ]}
+            ]},
+            24 * 4
+    );
+
+</script>
+
+<p>If you append a paragraph element to each section, the new selection likewise has a single group with four elements:
+
+<pre><code>d3.selectAll("section").append("p");</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "p"},
+                    {type: "element", name: "p"},
+                    {type: "element", name: "p"},
+                    {type: "element", name: "p"}
+                ]}
+            ]},
+            24 * 4
+    );
+
+</script>
+
+<p>Note that the <code>parentNode</code> for this selection is still the document element because selection.selectAll
+    has not been called to regroup the selection.
+
+<h2><a href="#null" name="null">#</a>Null Elements</h2>
+
+<p>Groups can contain nulls to indicate missing elements. Nulls are ignored for most operations; for example, D3 skips
+    null elements when applying styles and attributes.
+
+<p>Null elements can occur when selection.select cannot find a matching element for the given selector. The select
+    method must preserve the grouping structure, so it fills the missing slots with null. For example, if only the last
+    two sections have asides:
+
+<pre><code>d3.selectAll("section").select("aside");</code></pre>
+
+<aside>Here, selection.node would return <code>selection[0][2]</code>, because this aside is the first non-null element.
+</aside>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "null", name: "null"},
+                    {type: "null", name: "null"},
+                    {type: "element", name: "aside"},
+                    {type: "element", name: "aside"}
+                ]}
+            ]},
+            24 * 4
+    );
+
+</script>
+
+<p>As with grouping, you can usually ignore null elements, but note their use in preserving the grouped structure of a
+    selection and its within-group index.
+
+    <!-- <p>Null elements are critical when handling the result of a data join, which splits a selection into three parts: <i>enter</i>, <i>update</i> and <i>exit</i>. These three selections share the original selection’s structure, with null elements in-between. -->
+
+<h2><a href="#data" name="data">#</a>Bound to Data</h2>
+
+<p>Perhaps surprisingly, data is <i>not</i> a property of the selection, but a property of its elements. This means that
+    when you bind data to a selection, the data is stored in the DOM rather than in the selection: data is assigned to
+    the <code>__data__</code> property of each element. If an element lacks this property, the associated datum is
+    undefined. Data is therefore persistent while selections can be considered transient: you can reselect elements from
+    the DOM and they will retain whatever data was previously bound to them.
+
+    <aside>To verify that data is a property of elements, see <a
+            href="https://github.com/mbostock/d3/blob/master/src/selection/datum.js">selection.datum</a>’s
+        implementation.
+    </aside>
+
+<p>Data is bound to elements one of several ways:
+<ul>
+
+    <li>Joined to groups of elements via <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-data">selection.data</a>.
+    <li>Assigned to individual elements via <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-datum">selection.datum</a>.
+    <li>Inherited from a parent via append, insert, or select.
+
+</ul>
+
+<p>While there is no reason to set the <code>__data__</code> property directly when you can use selection.datum, doing
+    so illustrates how data binding is implemented:
+
+    <aside>You might also find this knowledge useful when inspecting selections in your browser’s developer tools;
+        <code>$0.__data__</code> shows the data bound to the inspected element.
+    </aside>
+
+<pre><code>document.body.__data__ = 42;</code></pre>
+
+<script>
+
+    tree(
+            {type: "element", name: "body", children: [
+                {type: "datum", name: "42"}
+            ]},
+            24 * 1
+    );
+
+</script>
+
+<p>The D3-idiomatic equivalent is to select the body and call datum:
+
+<pre><code>d3.select("body").datum(42);</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "body", children: [
+                        {type: "datum", name: "42"}
+                    ]}
+                ]}
+            ]},
+            24 * 1
+    );
+
+</script>
+
+<p>If we now append an element to the body, the child automatically inherits data from the parent:
+
+<pre><code>d3.select("body").datum(42).append("h1");</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "h1", children: [
+                        {type: "datum", name: "42"}
+                    ]}
+                ]}
+            ]},
+            24 * 1
+    );
+
+</script>
+
+<p>And that brings us to the last method of binding data: the mysterious join! But before we can achieve enlightenment,
+    we must answer a more existential question.
+
+<h2><a href="#data" name="data">#</a>What is Data?</h2>
+
+<p>Data in D3 can be any array of values. For example, an array of numbers:
+
+<pre><code>var numbers = [4, 5, 18, 23, 42];</code></pre>
+
+<p>Or an array of objects:
+
+    <aside>One of <a href="http://alignedleft.com">Scott Murray</a>’s many tutorials covers <a
+            href="http://alignedleft.com/tutorials/d3/data-types/">common types of data</a> in JavaScript.
+    </aside>
+
+<pre><code>var letters = [
+    {name: "A", frequency: .08167},
+    {name: "B", frequency: .01492},
+    {name: "C", frequency: .02780},
+    {name: "D", frequency: .04253},
+    {name: "E", frequency: .12702}
+    ];</code></pre>
+
+<p>Even an array of arrays:
+
+<pre><code>var matrix = [
+    [ 0, 1, 2, 3],
+    [ 4, 5, 6, 7],
+    [ 8, 9, 10, 11],
+    [12, 13, 14, 15]
+    ];</code></pre>
+
+<p>We can mirror the visual representation of selections to represent data. Here’s a plain array of five numbers:
+
+    <script>
+
+        tree(
+                null,
+                {type: "array", name: "array", children: [
+                    {type: "datum", name: "4"},
+                    {type: "datum", name: "5"},
+                    {type: "datum", name: "18"},
+                    {type: "datum", name: "23"},
+                    {type: "datum", name: "42"}
+                ]},
+                24 * 5
+        );
+
+    </script>
+
+<p>Just as selection.style takes either a constant string to define a uniform style property (<i>e.g.</i>,
+    <code>"red"</code>) for every selected element, or a function to compute a dynamic style per-element (<code>function(d)
+        { return d.color; }</code>), <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-data">selection.data</a> can accept a either a
+    constant value or a function.
+
+<p>However, unlike the other selection methods, <b>selection.data defines data per-group rather than per-element</b>:
+    data is expressed as an array of values for the group, or a function that returns such an array. Thus, a <a
+            href="#group">grouped</a> selection has correspondingly grouped data!
+
+    <aside>Since there are four groups in the selection, this data function is invoked four times and returns four
+        arrays (once per invocation). Each returned array here also happens to contain four values, but returned arrays
+        may vary in length depending on data.
+    </aside>
+
+    <script>
+
+        tree(
+                null,
+                {type: "data", name: "data", children: [
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "0"},
+                        {type: "datum", name: "1"},
+                        {type: "datum", name: "2"},
+                        {type: "datum", name: "3"}
+                    ]},
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "4"},
+                        {type: "datum", name: "5"},
+                        {type: "datum", name: "6"},
+                        {type: "datum", name: "7"}
+                    ]},
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "8"},
+                        {type: "datum", name: "9"},
+                        {type: "datum", name: "10"},
+                        {type: "datum", name: "11"}
+                    ]},
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "12"},
+                        {type: "datum", name: "13"},
+                        {type: "datum", name: "14"},
+                        {type: "datum", name: "15"}
+                    ]}
+                ]},
+                24 * 16
+        );
+
+    </script>
+
+<p>The blue lines in the diagram indicate that the <span style="display:inline-block;position:relative;width:55px;"><svg
+        style="position:absolute;top:-17px;" class="node" width="55" height="22">
+    <g transform="translate(1,1)" class="data">
+        <rect rx="6" ry="6" width="53" height="20"/>
+        <text x="26" y="10" dy=".35em" text-anchor="middle">data</text>
+    </g>
+</svg></span> function <i>returns</i> the linked array. Your data function is passed the datum of the group’s <code>parentNode</code>
+    (<code>d</code>) and the group’s index (<code>i</code>), and returns whatever array of data you want to join to that
+    group. Thus, data is typically expressed as a function of parent data, facilitating the creation of hierarchical DOM
+    elements from hierarchical data.
+
+<p>For selections with only a single group, you can pass the corresponding single array to selection.data directly; you
+    only need a function when binding different data to different groups.
+
+<h2><a href="#key" name="key">#</a>The Key to Enlightenment</h2>
+
+<p>To join data to elements, we must know which datum should be assigned to which element. This is done by pairing keys.
+    A <i>key</i> is simply an identifying string, such as a name; when the key for a datum and an element are equal, the
+    datum is assigned to that element.
+
+<p>The simplest method of assigning keys is by index: the first datum and the first element have the key “0”, the second
+    datum and element have the key “1”, and so on. Joining an array of numbers to a matching array of paragraph elements
+    therefore looks like this, with keys shown in green:
+
+<pre><code>var numbers = [4, 5, 18, 23, 42];</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "0", join: 0}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "1", join: 0}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "2", join: 0}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "3", join: 0}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "4", join: 0}
+                    ]}
+                ]}
+            ]},
+            {type: "data", name: "data", children: [
+                {type: "array", name: "array", children: [
+                    {type: "datum", name: "4", children: [
+                        {type: "key", name: "0"}
+                    ]},
+                    {type: "datum", name: "5", children: [
+                        {type: "key", name: "1"}
+                    ]},
+                    {type: "datum", name: "18", children: [
+                        {type: "key", name: "2"}
+                    ]},
+                    {type: "datum", name: "23", children: [
+                        {type: "key", name: "3"}
+                    ]},
+                    {type: "datum", name: "42", children: [
+                        {type: "key", name: "4"}
+                    ]}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>The resulting selection now has elements bound to data:
+
+<pre><code>d3.selectAll("div").data(numbers);</code></pre>
+
+<aside><a href="http://macwright.org/">Tom MacWright</a>’s “fun, difficult” <a
+        href="http://macwright.org/presentations/dcjq/">introduction to D3</a> explains data joins by way of a simple <a
+        href="http://macwright.org/mistakes/#5010465" style="white-space:nowrap;">reimplementation</a>.
+</aside>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "div", children: [
+                        {type: "datum", name: "4"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "datum", name: "5"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "datum", name: "18"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "datum", name: "23"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "datum", name: "42"}
+                    ]}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>Joining by index is convenient if your data and elements are in the same order. However, when orders differ, joining
+    by index is insufficient! In this case, you can specify a <a href="../constancy/#key-functions">key function</a> as
+    the second argument to selection.data. The key function returns the key for a given datum or element. For example,
+    if your data is an array of objects, each with a <code>name</code> property, your key function can return the
+    associated name:
+
+<pre><code>var letters = [
+    {name: "A", frequency: .08167},
+    {name: "B", frequency: .01492},
+    {name: "C", frequency: .02780},
+    {name: "D", frequency: .04253},
+    {name: "E", frequency: .12702}
+    ];
+
+    function name(d) {
+    return d.name;
+    }</code></pre>
+
+<aside>The key function is called for each old element and each new data: ten times in this example. The
+    previously-bound data is used to compute old keys, while the new data is used to compute new keys.
+</aside>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "B", join: 1}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "A", join: -1}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "D", join: 1}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "C", join: -1}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "E", join: 0}
+                    ]}
+                ]}
+            ]},
+            {type: "data", name: "data", children: [
+                {type: "array", name: "array", children: [
+                    {type: "code datum", name: "{name: \"A\"}", children: [
+                        {type: "key", name: "A"}
+                    ]},
+                    {type: "code datum", name: "{name: \"B\"}", children: [
+                        {type: "key", name: "B"}
+                    ]},
+                    {type: "code datum", name: "{name: \"C\"}", children: [
+                        {type: "key", name: "C"}
+                    ]},
+                    {type: "code datum", name: "{name: \"D\"}", children: [
+                        {type: "key", name: "D"}
+                    ]},
+                    {type: "code datum", name: "{name: \"E\"}", children: [
+                        {type: "key", name: "E"}
+                    ]}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>Again, the selected elements are now bound to data. The elements have also been reordered within the selection to
+    match the data:
+
+    <aside>Although the selection now matches the data, the elements are <i>not</i> automatically reordered in the DOM.
+        For that you must call <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-order">selection.order</a>
+        or <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-sort">selection.sort</a>.
+    </aside>
+
+<pre><code>d3.selectAll("div").data(letters, name);</code></pre>
+
+<script>
+
+    tree(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "div", children: [
+                        {type: "code datum", name: "{name: \"A\"}"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "code datum", name: "{name: \"B\"}"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "code datum", name: "{name: \"C\"}"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "code datum", name: "{name: \"D\"}"}
+                    ]},
+                    {type: "element", name: "div", children: [
+                        {type: "code datum", name: "{name: \"E\"}"}
+                    ]}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>This process can be quite complicated for large grouped selections, but is simplified somewhat because <b>each group
+    is joined independently</b>. Thus, you only need to worry about unique keys within a group, not across the entire
+    selection.
+
+    <script>
+
+        tree(
+                {type: "selection", name: "selection", children: [
+                    {type: "array", name: "group", children: [
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "B", join: 1}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "C", join: 1}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "D", join: 1}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "A", join: -3}
+                        ]}
+                    ]},
+                    {type: "array", name: "group", children: [
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "A", join: 0}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "B", join: 0}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "D", join: 1}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "C", join: -1}
+                        ]}
+                    ]},
+                    {type: "array", name: "group", children: [
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "A", join: 0}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "D", join: +2}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "B", join: 0}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "C", join: -2}
+                        ]}
+                    ]},
+                    {type: "array", name: "group", children: [
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "C", join: +2}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "D", join: +2}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "A", join: -2}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "B", join: -2}
+                        ]}
+                    ]}
+                ]},
+                {type: "data", name: "data", children: [
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "A", children: [
+                            {type: "key", name: "A"}
+                        ]},
+                        {type: "datum", name: "B", children: [
+                            {type: "key", name: "B"}
+                        ]},
+                        {type: "datum", name: "C", children: [
+                            {type: "key", name: "C"}
+                        ]},
+                        {type: "datum", name: "D", children: [
+                            {type: "key", name: "D"}
+                        ]}
+                    ]},
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "A", children: [
+                            {type: "key", name: "A"}
+                        ]},
+                        {type: "datum", name: "B", children: [
+                            {type: "key", name: "B"}
+                        ]},
+                        {type: "datum", name: "C", children: [
+                            {type: "key", name: "C"}
+                        ]},
+                        {type: "datum", name: "D", children: [
+                            {type: "key", name: "D"}
+                        ]}
+                    ]},
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "A", children: [
+                            {type: "key", name: "A"}
+                        ]},
+                        {type: "datum", name: "B", children: [
+                            {type: "key", name: "B"}
+                        ]},
+                        {type: "datum", name: "C", children: [
+                            {type: "key", name: "C"}
+                        ]},
+                        {type: "datum", name: "D", children: [
+                            {type: "key", name: "D"}
+                        ]}
+                    ]},
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "A", children: [
+                            {type: "key", name: "A"}
+                        ]},
+                        {type: "datum", name: "B", children: [
+                            {type: "key", name: "B"}
+                        ]},
+                        {type: "datum", name: "C", children: [
+                            {type: "key", name: "C"}
+                        ]},
+                        {type: "datum", name: "D", children: [
+                            {type: "key", name: "D"}
+                        ]}
+                    ]}
+                ]},
+                24 * 16
+        );
+
+    </script>
+
+    <aside>You can read more about key functions in my previous tutorial on <a href="../constancy/">object constancy</a>.
+    </aside>
+
+    xact 1:1 match between data and elements. But what happens when there’s no matching element for a given datum, or no
+    matching datum for a given element?
+
+<h2><a href="#enter-update-exit" name="enter-update-exit">#</a>Enter, Update and Exit</h2>
+
+<p>When joining elements to data by key, there are three possible logical outcomes:
+<ul>
+
+    <li><i>Update</i> - There was a matching element for a given datum.
+    <li><i>Enter</i> - There was no matching element for a given datum.
+    <li><i>Exit</i> - There was no matching datum for a given element.
+
+</ul>
+
+<p>These are the three selections returned by <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-data">selection.data</a>,
+    <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-enter">selection.enter</a> and <a
+            href="https://github.com/mbostock/d3/wiki/Selections#wiki-exit">selection.exit</a>, respectively. To
+    illustrate, imagine you had a bar chart of the first five letters of the alphabet (ABCDE), and you want to
+    transition to your five favorite vowels (YEAOI). You can use a key function to maintain association of letters to
+    bars across the transition, resulting in the following data join:
+
+    <script>
+
+        tree(
+                {type: "selection", name: "selection", children: [
+                    {type: "array", name: "group", children: [
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "A", join: 2}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "B"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "C"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "D"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "key", name: "E", join: -3}
+                        ]}
+                    ]}
+                ]},
+                {type: "data", name: "data", children: [
+                    {type: "array", name: "array", children: [
+                        {type: "datum", name: "Y", children: [
+                            {type: "key", name: "Y"}
+                        ]},
+                        {type: "datum", name: "E", children: [
+                            {type: "key", name: "E"}
+                        ]},
+                        {type: "datum", name: "A", children: [
+                            {type: "key", name: "A"}
+                        ]},
+                        {type: "datum", name: "O", children: [
+                            {type: "key", name: "O"}
+                        ]},
+                        {type: "datum", name: "I", children: [
+                            {type: "key", name: "I"}
+                        ]}
+                    ]}
+                ]},
+                24 * 5
+        );
+
+    </script>
+
+<p>Two of the previously-displayed letters (A and E) are vowels. These bars are therefore placed in the <b>update</b>
+    selection, in order of the new data:
+
+<pre><code>var div = d3.selectAll("div").data(vowels, name);</code></pre>
+
+<aside>The enter and update selections match the order of the new dataset. New data replaces old data in the update
+    selection.
+</aside>
+
+<script>
+
+    updateAnimation(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "A", join: 2}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "B"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "C"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "D"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "E", join: -3}
+                    ]}
+                ]}
+            ]},
+            {type: "data", name: "data", children: [
+                {type: "array", name: "array", children: [
+                    {type: "datum", name: "Y", children: [
+                        {type: "key", name: "Y"}
+                    ]},
+                    {type: "datum", name: "E", children: [
+                        {type: "key", name: "E"}
+                    ]},
+                    {type: "datum", name: "A", children: [
+                        {type: "key", name: "A"}
+                    ]},
+                    {type: "datum", name: "O", children: [
+                        {type: "key", name: "O"}
+                    ]},
+                    {type: "datum", name: "I", children: [
+                        {type: "key", name: "I"}
+                    ]}
+                ]}
+            ]},
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "null", name: "null"},
+                    {type: "element", name: "element", children: [
+                        {type: "datum", name: "E"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "datum", name: "A"}
+                    ]},
+                    {type: "null", name: "null"},
+                    {type: "null", name: "null"}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>The other three displayed letters (B, C and D) are consonants, and thus have no corresponding data in the new
+    dataset. These elements are therefore placed in the <b>exit</b> selection. Note that the exit selection preserves
+    the order of the original selection, which is sometimes useful when animating prior to removal:
+
+<pre><code>div.exit();</code></pre>
+
+<aside>The exit selection preserves the order, indexes and data of the old selection.</aside>
+
+<script>
+
+    exitAnimation(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "A", join: 2}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "B"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "C"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "D"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "E", join: -3}
+                    ]}
+                ]}
+            ]},
+            {type: "data", name: "data", children: [
+                {type: "array", name: "array", children: [
+                    {type: "datum", name: "Y", children: [
+                        {type: "key", name: "Y"}
+                    ]},
+                    {type: "datum", name: "E", children: [
+                        {type: "key", name: "E"}
+                    ]},
+                    {type: "datum", name: "A", children: [
+                        {type: "key", name: "A"}
+                    ]},
+                    {type: "datum", name: "O", children: [
+                        {type: "key", name: "O"}
+                    ]},
+                    {type: "datum", name: "I", children: [
+                        {type: "key", name: "I"}
+                    ]}
+                ]}
+            ]},
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "null", name: "null"},
+                    {type: "element", name: "element", children: [
+                        {type: "datum", name: "B"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "datum", name: "C"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "datum", name: "D"}
+                    ]},
+                    {type: "null", name: "null"}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>Lastly, three of the vowels (Y, O and I) were not previously displayed, and thus have no corresponding element. These
+    form the <b>enter</b> selection:
+
+<pre><code>div.enter();</code></pre>
+
+<aside>The placeholders in an enter selection are typically transient; the enter selection is replaced with a normal
+    selection of elements when you call enter.append or enter.insert.
+</aside>
+
+<script>
+
+    enterAnimation(
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "A", join: 2}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "B"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "C"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "D"}
+                    ]},
+                    {type: "element", name: "element", children: [
+                        {type: "key", name: "E", join: -3}
+                    ]}
+                ]}
+            ]},
+            {type: "data", name: "data", children: [
+                {type: "array", name: "array", children: [
+                    {type: "datum", name: "Y", children: [
+                        {type: "key", name: "Y"}
+                    ]},
+                    {type: "datum", name: "E", children: [
+                        {type: "key", name: "E"}
+                    ]},
+                    {type: "datum", name: "A", children: [
+                        {type: "key", name: "A"}
+                    ]},
+                    {type: "datum", name: "O", children: [
+                        {type: "key", name: "O"}
+                    ]},
+                    {type: "datum", name: "I", children: [
+                        {type: "key", name: "I"}
+                    ]}
+                ]}
+            ]},
+            {type: "selection", name: "selection", children: [
+                {type: "array", name: "group", children: [
+                    {type: "element", name: "placeholder", children: [
+                        {type: "datum", name: "Y"}
+                    ]},
+                    {type: "null", name: "null"},
+                    {type: "null", name: "null"},
+                    {type: "element", name: "placeholder", children: [
+                        {type: "datum", name: "O"}
+                    ]},
+                    {type: "element", name: "placeholder", children: [
+                        {type: "datum", name: "I"}
+                    ]}
+                ]}
+            ]},
+            24 * 5
+    );
+
+</script>
+
+<p>While update and exit are normal selections, enter is a subclass of selection. This is necessary because it
+    represents elements that <i>do not yet exist</i>. An enter selection contains placeholders rather than DOM elements;
+    these placeholders are simply objects with a <code>__data__</code> property. The implementation of <a
+            href="https://github.com/mbostock/d3/blob/master/src/selection/enter-select.js">enter.select</a> is then
+    specialized such that nodes are inserted into the group’s parent, replacing the placeholder. This is why it is
+    critical to call selection.selectAll prior to a data join: it establishes the parent node for entering elements.
+
+<h2><a href="#enter-update" name="enter-update">#a>Merging Enter & Update</h2>
+
+<p>The <a href="http://bl.ocks.org/mbostock/3808218">general update pattern</a> with a data join appends entering
+    elements and removes exiting elements, while modifying dynamic attributes, styles and other properties of updating
+    elements. Often, there’s overlap between properties of updating and entering elements.
+
+<p>To reduce duplicate code, enter.append has a convenient side-effect: it replaces null elements in the update
+    selection with the newly-created elements from the enter selection. Thus, after enter.append, the update selection
+    is modified to contain both entering and updating elements. The update selection subsequently contains all
+    currently-displayed elements:
+
+    <script>
+
+        tree(
+                {type: "selection", name: "selection", children: [
+                    {type: "array", name: "group", children: [
+                        {type: "element", name: "element", children: [
+                            {type: "datum", name: "A"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "datum", name: "E"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "datum", name: "I"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "datum", name: "O"}
+                        ]},
+                        {type: "element", name: "element", children: [
+                            {type: "datum", name: "U"}
+                        ]}
+                    ]}
+                ]},
+                24 * 5
+        );
+
+    </script>
+
+<p>With the selection once again consistent with the document, the life-cycle of the data join is complete.
+
+<h3 style="margin-top:8em;">Acknowledgements</h3>
+
+<p>Thank you to Anna Powell-Smith, Scott Murray, Nelson Minar, Tom Carden, Shan Carter, Jason Davies, Tom MacWright and
+    John Firebaugh for reviewing and providing feedback to improve this article.
+
+<h3>Further Reading</h3>
+
+<p>If you found this article informative, if you found parts unclear or confusing, or if you have followup questions or
+    feedback, please let me know via <a href="https://twitter.com/mbostock">Twitter</a> or <a
+            href="https://news.ycombinator.com/item?id=5614421">Hacker News</a>. To continue learning about selections,
+    <a href="https://github.com/mbostock/d3/tree/master/src/selection/">reading D3’s source</a> is a rigorous way to
+    test your understanding. And here are several excellent talks and tutorials by others:
+
+<ul>
+    <li><a href="http://alignedleft.com/tutorials/d3/binding-data/">Binding Data</a> by Scott Murray
+    <li><a href="http://www.rvl.io/annaps/d3-journey-to-the-source/">Journey to the Source</a> by Anna Powell-Smith
+    <li><a href="http://macwright.org/presentations/dcjq/">A Fun, Difficult Introduction to D3</a> by Tom MacWright
+</ul>
+
+<footer>
+    <aside>April 26, 2013</aside>
+    <a href="../" rel="author">Mike Bostock</a>
+</footer>
+
+<!-- You found me! -->
+<table style="position:absolute;top:-1000px;">
+    <tr>
+        <td><span>0</span></td>
+        <td><span>1</span></td>
+        <td><span>2</span></td>
+        <td><span>3</span></td>
+    </tr>
+    <tr>
+        <td><span>4</span></td>
+        <td><span>5</span></td>
+        <td><span>6</span></td>
+        <td><span>7</span></td>
+    </tr>
+    <tr>
+        <td><span>8</span></td>
+        <td><span>9</span></td>
+        <td><span>10</span></td>
+        <td><span>11</span></td>
+    </tr>
+    <tr>
+        <td><span>12</span></td>
+        <td><span>13</span></td>
+        <td><span>14</span></td>
+        <td><span>15</span></td>
+    </tr>
+</table>
+
+<footer style="position:absolute;top:-1000px;">
+    <section></section>
+    <section></section>
+    <section>
+        <aside>Hello!</aside>
+    </section>
+    <section>
+        <aside>There!</aside>
+    </section>
+</footer>
+
+<footer style="position:absolute;top:-1000px;">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+</footer>
+
+<script src="../highlight.min.js"></script>
+<script>
+
+    console.warn("Hooray, you opened the JavaScript console. Have fun!");
+
+</script>
