@@ -6,20 +6,36 @@
  * To change this template use File | Settings | File Templates.
  */
 
+/* global exports */
+
 var request = require("request");
 var _ = require("underscore");
 
-var BASE_URL = "http://localhost:8182/graphs/neo4j-nexo-dag/";
+var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
+
+var NEXO_NAMESPACE = "nexo";
+
+var EMPTY_OBJ = {};
+var EMPTY_ARRAY = [];
 
 //
 // Get a term by ID.
 //
 exports.getByID = function (req, res) {
 
-    var EMPTY_OBJ = {};
-    var fullUrl = BASE_URL + "vertices/?key=name&value=" + req.params.id;
+    "use strict";
 
-    console.log('URL = ' + fullUrl);
+    var nameSpace = "nexo";
+    var id = req.params.id;
+
+    var fullUrl = BASE_URL + "vertices/?key=name&value=";
+    if (nameSpace === NEXO_NAMESPACE) {
+        fullUrl = fullUrl + id;
+    } else {
+        fullUrl = fullUrl + nameSpace + ":" + id;
+    }
+
+    console.log("URL = " + fullUrl);
 
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
@@ -35,16 +51,20 @@ exports.getByID = function (req, res) {
 };
 
 exports.getByQuery = function (req, res) {
-
-    var EMPTY_ARRAY = [];
+    "use strict";
 
     var query = req.params.query;
     console.log('Query = ' + query);
+
 
     var fullUrl = BASE_URL + "tp/gremlin?script=g.V.filter{" +
         "it.'CC Definition'.contains('" + query + "')||it.'BP Definition'.contains('" + query + "')||" +
         "it.'MF Definition'.contains('" + query + "')||it.'Assigned Orfs'.contains('" + query + "')||" +
         "it.'Assigned Genes'.contains('" + query + "')}";
+
+    var searchUrl1 = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('','GO*')";
+    var searchUrl2 = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name','GO*')";
+    fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name','GO*')";
 
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
@@ -62,12 +82,12 @@ exports.getByQuery = function (req, res) {
 
 exports.getByGeneQuery = function (req, res) {
 
-    var EMPTY_ARRAY = [];
+    "use strict";
 
     var query = req.params.query;
     console.log('Query = ' + query);
 
-    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex.Assigned Genes').query('Vertex.Assigned Genes','" + query + "')";
+    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('Assigned Genes','" + query + "')";
 
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
@@ -86,11 +106,20 @@ exports.getByGeneQuery = function (req, res) {
 
 exports.getPath = function (req, res) {
 
-    var EMPTY_ARRAY = [];
-    var getGraphUrl = "http://localhost:8182/graphs/neo4j-nexo-dag/tp/gremlin?script=" +
-        "g.V.has('name', '" + req.params.id +
-        "').as('x').inE.outV.loop('x'){it.loops < 120}{it.object.name.equals('joining_root')}.path";
 
+    "use strict";
+
+    var nameSpace = req.params.namespace;
+    var id = req.params.id;
+
+    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+    if (nameSpace === NEXO_NAMESPACE) {
+        getGraphUrl = getGraphUrl +
+            "g.V.has('name', '" + id +
+            "').as('x').outE.inV.loop('x'){it.loops < 120}{it.object.name.equals('joining_root')}.path";
+    } else {
+        // TODO add handler for other namespace
+    }
 
     console.log('URL = ' + getGraphUrl);
 
@@ -109,7 +138,6 @@ exports.getPath = function (req, res) {
 
 exports.getPathCytoscape = function (req, res) {
 
-    var EMPTY_ARRAY = [];
     var fullUrl = "http://gamay.ucsd.edu:3000/nexo/" + req.params.id + "/path";
 
     console.log('URL = ' + fullUrl);
@@ -163,12 +191,12 @@ exports.getPathCytoscape = function (req, res) {
 
                 node.data = {};
                 node.data.id = graphObject.name;
-                if(graphObject.name === "joining_root") {
+                if (graphObject.name === "joining_root") {
                     node.data["size"] = 50;
                     node.data["border"] = 5;
                     node.data["border-color"] = "rgb(51,10,10)";
                     node.data["type"] = "root";
-                } else if(i == 0) {
+                } else if (i == 0) {
                     node.data["size"] = 50;
                     node.data["border"] = 5;
                     node.data["border-color"] = "rgb(0,0,50)";

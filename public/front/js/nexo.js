@@ -45,6 +45,28 @@
 
     /////////// Models ///////////////////
 
+    var TARGETS = {
+        name: "Term ID",
+        "Best Alignment GO Term ID": "Best Aligned GO",
+        "BP Annotation": "BP Name",
+        "BP Definition": "BP Def.",
+        "CC Annotation": "CC Name",
+        "CC Definition": "CC Def.",
+        "MF Annotation": "MF Name",
+        "MF Definition": "MF Def"
+    };
+
+    var TARGETS_GENE = {
+        name: "Gene ID",
+        "Assigned Genes": "Gene Name",
+        "Assigned Orfs": "BP Name",
+        "SGD Gene Description": "Description"
+    };
+
+    var EMPTY_RECORD = "N/A";
+    var QUICK_GO_API = "http://www.ebi.ac.uk/QuickGO/GTerm?id=";
+    var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
+
     var Node = Backbone.Model.extend({
 
         urlRoot: "/nexo",
@@ -57,20 +79,66 @@
 
     var NodeView = Backbone.View.extend({
 
+
         render: function () {
 
-            var summary = "<ul>";
+            var entryId = this.model.get("name");
 
-            for (var key in this.model.attributes) {
-                summary += "<li>" + key + ': ' + this.model.get(key) + "</li>";
+            var summary = "<div class='subnetwork'></div><table class=\"table table-striped\">";
 
-                console.log(key + " == " + this.model.get(key));
+
+            if(entryId.indexOf("S") === -1) {
+                console.log("FOUND! " + entryId);
+                summary = this.processEntry(summary);
+            } else {
+                console.log("NOT FOUND! " + entryId);
+                summary = this.processGeneEntry(summary);
             }
-
-            summary += "</ul>";
+            summary += "</table>";
 
             this.$el.html(summary).fadeIn(1000);
             return this;
+        },
+
+        processEntry: function (allValues) {
+
+            for (var tableKey in TARGETS) {
+                var tableValue = this.model.get(tableKey);
+                if (tableValue === null || tableValue === "") {
+                    tableValue = EMPTY_RECORD;
+                }
+
+                if (tableKey === "Best Alignment GO Term ID" && tableValue !== EMPTY_RECORD) {
+                    tableValue = "<a href='" + QUICK_GO_API + tableValue + "' target='_blank'>" + tableValue + "</a>";
+                }
+                allValues += "<tr><td style='width: 120px'>" + TARGETS[tableKey] + "</td><td>" + tableValue + "</td></tr>";
+            }
+
+            return allValues;
+        },
+
+        processGeneEntry: function (allValues) {
+            for (var tableKey in TARGETS_GENE) {
+                var tableValue = this.model.get(tableKey);
+                if (tableValue === null || tableValue === "") {
+                    tableValue = EMPTY_RECORD;
+                }
+
+                if (tableKey === "name") {
+                    tableValue = "<a href='" + SGD_API + tableValue + "' target='_blank'>" + tableValue + "</a>";
+                } else if(tableKey === "SGD Gene Description") {
+                    var descriptionList = "<ul>";
+                    var entries = tableValue.split(";");
+                    for(var i = 0; i<entries.length; i++) {
+                        descriptionList += "<li>" + entries[i] + "</li>";
+                    }
+                    descriptionList += "</ul>";
+                    tableValue = descriptionList;
+                }
+                allValues += "<tr><td style='width: 120px'>" + TARGETS_GENE[tableKey] + "</td><td>" + tableValue + "</td></tr>";
+            }
+
+            return allValues;
         }
     });
 
@@ -166,6 +234,7 @@
 
             $.getJSON(configFileUrl, function (configObject) {
                 self.appConfig = configObject;
+
                 $(document).ready(self.initView(self.appConfig));
             });
         },
@@ -235,6 +304,7 @@
 
                 sigmaView.bind("upnodes", function (nodes) {
                     var selectedNodeId = nodes.content[0];
+                    self.dimNode(sigmaView);
                     activator.activate(selectedNodeId, sigmaView);
 
                     var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
@@ -378,181 +448,69 @@
         this.appConfig = appConfig;
     };
 
-    NodeActivator.prototype.activate = function (nodeIndex, sigInst) {
+    NodeActivator.prototype = {
+        activate: function (nodeIndex, sigInst) {
+            var config = this.appConfig;
 
+            var groupByDirection = false;
 
-        var config = this.appConfig;
+            if (config.informationPanel.groupByEdgeDirection && config.informationPanel.groupByEdgeDirection === true) {
+                groupByDirection = true;
+            }
 
-        var groupByDirection = false;
+            var node = sigInst._core.graph.nodesIndex[nodeIndex];
 
-        if (config.informationPanel.groupByEdgeDirection && config.informationPanel.groupByEdgeDirection === true) {
-            groupByDirection = true;
+            console.log("Processing Selected node: " + node.label);
+
+            $(".headertext").empty().append(node.label);
+
+            // Show the summary panel
+            $("#attributepane").animate({width: 'show'}, 250);
+
+            $("#attributepane .left-close").click(function () {
+                $("#attributepane").fadeOut(500);
+            });
+        },
+        createList: function (edges, nodeIndex) {
+            var f = [];
+            var e = [],
+                g;
+            for (g in edges) {
+                var d = sigInst._core.graph.nodesIndex[g];
+                d.hidden = !1;
+                d.attr.lineWidth = !1;
+                d.attr.color = edges[g].colour;
+                nodeIndex != g && e.push({
+                    id: g,
+                    name: d.label,
+                    group: (edges[g].name) ? edges[g].name : "",
+                    colour: edges[g].colour
+                });
+            }
+            e.sort(function (a, b) {
+                var c = a.group.toLowerCase(),
+                    d = b.group.toLowerCase(),
+                    e = a.name.toLowerCase(),
+                    f = b.name.toLowerCase();
+                return edges != d ? c < d ? -1 : edges > d ? 1 : 0 : e < f ? -1 : e > f ? 1 : 0
+            });
+            d = "";
+            for (g in e) {
+                edges = e[g];
+                f.push("<li class=\"membership\">" + edges.name + "</li>");
+            }
+            return f;
+
+        },
+        zoomTo: function (node, sigmaView) {
+            sigmaView.position(0, 0, 1).draw();
+            sigmaView.zoomTo(node.displayX, node.displayY, 20);
+            sigmaView.draw(2, 2, 2);
         }
-
-//        sigInst.neighbors = {};
-//        sigInst.detail = !0;
-        var node = sigInst._core.graph.nodesIndex[nodeIndex];
-
-        console.log("Processing Selected node: " + node.label);
-
-        $(".headertext").empty().append(node.label);
-
-//        var outgoing = {};
-//        var incoming = {};
-//        var mutual = {};
-//
-//        sigInst.iterEdges(function (edge) {
-//            edge.attr.lineWidth = !1;
-//            edge.hidden = !0;
-//
-//            var n = {
-//                name: edge.label,
-//                colour: edge.color
-//            };
-//
-//            if (nodeIndex === edge.source) {
-//                outgoing[edge.target] = n;
-//            } else if (nodeIndex === edge.target) {
-//                incoming[edge.source] = n;
-//            }
-//
-//            if (nodeIndex === edge.source || nodeIndex === edge.target) {
-//                sigInst.neighbors[nodeIndex === edge.target ? edge.source : edge.target] = n;
-//            }
-//
-//            edge.hidden = !1;
-//            edge.attr.color = "rgba(0, 0, 0, 1)";
-//        });
-//
-//        sigInst.iterNodes(function (node) {
-//            node.hidden = !0;
-//            node.attr.lineWidth = !1;
-//            node.attr.color = node.color;
-//        });
-//
-//        if (groupByDirection) {
-//            for (var currentEdge in outgoing) {
-//                if (currentEdge in incoming) {
-//                    mutual[currentEdge] = outgoing[currentEdge];
-//                    delete incoming[currentEdge];
-//                    delete outgoing[currentEdge];
-//                }
-//            }
-//        }
-
-
-        // Show the summary panel
-        $("#attributepane").animate({width: 'show'}, 250);
-
-        var f = [];
-//        if (groupByDirection) {
-//            size = Object.size(mutual);
-//            f.push("<h2>Mututal (" + size + ")</h2>");
-//            (size > 0) ? f = f.concat(this.createList(mutual, a)) : f.push("No mutual links<br>");
-//            size = Object.size(incoming);
-//            f.push("<h2>Incoming (" + size + ")</h2>");
-//            (size > 0) ? f = f.concat(this.createList(incoming, a)) : f.push("No incoming links<br>");
-//            size = Object.size(outgoing);
-//            f.push("<h2>Outgoing (" + size + ")</h2>");
-//            (size > 0) ? f = f.concat(this.createList(outgoing, a)) : f.push("No outgoing links<br>");
-//        } else {
-//            f = f.concat(this.createList(sigInst.neighbors, a));
-//        }
-//
-//        b.hidden = !1;
-//        b.attr.color = b.color;
-//        b.attr.lineWidth = 6;
-//        b.attr.strokeStyle = "#000000";
-//        sigInst.draw(2, 2, 2, 2);
-//
-//        $GP.info_link.find("ul").html(f.join(""));
-//        $GP.info_link.find("li").each(function () {
-//            var a = $(this),
-//                b = a.attr("rel");
-//        });
-//        f = b.attr;
-//        if (f.attributes) {
-//            var image_attribute = false;
-//            if (config.informationPanel.imageAttribute) {
-//                image_attribute = config.informationPanel.imageAttribute;
-//            }
-//            e = [];
-//            temp_array = [];
-//            g = 0;
-//            for (var attr in f.attributes) {
-//                var d = f.attributes[attr],
-//                    h = "";
-//                if (attr != image_attribute) {
-//                    h = '<span><strong>' + attr + ':</strong> ' + d + '</span><br/>'
-//                }
-//                //temp_array.push(f.attributes[g].attr);
-//                e.push(h)
-//            }
-//
-//            if (image_attribute) {
-//                $GP.info_name.html(
-//                    "<div><span onmouseover=\"sigInst._core.plotter.drawHoverNode(sigInst._core.graph.nodesIndex['"
-//                        + b.id + '\'])" onmouseout="sigInst.refresh()">' + b.label + "</span></div>");
-//            } else {
-//                $GP.info_name.html("<div><span onmouseover=\"sigInst._core.plotter.drawHoverNode(sigInst._core.graph.nodesIndex['" + b.id + '\'])" onmouseout="sigInst.refresh()">' + b.label + "</span></div>");
-//            }
-//            // Image field for attribute pane
-//            $GP.info_data.html(e.join("<br/>"))
-//        }
-//        $GP.info_p.html("Connections:");
-//        $GP.info.animate({width: 'show'}, 350);
-        $("#attributepane .left-close").click(function () {
-            $("#attributepane").fadeOut(500);
-        });
-
-
-        //sigInst.active = nodeIndex;
-
-        //window.location.hash = node.label;
-    };
-
-    NodeActivator.prototype.createList = function (edges, nodeIndex) {
-        var f = [];
-        var e = [],
-            g;
-        for (g in edges) {
-            var d = sigInst._core.graph.nodesIndex[g];
-            d.hidden = !1;
-            d.attr.lineWidth = !1;
-            d.attr.color = edges[g].colour;
-            nodeIndex != g && e.push({
-                id: g,
-                name: d.label,
-                group: (edges[g].name) ? edges[g].name : "",
-                colour: edges[g].colour
-            })
-        }
-        e.sort(function (a, b) {
-            var c = a.group.toLowerCase(),
-                d = b.group.toLowerCase(),
-                e = a.name.toLowerCase(),
-                f = b.name.toLowerCase();
-            return edges != d ? c < d ? -1 : edges > d ? 1 : 0 : e < f ? -1 : e > f ? 1 : 0
-        });
-        d = "";
-        for (g in e) {
-            edges = e[g];
-            f.push("<li class=\"membership\">" + edges.name + "</li>");
-        }
-        return f;
-    };
-
-    NodeActivator.prototype.zoomTo = function (node, sigmaView) {
-        sigmaView.position(0, 0, 1).draw();
-        sigmaView.zoomTo(node.displayX, node.displayY, 20);
-        sigmaView.draw(2, 2, 2);
     };
 
 
     ///////////// Main ////////////
-
-
-
     var viewManager = new NodeListView();
     var nexo = new NexoApp(CONFIG_FILE, viewManager);
 

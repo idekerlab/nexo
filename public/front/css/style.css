@@ -65,6 +65,7 @@ canvas#sigma_bg_1 {
     padding-bottom: 18px;
     font-size: 36px;
     font-weight: 100;
+    line-height: 1.1em;
 }
 
 #attributepane .returntext em {
@@ -122,9 +123,7 @@ canvas#sigma_bg_1 {
     font-weight: bold;
 }
 
-#attributepane .data {
 
-}
 
 #attributepane .data .plus {
     background-repeat: no-repeat;
@@ -276,60 +275,6 @@ canvas#sigma_bg_1 {
     color: #fff;
 }
 
-#attributeselect {
-    margin: 20px 0 13px 0;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-#attributeselect .select {
-    border: 1px solid #999;
-    padding: 5px 7px 4px 7px;
-    color: #fff;
-    cursor: pointer;
-    background-color: #999;
-    background-image: url('../images/sprite.png');
-    background-repeat: no-repeat;
-    background-position: 200px -144px;
-}
-
-#attributeselect .close {
-    background-position: 200px -8px;
-}
-
-#attributeselect .list {
-    display: none;
-    border: 1px solid #999;
-    padding: 6px;
-    height: 150px;
-    width: 226px;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    background-color: #999;
-    /*position: relative;
-        left: 240px;
-        bottom: 164px;*/
-    position: absolute;
-    margin-left: 240px;
-    margin-top: -164px;
-    color: white;
-}
-
-#attributeselect .list a {
-    display: block;
-    padding: 2px;
-    text-decoration: none;
-    color: #fff;
-}
-
-#attributeselect .list a:hover {
-    background-color: #fff;
-    color: #000;
-}
 
 .link h2 {
     font-size: 1em;
@@ -353,9 +298,6 @@ canvas#sigma_bg_1 {
     float: left;
     background-repeat: no-repeat;
     background-image: url('../images/sprite.png');
-}
-
-#legend dl {
 }
 
 #mainpanel h2 {
@@ -385,11 +327,6 @@ canvas#sigma_bg_1 {
 
 }
 
-#legend .note {
-    margin-bottom: 8px;
-
-}
-
 #mainpanel .regions {
     background-position: -171px -13px;
 }
@@ -404,21 +341,6 @@ canvas#sigma_bg_1 {
     margin-left: 5px;
 }
 
-#copyright {
-    margin: 0 auto;
-    position: fixed;
-    right: 40px;
-    bottom: 25px;
-    z-index: 0;
-}
-
-#copyright a {
-    color: #000;
-}
-
-#copyright .explanation {
-    display: none;
-}
 
 #zoom {
     opacity: 0.6;
@@ -475,66 +397,6 @@ canvas#sigma_bg_1 {
     cursor: hand;
 }
 
-#information {
-    display: none;
-    background: #fff;
-    padding: 1px 10px 10px 10px;
-}
-
-#information h3 {
-    margin: 14px 0 4px 0;
-}
-
-#information p {
-    margin: 0 0 4px 0;
-}
-
-#information .button {
-    width: 14px;
-    height: 14px;
-    background-image: url('../images/sprite.png');
-    border: 1px solid #999;
-    display: inline-block;
-    *display: inline;
-    *zoom: 1;
-}
-
-#information .button span {
-    display: none;
-}
-
-#information .button.plus {
-    background-position: -91px -122px;
-}
-
-#information .button.moins {
-    background-position: -131px -122px;
-}
-
-#minify {
-    background-color: #fff;
-    padding: 4px 4px 4px 25px;
-    cursor: pointer;
-    background-image: url('../images/sprite.png');
-    background-repeat: no-repeat;
-    background-position: -167px -118px;
-    position: absolute;
-    top: 65px;
-    left: 15px;
-    display: none;
-}
-
-#minifier {
-    position: absolute;
-    width: 20px;
-    height: 16px;
-    background-image: url('../images/sprite.png');
-    background-repeat: no-repeat;
-    background-position: -45px -147px;
-    cursor: pointer;
-    display: none;
-}
-
 #resulttable {
     margin-left: 20px;
     border-radius: 10px;
@@ -553,4 +415,16 @@ canvas#sigma_bg_1 {
     font-size: 14px;
     line-height: 1.5em;
     margin: 2em;
+}
+
+.subnetwork {
+    background-color: #bbbbbb;
+    width: 100%;
+    height: 400px;
+    border-radius: 10px;
+    margin-top: 0;
+    margin-right: 0em;
+    margin-left: 0;
+    margin-bottom: 1em;
+
 }

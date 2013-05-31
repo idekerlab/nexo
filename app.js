@@ -33,12 +33,12 @@ if ('development' == app.get('env')) {
 app.get('/users', user.list);
 app.get('/result', result.index);
 app.get('/search/nexo/:query', nexo.getByQuery);
-app.get('/search/nexo/genes/:query', nexo.getByGeneQuery);
-app.get('/nexo/:id([0-9]+)', nexo.getByID);
+app.get('/search/genes/:query', nexo.getByGeneQuery);
+app.get('/nexo/:id', nexo.getByID);
 
-app.get('/nexo/:id([0-9]+)/path', nexo.getPath);
-app.get('/nexo/:id([0-9]+)/path.json', nexo.getPathCytoscape);
-app.get('/nexoview/:id([0-9]+)', nexoView.showSummary);
+app.get('/:namespace/:id/path', nexo.getPath);
+app.get('/:namespace/:id/path.json', nexo.getPathCytoscape);
+app.get('/nexoview/:id', nexoView.showSummary);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
