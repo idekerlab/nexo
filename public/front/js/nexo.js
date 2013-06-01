@@ -87,7 +87,7 @@
             var summary = "<div class='subnetwork'></div><table class=\"table table-striped\">";
 
 
-            if(entryId.indexOf("S") === -1) {
+            if (entryId.indexOf("S") === -1) {
                 console.log("FOUND! " + entryId);
                 summary = this.processEntry(summary);
             } else {
@@ -126,10 +126,10 @@
 
                 if (tableKey === "name") {
                     tableValue = "<a href='" + SGD_API + tableValue + "' target='_blank'>" + tableValue + "</a>";
-                } else if(tableKey === "SGD Gene Description") {
+                } else if (tableKey === "SGD Gene Description") {
                     var descriptionList = "<ul>";
                     var entries = tableValue.split(";");
-                    for(var i = 0; i<entries.length; i++) {
+                    for (var i = 0; i < entries.length; i++) {
                         descriptionList += "<li>" + entries[i] + "</li>";
                     }
                     descriptionList += "</ul>";
@@ -180,13 +180,9 @@
 
         selected: function (selectedNode) {
             var id = selectedNode.id;
-            console.log(" - Selected: " + id);
 
             var newNode = new Node();
-            console.log(" - isnew: " + newNode.isNew());
             newNode.set("id", id);
-            console.log(" - isnew2: " + newNode.isNew());
-            console.log(" - URL: " + newNode.url());
             var self = this;
 
             this.collection.pop();
@@ -202,7 +198,6 @@
                     var attr = data.attributes;
                     for (var key in attr) {
                         newNode.set(key, attr[key]);
-                        console.log(key + " ----: " + newNode.get(key));
                     }
                     self.render();
 
@@ -294,7 +289,6 @@
         },
 
         render: function (sigmaView, graphFileLocation) {
-            console.log("Loading ...");
 
             var config = this.getConfig();
             var activator = new NodeActivator(config);
@@ -302,14 +296,20 @@
             var self = this;
             sigmaView.parseJson(graphFileLocation, function () {
 
-                sigmaView.bind("upnodes", function (nodes) {
+                sigmaView.bind("upnodes",function (nodes) {
+
                     var selectedNodeId = nodes.content[0];
-                    self.dimNode(sigmaView);
                     activator.activate(selectedNodeId, sigmaView);
+
+                    console.log("node id = " + selectedNodeId);
 
                     var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
                     self.viewManager.selected(selectedNode);
-                });
+
+                    self.findPath(sigmaView, selectedNode);
+                }).bind("upgraph", function (nodes) {
+                        //self.refresh(sigmaView);
+                    });
 
                 self.updateElements(sigmaView);
 
@@ -319,19 +319,13 @@
         },
 
         updateElements: function (sigmaView) {
-            var hoover = this.getConfig().features.hoverBehavior;
-
-            if (hoover === "dim") {
-                this.dimNode(sigmaView);
-            } else if (hoover === "hide") {
-                this.hideNode(sigmaView);
-            }
-
             this.zoomAction(sigmaView);
         },
 
         zoomAction: function (sigmaView) {
-            $("#zoom").find("div.z").each(function () {
+            var self = this;
+
+            $("#commands").find("div.z").each(function () {
 
                 var zoomButton = $(this);
                 var zoomCommand = zoomButton.attr("rel");
@@ -361,85 +355,98 @@
 
                 });
             });
-        },
 
-        // Dimmer for nodes (when user points to a node)
-        dimNode: function (sigmaView) {
+            $("#commands").find("div.s").each(function () {
 
-            // TODO: Select Subtree (from selected node to root & children) run simple DFS
+                var button = $(this);
+                var command = button.attr("rel");
 
-            sigmaView.bind("overnodes",function (event) {
-                var nodes = event.content;
-                var neighbors = {};
+                button.click(function () {
 
-                sigmaView
-                    .iterEdges(function (edge) {
-                        if (nodes.indexOf(edge.source) < 0 && nodes.indexOf(edge.target) < 0) {
-                            if (!edge.attr.grey) {
-                                edge.attr.true_color = edge.color;
-                                edge.color = DIM_COLOR;
-                                edge.attr.grey = 1;
-                            }
-                        } else {
-                            edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
-                            edge.attr.grey = 0;
-
-                            neighbors[edge.source] = 1;
-                            neighbors[edge.target] = 1;
-                        }
-                    })
-
-                    .iterNodes(function (node) {
-                        if (!neighbors[node.id]) {
-                            if (!node.attr.grey) {
-                                node.attr.true_color = node.color;
-                                node.color = DIM_COLOR;
-                                node.attr.grey = 1;
-                            }
-                        } else {
-                            node.color = node.attr.grey ? node.attr.true_color : node.color;
-                            node.attr.grey = 0;
-                        }
-                    }).draw(2, 2, 2);
-
-            }).bind('outnodes', function () {
-                    sigmaView
-                        .iterEdges(function (edge) {
-                            edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
-                            edge.attr.grey = 0;
-                        })
-
-                        .iterNodes(function (node) {
-                            node.color = node.attr.grey ? node.attr.true_color : node.color;
-                            node.attr.grey = 0;
-                        }).draw(2, 2, 2);
-                });
-        },
-
-        hideNode: function (sigInst) {
-
-            sigInst.bind('overnodes',function (event) {
-                var nodes = event.content;
-                var neighbors = {};
-                sigInst.iterEdges(function (e) {
-                    if (nodes.indexOf(e.source) >= 0 || nodes.indexOf(e.target) >= 0) {
-                        neighbors[e.source] = 1;
-                        neighbors[e.target] = 1;
+                    if (command === "switch") {
+                        // Fit to window
+                        self.refresh(sigmaView);
                     }
-                }).iterNodes(function (n) {
-                        if (!neighbors[n.id]) {
-                            n.hidden = 1;
-                        } else {
-                            n.hidden = 0;
-                        }
-                    }).draw(2, 2, 2);
-            }).bind('outnodes', function () {
-                    sigInst.iterEdges(function (e) {
-                        e.hidden = 0;
-                    }).iterNodes(function (n) {
-                            n.hidden = 0;
-                        }).draw(2, 2, 2);
+
                 });
+            });
+        },
+
+        refresh: function (sigmaView) {
+
+            console.log("Refresh view.");
+
+            sigmaView
+                .iterEdges(function (edge) {
+                    edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
+                    edge.attr.grey = 0;
+                })
+                .iterNodes(function (node) {
+                    node.color = node.attr.grey ? node.attr.true_color : node.color;
+                    node.attr.grey = 0;
+                    node.forceLabel = false;
+                }).draw(2, 2, 2);
+        },
+
+        findPath: function (sigmaView, selectedNode) {
+            var self = this;
+            var nodeId = selectedNode.id;
+            var url = "/nexo/" + nodeId + "/path.json";
+            $.getJSON(url, function (path) {
+                self.showPath(sigmaView, path);
+            });
+        },
+
+        showPath: function (sigmaView, path) {
+
+            var pathNodes = path.elements.nodes;
+
+            // Boolean map for enable/disable nodes.
+            var targetNodes = {};
+
+            for (var i = 0; i < pathNodes.length; i++) {
+                var cytoscapejsNode = pathNodes[i];
+                var id = cytoscapejsNode.data.id;
+                var sigmaNode = sigmaView._core.graph.nodesIndex[id];
+                if (sigmaNode !== null) {
+                    targetNodes[sigmaNode.id] = true;
+                }
+            }
+
+            sigmaView
+                .iterEdges(function (edge) {
+                    var sourceId = edge.source.id;
+                    var targetId = edge.target.id;
+
+                    if (targetNodes[sourceId] === null && targetNodes[targetId] === null) {
+                        // Not on the path.  DIM all of those.
+                        if (!edge.attr.grey) {
+                            edge.attr.true_color = edge.color;
+                            edge.color = DIM_COLOR;
+                            edge.attr.grey = 1;
+                        }
+                    } else {
+                        edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
+                        edge.attr.grey = false;
+                    }
+                })
+
+                .iterNodes(function (node) {
+                    if (!targetNodes[node.id]) {
+                        if (!node.attr.grey) {
+                            node.attr.true_color = node.color;
+                            node.color = DIM_COLOR;
+                            node.attr.grey = true;
+                            node.forceLabel = false;
+                        }
+                    } else {
+                        node.color = node.attr.grey ? node.attr.true_color : node.color;
+                        node.attr.grey = false;
+                        node.forceLabel = true;
+                    }
+                })
+
+                .draw(2, 2, 2);
         }
     };
 
@@ -454,7 +461,8 @@
 
             var groupByDirection = false;
 
-            if (config.informationPanel.groupByEdgeDirection && config.informationPanel.groupByEdgeDirection === true) {
+            if (config.informationPanel.groupByEdgeDirection &&
+                config.informationPanel.groupByEdgeDirection === true) {
                 groupByDirection = true;
             }
 
@@ -468,40 +476,10 @@
             $("#attributepane").animate({width: 'show'}, 250);
 
             $("#attributepane .left-close").click(function () {
-                $("#attributepane").fadeOut(500);
+                $("#attributepane").fadeOut(400);
             });
         },
-        createList: function (edges, nodeIndex) {
-            var f = [];
-            var e = [],
-                g;
-            for (g in edges) {
-                var d = sigInst._core.graph.nodesIndex[g];
-                d.hidden = !1;
-                d.attr.lineWidth = !1;
-                d.attr.color = edges[g].colour;
-                nodeIndex != g && e.push({
-                    id: g,
-                    name: d.label,
-                    group: (edges[g].name) ? edges[g].name : "",
-                    colour: edges[g].colour
-                });
-            }
-            e.sort(function (a, b) {
-                var c = a.group.toLowerCase(),
-                    d = b.group.toLowerCase(),
-                    e = a.name.toLowerCase(),
-                    f = b.name.toLowerCase();
-                return edges != d ? c < d ? -1 : edges > d ? 1 : 0 : e < f ? -1 : e > f ? 1 : 0
-            });
-            d = "";
-            for (g in e) {
-                edges = e[g];
-                f.push("<li class=\"membership\">" + edges.name + "</li>");
-            }
-            return f;
 
-        },
         zoomTo: function (node, sigmaView) {
             sigmaView.position(0, 0, 1).draw();
             sigmaView.zoomTo(node.displayX, node.displayY, 20);

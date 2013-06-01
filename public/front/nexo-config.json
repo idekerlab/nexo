@@ -24,22 +24,22 @@
     "sigma": {
         "drawingProperties": {
             "defaultLabelColor": "#eeeeee",
-            "defaultLabelSize": 24,
+            "defaultLabelSize": 18,
             "defaultLabelBGColor": "#ddd",
             "defaultHoverLabelBGColor": "#cccccc",
             "defaultLabelHoverColor": "#555",
-            "labelThreshold": 10,
+            "labelThreshold": 11,
             "font": "Helvetica Neue",
-            "defaultEdgeType": "curve",
+            "defaultEdgeType": "line",
             "hoverFontStyle": "normal",
-            "fontStyle": "bold",
+            "fontStyle": "normal",
             "activeFontStyle": "bold"
         },
         "graphProperties": {
             "minNodeSize": 1,
-            "maxNodeSize": 30,
-            "minEdgeSize": 0.8,
-            "maxEdgeSize": 3.0
+            "maxNodeSize": 20,
+            "minEdgeSize": 0.5,
+            "maxEdgeSize": 3.5
         },
         "mouseProperties": {
             "minRatio": 0.75,

@@ -342,8 +342,8 @@ canvas#sigma_bg_1 {
 }
 
 
-#zoom {
-    opacity: 0.6;
+#commands {
+    opacity: 0.8;
     z-index: 999;
     position: fixed;
     left: 20px;
@@ -359,11 +359,11 @@ canvas#sigma_bg_1 {
     text-align: left;
 }
 
-#zoom .z {
+#commands .z,.s {
     background: #fff;
-    background-color: rgba(255, 255, 255, 0.7);
-    width: 60px;
-    height: 60px;
+    background-color: rgba(255, 255, 255, 0.8);
+    width: 70px;
+    height: 70px;
     margin: 5px;
     border-radius: 10px;
     cursor: pointer;
@@ -371,23 +371,28 @@ canvas#sigma_bg_1 {
     float: left;
     margin-right: 4px;
     background-repeat: no-repeat;
-}
-
-#zoom .z[rel=center] {
-    background-image: url('../images/zoom_reset.png');
     background-position: center;
 }
 
-#zoom .z[rel=in] {
-    background-image: url('../images/zoom_in.png');
-    background-position: center;
+#commands .z[rel=center] {
+    background-image: url('../images/fit.png');
 }
 
-#zoom .z[rel=out] {
-    background-image: url('../images/zoom_out.png');
-    background-position: center;
+#commands .z[rel=in] {
+    background-image: url('../images/zoomin.png');
 }
 
+#commands .z[rel=out] {
+    background-image: url('../images/zoomout.png');
+}
+
+#commands .s[rel=switch] {
+    background-image: url('../images/switch.png');
+}
+
+#commands .s[rel=settings] {
+    background-image: url('../images/settings.png');
+}
 .line {
     font-size: 12px;
     color: #000;

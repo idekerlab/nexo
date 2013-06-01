@@ -116,7 +116,7 @@ exports.getPath = function (req, res) {
     if (nameSpace === NEXO_NAMESPACE) {
         getGraphUrl = getGraphUrl +
             "g.V.has('name', '" + id +
-            "').as('x').outE.inV.loop('x'){it.loops < 120}{it.object.name.equals('joining_root')}.path";
+            "').as('x').outE.inV.loop('x'){it.loops < 30}{it.object.name.equals('joining_root')}.path";
     } else {
         // TODO add handler for other namespace
     }
@@ -127,7 +127,7 @@ exports.getPath = function (req, res) {
         if (!err) {
             var results = JSON.parse(body);
             var resultArray = results.results;
-            if (resultArray.length != 0) {
+            if (resultArray !== undefined && resultArray.length !== 0) {
                 res.json(resultArray);
             } else {
                 res.json(EMPTY_ARRAY);
