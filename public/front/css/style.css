@@ -19,11 +19,10 @@ html, body {
     height: 100%;
     top: 0;
     left: 0;
-    color: #eeeeee;
-    font-family: "Helvetica Neue";
-    font-size: 24px;
-    background-color: #000;
-    background-position: center center;
+    color: #aaaaaa;
+    font-weight: 100;
+    font-size: 34px;
+    background: linear-gradient(#555555, white);
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -35,6 +34,64 @@ html, body {
 
 canvas#sigma_bg_1 {
     display: none;
+}
+
+#mainpanel {
+    margin-top: 10px;
+    margin-left: 10px;
+    border-radius: 5px;
+    width: 200px;
+    padding-top: 2em;
+    padding-right: 2em;
+    padding-left: 1.5em;
+    padding-bottom: 0;
+    background-color: rgba(230, 230, 230, 0.8);
+    z-index: 20;
+    position: fixed;
+    top: 0;
+}
+
+#title {
+    color: #555555;
+    font-weight: 800;
+    font-size: 48px;
+    margin-bottom: 5px;
+}
+
+#search {
+    font-weight: 300;
+    font-size: 14px;
+    padding-top: 15px;
+}
+
+#search input[name=search] {
+    background-color: #fff;
+    color: #333333;
+    width: 190px;
+}
+
+
+#search .results {
+    display: none;
+    /*	border: 1px solid #999;*/
+    margin: 6px;
+    /*height: 150px;*/
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+
+#search .results a {
+    padding: 1px 2px;
+    display: block;
+    cursor: pointer;
+    text-decoration: none;
+    color: #000;
+}
+
+#search .results a:hover {
+    background-color: #999;
+    color: #fff;
 }
 
 #attributepane {
@@ -123,8 +180,6 @@ canvas#sigma_bg_1 {
     font-weight: bold;
 }
 
-
-
 #attributepane .data .plus {
     background-repeat: no-repeat;
     background-image: url('../images/sprite.png');
@@ -156,14 +211,6 @@ canvas#sigma_bg_1 {
     cursor: pointer;
     font-weight: bold;
 }
-
-#developercontainer {
-    margin-left: 25px;
-    margin-bottom: 25px;
-    position: fixed;
-    bottom: 0;
-}
-
 #maintitle {
     width: 100%;
     height: 72px;
@@ -173,112 +220,6 @@ canvas#sigma_bg_1 {
 
 #maintitle h1 {
     display: none;
-}
-
-#mainpanel {
-    margin-top: 20px;
-    margin-left: 20px;
-    border-radius: 10px;
-    background: #fff;
-    background-color: rgba(230, 230, 230, 0.8);
-    border: 1px solid #ccc;
-    z-index: 20;
-    position: fixed;
-    top: 0;
-}
-
-#mainpanel .b1 {
-    padding: 0px 0 0 0;
-}
-
-#mainpanel .col {
-    width: 240px;
-    padding: 18px 18px 18px 18px;
-    margin: 0;
-
-}
-
-#title {
-    font: "Helvetica Neue";
-    font-weight: 100;
-    font-size: 42px;
-}
-
-#titletext {
-    padding: 6px 0 10px 0;
-}
-
-#info {
-    padding-bottom: 15px;
-}
-
-#search {
-    font: "Helvetica Neue";
-    font-weight: 300;
-    font-size: 14px;
-    padding: 20px 0 0px 2px;
-}
-
-#search input[name=search] {
-    border: 2px solid #888;
-    background-color: #fff;
-    padding: 5px 7px 4px 7px;
-    width: 220px;
-    color: #000;
-}
-
-#search h2 {
-    font-size: 14px !important;
-    font-weight: 300 !important;
-}
-
-#search input.empty {
-    color: #000;
-}
-
-#search .state {
-    width: 14px;
-    height: 14px;
-    float: right;
-    margin-top: 6px;
-    cursor: pointer;
-    background: url('../images/sprite.png') -131px -13px;
-}
-
-#search .state.searching {
-    background-position: -11px -13px;
-}
-
-#search .results {
-    display: none;
-    /*	border: 1px solid #999;*/
-    margin: 6px;
-    /*height: 150px;*/
-    overflow-y: scroll;
-    overflow-x: hidden;
-}
-
-#search .results b {
-    padding-left: 2px;
-}
-
-#search .results a {
-    padding: 1px 2px;
-    display: block;
-    cursor: pointer;
-    text-decoration: none;
-    color: #000;
-}
-
-#search .results a:hover {
-    background-color: #999;
-    color: #fff;
-}
-
-
-.link h2 {
-    font-size: 1em;
-    padding-top: 1em;
 }
 
 #mainpanel dl {
@@ -292,55 +233,10 @@ canvas#sigma_bg_1 {
     margin: 10px;
 }
 
-#mainpanel dt {
-    width: 20px;
-    height: 20px;
-    float: left;
-    background-repeat: no-repeat;
-    background-image: url('../images/sprite.png');
-}
-
-#mainpanel h2 {
-    padding-bottom: 10px;
-}
-
 #legend dd {
     margin-bottom: 8px;
     color: #000;
 }
-
-#mainpanel .infos dd {
-    margin-bottom: 12px;
-}
-
-#mainpanel .node {
-    background-position: -11px -119px;
-}
-
-#mainpanel .edge {
-    background-position: -51px -122px;
-}
-
-#mainpanel .colours {
-
-    background-image: url('../images/rainbow.png');
-
-}
-
-#mainpanel .regions {
-    background-position: -171px -13px;
-}
-
-#mainpanel .download {
-    background-position: -51px -13px;
-}
-
-#mainpanel .moreinformation {
-    background: url('../images/info.png');
-    background-repeat: no-repeat;
-    margin-left: 5px;
-}
-
 
 #commands {
     opacity: 0.8;
@@ -360,14 +256,10 @@ canvas#sigma_bg_1 {
 }
 
 #commands .z,.s {
-    background: #fff;
-    background-color: rgba(255, 255, 255, 0.8);
     width: 70px;
     height: 70px;
     margin: 5px;
-    border-radius: 10px;
     cursor: pointer;
-    border: 1px solid #ccc;
     float: left;
     margin-right: 4px;
     background-repeat: no-repeat;

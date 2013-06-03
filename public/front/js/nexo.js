@@ -38,7 +38,6 @@
 
     var DIM_COLOR = "#333333";
 
-
     // IDs & classes in the HTML document
     var ID_NODE_DETAILS = "#details";
 
@@ -301,25 +300,16 @@
                     var selectedNodeId = nodes.content[0];
                     activator.activate(selectedNodeId, sigmaView);
 
-                    console.log("node id = " + selectedNodeId);
-
                     var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
                     self.viewManager.selected(selectedNode);
-
                     self.findPath(sigmaView, selectedNode);
-                }).bind("upgraph", function (nodes) {
-                        //self.refresh(sigmaView);
-                    });
+                });
 
-                self.updateElements(sigmaView);
+                self.zoomAction(sigmaView);
 
                 // Render the view.
                 sigmaView.draw();
             });
-        },
-
-        updateElements: function (sigmaView) {
-            this.zoomAction(sigmaView);
         },
 
         zoomAction: function (sigmaView) {
@@ -456,19 +446,8 @@
     };
 
     NodeActivator.prototype = {
-        activate: function (nodeIndex, sigInst) {
-            var config = this.appConfig;
-
-            var groupByDirection = false;
-
-            if (config.informationPanel.groupByEdgeDirection &&
-                config.informationPanel.groupByEdgeDirection === true) {
-                groupByDirection = true;
-            }
-
-            var node = sigInst._core.graph.nodesIndex[nodeIndex];
-
-            console.log("Processing Selected node: " + node.label);
+        activate: function (nodeIndex, sigmaView) {
+            var node = sigmaView._core.graph.nodesIndex[nodeIndex];
 
             $(".headertext").empty().append(node.label);
 

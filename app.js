@@ -37,7 +37,7 @@ app.get('/search/genes/:query', nexo.getByGeneQuery);
 app.get('/nexo/:id', nexo.getByID);
 
 app.get('/:namespace/:id/path', nexo.getPath);
-app.get('/:namespace/:id/path.json', nexo.getPathCytoscape);
+app.get('/nexo/:id/path.json', nexo.getPathCytoscape);
 app.get('/nexoview/:id', nexoView.showSummary);
 
 http.createServer(app).listen(app.get('port'), function(){

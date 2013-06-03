@@ -18,21 +18,12 @@
 
 <!-- Overlay -->
 <div id="mainpanel">
-    <div class="col">
-        <div id="title"></div>
-        <div class="b1">
-            <form>
-                <div id="search" class="cf">
-                    <input type="text" name="search" value="Search by term name" class="empty"/>
-
-                    <div class="state"></div>
-                    <div class="results"></div>
-                </div>
-            </form>
+    <div id="title"></div>
+    <form>
+        <div id="search">
+            <input type="text" name="search" value="Search by term name" class="empty"/>
         </div>
-    </div>
-    <div id="information">
-    </div>
+    </form>
 </div>
 
 <!--<div id="resulttable">-->
@@ -73,7 +64,6 @@
         </div>
 
 
-
     </div>
 </div>
 
@@ -90,14 +80,14 @@
 <script src="js/nexo.js"></script>
 <script>
 
-    $('#myTab a').click(function(e) {
+    $('#myTab a').click(function (e) {
         console.log("################## OK");
         e.preventDefault();
         $(this).tab('show');
     });
 
 
-//    $('#myTab a:last').tab('show');
+    //    $('#myTab a:last').tab('show');
 
 </script>
 

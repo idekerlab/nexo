@@ -105,8 +105,6 @@ exports.getByGeneQuery = function (req, res) {
 
 
 exports.getPath = function (req, res) {
-
-
     "use strict";
 
     var nameSpace = req.params.namespace;
@@ -116,7 +114,7 @@ exports.getPath = function (req, res) {
     if (nameSpace === NEXO_NAMESPACE) {
         getGraphUrl = getGraphUrl +
             "g.V.has('name', '" + id +
-            "').as('x').outE.inV.loop('x'){it.loops < 30}{it.object.name.equals('joining_root')}.path";
+            "').as('x').outE('parent_of').inV.loop('x'){it.loops < 15}{it.object.name.equals('joining_root')}.path";
     } else {
         // TODO add handler for other namespace
     }
@@ -138,13 +136,12 @@ exports.getPath = function (req, res) {
 
 exports.getPathCytoscape = function (req, res) {
 
-    var fullUrl = "http://gamay.ucsd.edu:3000/nexo/" + req.params.id + "/path";
+    var fullUrl = "http://localhost:3000/nexo/" + req.params.id + "/path";
 
-    console.log('URL = ' + fullUrl);
+    console.log('Cy URL = ' + fullUrl);
 
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
-
             // This is an array.
             var results = JSON.parse(body);
             if (results != "" && results.length != 0) {
