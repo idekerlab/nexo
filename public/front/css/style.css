@@ -311,8 +311,23 @@ canvas#sigma_bg_1 {
     font-weight: 300;
     font-size: 14px;
     line-height: 1.5em;
-    margin: 2em;
+    margin-left: 3px;
+    margin-right: 3px;
 }
+
+#details dl {
+    font-size: 24px;
+    font-weight: 100;
+}
+
+#details dt,dd {
+    line-height: 1.5em;
+}
+
+#details dt {
+    font-weight: 200;
+}
+
 
 .subnetwork {
     background-color: #bbbbbb;
@@ -323,5 +338,16 @@ canvas#sigma_bg_1 {
     margin-right: 0em;
     margin-left: 0;
     margin-bottom: 1em;
+}
 
+#details svg {
+    width: 100%;
+    margin-top: 0.5em;
+    margin-right: 0em;
+    margin-left: 0;
+    margin-bottom: 0;
+}
+
+#myTab {
+    margin: 0;
 }

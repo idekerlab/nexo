@@ -49,6 +49,7 @@
         </div>
 
         <div class="headertext"></div>
+        <div class="subnetwork"></div>
 
         <div class="tabbable">
             <ul id="myTab" class="nav nav-tabs">
@@ -58,8 +59,8 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade in active" id="details"></div>
-                <div class="tab-pane fade in active" id="genes">Gene list will be here...</div>
-                <div class="tab-pane fade in active" id="children">children list will be here...</div>
+                <div class="tab-pane fade in active" id="genes"></div>
+                <div class="tab-pane fade in active" id="children"></div>
             </div>
         </div>
 
@@ -76,12 +77,12 @@
 <script src="js/underscore.js/underscore.js"></script>
 <script src="js/backbone/backbone.js"></script>
 <script src="js/bootstrap.min.js"></script>
+<script src="js/d3/d3.v3.js"></script>
 
 <script src="js/nexo.js"></script>
 <script>
 
     $('#myTab a').click(function (e) {
-        console.log("################## OK");
         e.preventDefault();
         $(this).tab('show');
     });

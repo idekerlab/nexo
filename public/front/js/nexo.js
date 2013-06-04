@@ -4,6 +4,7 @@
 
 /* global Backbone */
 /* global sigma */
+/* global d3 */
 
 (function () {
     "use strict";
@@ -44,15 +45,25 @@
 
     /////////// Models ///////////////////
 
+    var CATEGORY_MAP = {
+        bp: "Biological Process",
+        cc: "Cellular Component",
+        mf: "Molecular Function"
+    };
+
     var TARGETS = {
-        name: "Term ID",
-        "Best Alignment GO Term ID": "Best Aligned GO",
-        "BP Annotation": "BP Name",
-        "BP Definition": "BP Def.",
-        "CC Annotation": "CC Name",
-        "CC Definition": "CC Def.",
-        "MF Annotation": "MF Name",
-        "MF Definition": "MF Def"
+        "Biological Process": "",
+        "BP Annotation": "Name",
+        "BP Definition": "Definition",
+        "BP Score": "Score",
+        "Cellular Component": "",
+        "CC Annotation": "Name",
+        "CC Definition": "Definition",
+        "CC Score": "Score",
+        "Molecular Function": "",
+        "MF Annotation": "Name",
+        "MF Definition": "Definition",
+        "MF Score": "Score"
     };
 
     var TARGETS_GENE = {
@@ -81,13 +92,23 @@
 
         render: function () {
 
+            // Manually render summary view.
             var entryId = this.model.get("name");
+            var bestAlignedGoCategory = this.model.get("Best Alignment Ontology");
+            var alignedCategory = "-";
+            if (bestAlignedGoCategory !== "" && bestAlignedGoCategory !== null && bestAlignedGoCategory !== "None") {
+                alignedCategory = CATEGORY_MAP[bestAlignedGoCategory];
+            }
+            var alighedGo = this.model.get("Best Alignment GO Term ID");
+            var robustness = this.model.get("Robustness");
 
-            var summary = "<div class='subnetwork'></div><table class=\"table table-striped\">";
-
+            var summary = "<h3>Term ID: " + entryId + "</h3>";
 
             if (entryId.indexOf("S") === -1) {
                 console.log("FOUND! " + entryId);
+                summary += "<table class=\"table table-striped\">";
+                summary += "<tr><td>Robustness</td><td>" + robustness + "</td></tr>";
+                summary += "<tr><td>Aligned GO</td><td>" + alighedGo + "  (" + alignedCategory + ")</td></tr>";
                 summary = this.processEntry(summary);
             } else {
                 console.log("NOT FOUND! " + entryId);
@@ -96,8 +117,107 @@
             summary += "</table>";
 
             this.$el.html(summary).fadeIn(1000);
+            this.renderChart();
             return this;
         },
+
+        renderChart: function () {
+            var data = [];
+            var bp = this.model.get("BP Score");
+            var cc = this.model.get("CC Score");
+            var mf = this.model.get("MF Score");
+            data.push({name: "Biological Process", score: bp});
+            data.push({name: "Cellular Component", score: cc});
+            data.push({name: "Molecular Function", score: mf});
+
+
+
+
+            var valueLabelWidth = 170;
+            var barHeight = 25; // height of one bar
+            var barLabelWidth = 140; // space reserved for bar labels
+            var barLabelPadding = 15; // padding between bar and bar labels (left)
+            var gridLabelHeight = 18; // space reserved for gridline labels
+            var gridChartOffset = 10; // space between start of grid and first bar
+            var maxBarWidth = 420; // width of the bar with the max value
+
+            var barLabel = function (d) {
+                return d.name;
+            };
+            var barValue = function (d) {
+                return parseFloat(d.score);
+            };
+
+            var yScale = d3.scale.ordinal().domain(d3.range(0, data.length)).rangeBands([0, data.length * barHeight]);
+            var y = function (d, i) {
+                return yScale(i);
+            };
+            var yText = function (d, i) {
+                return y(d, i) + yScale.rangeBand() / 2;
+            };
+            var x = d3.scale.linear().domain([0, 1.0]).range([0, maxBarWidth]);
+            var chart = d3.select(ID_NODE_DETAILS).append("svg")
+                .attr('width', maxBarWidth + barLabelWidth + valueLabelWidth)
+                .attr('height', gridLabelHeight + gridChartOffset + data.length * barHeight);
+
+            var gridContainer = chart.append('g')
+                .attr('transform', 'translate(' + barLabelWidth + ',' + gridLabelHeight + ')');
+            gridContainer.selectAll("text").data(x.ticks(10)).enter().append("text")
+                .attr("x", x)
+                .attr("dy", -3)
+                .attr("text-anchor", "middle")
+                .text(String);
+
+            gridContainer.selectAll("line").data(x.ticks(10)).enter().append("line")
+                .attr("x1", x)
+                .attr("x2", x)
+                .attr("y1", 0)
+                .attr("y2", yScale.rangeExtent()[1] + gridChartOffset)
+                .style("stroke", "#ccc");
+
+            var labelsContainer = chart.append('g')
+                .attr('transform', 'translate(' + (barLabelWidth - barLabelPadding) + ',' + (gridLabelHeight + gridChartOffset) + ')');
+
+            labelsContainer.selectAll('text').data(data).enter().append('text')
+                .attr('y', yText)
+                .attr('stroke', 'none')
+                .attr('fill', 'black')
+                .attr("dy", ".35em") // vertical-align: middle
+                .attr('text-anchor', 'end')
+                .text(barLabel);
+
+            var barsContainer = chart.append('g')
+                .attr('transform', 'translate(' + barLabelWidth + ',' + (gridLabelHeight + gridChartOffset) + ')');
+
+            barsContainer.selectAll("rect").data(data).enter().append("rect")
+                .attr('y', y)
+                .attr('height', yScale.rangeBand())
+                .attr('width', function (d) {
+                    return x(barValue(d));
+                })
+                .attr('stroke', 'white')
+                .attr('fill', 'steelblue');
+
+            barsContainer.selectAll("text").data(data).enter().append("text")
+                .attr("x", function (d) {
+                    return x(barValue(d));
+                })
+                .attr("y", yText)
+                .attr("dx", 3) // padding-left
+                .attr("dy", ".35em") // vertical-align: middle
+                .attr("text-anchor", "start") // text-align: right
+                .attr("fill", "black")
+                .attr("stroke", "none")
+                .text(function (d) {
+                    return d3.round(barValue(d), 5);
+                });
+
+            barsContainer.append("line")
+                .attr("y1", -gridChartOffset)
+                .attr("y2", yScale.rangeExtent()[1] + gridChartOffset)
+                .style("stroke", "#000");
+        },
+
 
         processEntry: function (allValues) {
 
@@ -110,13 +230,20 @@
                 if (tableKey === "Best Alignment GO Term ID" && tableValue !== EMPTY_RECORD) {
                     tableValue = "<a href='" + QUICK_GO_API + tableValue + "' target='_blank'>" + tableValue + "</a>";
                 }
-                allValues += "<tr><td style='width: 120px'>" + TARGETS[tableKey] + "</td><td>" + tableValue + "</td></tr>";
+
+                if (tableKey === "Biological Process" || tableKey === "Cellular Component" || tableKey === "Molecular Function") {
+                    allValues += "</table><h4>" + tableKey + "</h4><table class=\"table table-striped\">";
+                } else {
+                    allValues += "<tr><td style='width: 120px'>" + TARGETS[tableKey] + "</td><td>" + tableValue + "</td></tr>";
+                }
             }
 
             return allValues;
         },
 
         processGeneEntry: function (allValues) {
+
+            allValues += "<table class=\"table table-striped\">";
             for (var tableKey in TARGETS_GENE) {
                 var tableValue = this.model.get(tableKey);
                 if (tableValue === null || tableValue === "") {
@@ -295,7 +422,7 @@
             var self = this;
             sigmaView.parseJson(graphFileLocation, function () {
 
-                sigmaView.bind("upnodes",function (nodes) {
+                sigmaView.bind("upnodes", function (nodes) {
 
                     var selectedNodeId = nodes.content[0];
                     activator.activate(selectedNodeId, sigmaView);
