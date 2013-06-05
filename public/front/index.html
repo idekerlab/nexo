@@ -19,11 +19,20 @@
 <!-- Overlay -->
 <div id="mainpanel">
     <div id="title"></div>
-    <form>
-        <div id="search">
-            <input type="text" name="search" value="Search by term name" class="empty"/>
-        </div>
+
+    <form class="form-search">
+        <input type="text" class="input-medium search-query">
+        <button type="button" class="btn btn-primary" data-loading-text="Searching...">Search</button>
     </form>
+    <label class="radio">
+        <input type="radio" name="optionsRadios" id="byKeyword" value="option1" checked>
+        Search by Keywords
+    </label>
+    <label class="radio">
+        <input type="radio" name="optionsRadios" id="byGenes" value="option2">
+        Search by Genes
+    </label>
+
 </div>
 
 <!--<div id="resulttable">-->
@@ -63,8 +72,6 @@
                 <div class="tab-pane fade in active" id="children"></div>
             </div>
         </div>
-
-
     </div>
 </div>
 
@@ -87,8 +94,9 @@
         $(this).tab('show');
     });
 
+    $('#myTab a:last').tab('show');
+    $('#myTab a[href="#details"]').tab('show');
 
-    //    $('#myTab a:last').tab('show');
 
 </script>
 

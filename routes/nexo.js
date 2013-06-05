@@ -87,7 +87,9 @@ exports.getByGeneQuery = function (req, res) {
     var query = req.params.query;
     console.log('Query = ' + query);
 
-    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('Assigned Genes','" + query + "')";
+//    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('Assigned Genes','" + query + "')";
+    var fullUrl = BASE_URL + "tp/gremlin?params={query='"+ query +"'}&script=search()&load=[bygene]" +
+        "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
 
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
@@ -114,7 +116,7 @@ exports.getPath = function (req, res) {
     if (nameSpace === NEXO_NAMESPACE) {
         getGraphUrl = getGraphUrl +
             "g.V.has('name', '" + id +
-            "').as('x').outE('parent_of').inV.loop('x'){it.loops < 15}{it.object.name.equals('joining_root')}.path";
+            "').as('x').outE.inV.loop('x'){it.loops < 15}{it.object.name.equals('joining_root')}.path";
     } else {
         // TODO add handler for other namespace
     }

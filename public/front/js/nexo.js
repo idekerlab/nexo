@@ -55,27 +55,28 @@
         "Biological Process": "",
         "BP Annotation": "Name",
         "BP Definition": "Definition",
-        "BP Score": "Score",
         "Cellular Component": "",
         "CC Annotation": "Name",
         "CC Definition": "Definition",
-        "CC Score": "Score",
         "Molecular Function": "",
         "MF Annotation": "Name",
-        "MF Definition": "Definition",
-        "MF Score": "Score"
+        "MF Definition": "Definition"
     };
 
     var TARGETS_GENE = {
         name: "Gene ID",
         "Assigned Genes": "Gene Name",
-        "Assigned Orfs": "BP Name",
+        "Assigned Orfs": "ORF Name",
         "SGD Gene Description": "Description"
     };
 
     var EMPTY_RECORD = "N/A";
     var QUICK_GO_API = "http://www.ebi.ac.uk/QuickGO/GTerm?id=";
     var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
+
+    var SearchResult = Backbone.Model.extend({
+
+    });
 
     var Node = Backbone.Model.extend({
 
@@ -92,15 +93,21 @@
 
         render: function () {
 
+            var genesTab = $("#genes").empty();
+
             // Manually render summary view.
             var entryId = this.model.get("name");
             var bestAlignedGoCategory = this.model.get("Best Alignment Ontology");
             var alignedCategory = "-";
+            var category = "";
             if (bestAlignedGoCategory !== "" && bestAlignedGoCategory !== null && bestAlignedGoCategory !== "None") {
                 alignedCategory = CATEGORY_MAP[bestAlignedGoCategory];
+                category = bestAlignedGoCategory.toUpperCase();
             }
-            var alighedGo = this.model.get("Best Alignment GO Term ID");
+            var alignedGo = this.model.get("Best Alignment GO Term ID");
             var robustness = this.model.get("Robustness");
+            var interactionDensity = this.model.get("Interaction Density");
+            var bootstrap = this.model.get("Bootstrap");
 
             var summary = "<h3>Term ID: " + entryId + "</h3>";
 
@@ -108,8 +115,12 @@
                 console.log("FOUND! " + entryId);
                 summary += "<table class=\"table table-striped\">";
                 summary += "<tr><td>Robustness</td><td>" + robustness + "</td></tr>";
-                summary += "<tr><td>Aligned GO</td><td>" + alighedGo + "  (" + alignedCategory + ")</td></tr>";
+                summary += "<tr><td>Interaction Density</td><td>" + interactionDensity + "</td></tr>";
+                summary += "<tr><td>Bootstrap</td><td>" + bootstrap + "</td></tr>";
+                summary += "<tr><td>Best Aligned GO</td><td>" + alignedCategory + "</td></tr>";
                 summary = this.processEntry(summary);
+                this.renderChart();
+                this.renderGeneList(this.model.get("Assigned Genes"));
             } else {
                 console.log("NOT FOUND! " + entryId);
                 summary = this.processGeneEntry(summary);
@@ -117,8 +128,23 @@
             summary += "</table>";
 
             this.$el.html(summary).fadeIn(1000);
-            this.renderChart();
+
             return this;
+        },
+
+        renderGeneList: function (geneList) {
+            var genesTab = $("#genes");
+            geneList = geneList.replace("[", "");
+            geneList = geneList.replace("]","");
+            var genes = geneList.split(",");
+
+            var table = "<table class=\"table table-striped\">";
+            for(var i = 0; i<genes.length; i++) {
+                table += "<tr><td>" + genes[i] + "</td></tr>"
+            }
+
+            table += "</table>"
+            genesTab.append(table);
         },
 
         renderChart: function () {
@@ -129,9 +155,6 @@
             data.push({name: "Biological Process", score: bp});
             data.push({name: "Cellular Component", score: cc});
             data.push({name: "Molecular Function", score: mf});
-
-
-
 
             var valueLabelWidth = 170;
             var barHeight = 25; // height of one bar
@@ -223,7 +246,7 @@
 
             for (var tableKey in TARGETS) {
                 var tableValue = this.model.get(tableKey);
-                if (tableValue === null || tableValue === "") {
+                if (tableValue === null || tableValue === "" || tableValue === undefined) {
                     tableValue = EMPTY_RECORD;
                 }
 

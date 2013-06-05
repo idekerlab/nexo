@@ -19,10 +19,10 @@ html, body {
     height: 100%;
     top: 0;
     left: 0;
-    color: #aaaaaa;
+    color: #777777;
     font-weight: 100;
-    font-size: 34px;
-    background: linear-gradient(#555555, white);
+    font-size: 24px;
+    background: linear-gradient(#777777, #dddddd);
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -40,22 +40,23 @@ canvas#sigma_bg_1 {
     margin-top: 10px;
     margin-left: 10px;
     border-radius: 5px;
-    width: 200px;
-    padding-top: 2em;
-    padding-right: 2em;
-    padding-left: 1.5em;
-    padding-bottom: 0;
-    background-color: rgba(230, 230, 230, 0.8);
+    width: 270px;
+    padding-top: 1em;
+    padding-right: 1em;
+    padding-left: 1em;
+    padding-bottom: 1em;
+    background-color: rgba(240, 240, 240, 0.9);
     z-index: 20;
     position: fixed;
     top: 0;
 }
 
 #title {
-    color: #555555;
-    font-weight: 800;
-    font-size: 48px;
-    margin-bottom: 5px;
+    color: #333333;
+    font-weight: 100;
+    font-size: 32px;
+    padding: 0.2em;
+    padding-bottom: 0.5em;
 }
 
 #search {
