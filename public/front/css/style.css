@@ -49,6 +49,7 @@ canvas#sigma_bg_1 {
     z-index: 20;
     position: fixed;
     top: 0;
+
 }
 
 #title {
@@ -351,4 +352,11 @@ canvas#sigma_bg_1 {
 
 #myTab {
     margin: 0;
+}
+
+#results {
+    max-height: 600px;
+
+    overflow-y: scroll;
+    overflow-x: hidden;
 }

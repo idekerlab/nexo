@@ -32,7 +32,7 @@ if ('development' == app.get('env')) {
 
 app.get('/users', user.list);
 app.get('/result', result.index);
-app.get('/search/nexo/:query', nexo.getByQuery);
+app.get('/search/:query', nexo.getByQuery);
 app.get('/search/genes/:query', nexo.getByGeneQuery);
 app.get('/nexo/:id', nexo.getByID);
 

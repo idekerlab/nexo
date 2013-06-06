@@ -9,6 +9,11 @@
 (function () {
     "use strict";
 
+    ////////////////////////////////////////////
+    // Constants
+    ////////////////////////////////////////////
+
+    // Configuration file for this application
     var CONFIG_FILE = "nexo-config.json";
 
     // Presets for sigma.js
@@ -37,14 +42,17 @@
         maxRatio: 20
     };
 
-    var DIM_COLOR = "#333333";
+    // Color for nodes that are not selected
+    var DIM_COLOR = "#aaaaaa";
 
     // IDs & classes in the HTML document
     var ID_NODE_DETAILS = "#details";
 
+    // Search result panel
+    var ID_SEARCH_RESULTS = "#mainpanel";
 
-    /////////// Models ///////////////////
 
+    /////////// For rendering ///////////////////
     var CATEGORY_MAP = {
         bp: "Biological Process",
         cc: "Cellular Component",
@@ -71,12 +79,98 @@
     };
 
     var EMPTY_RECORD = "N/A";
+
+    ////////////////////////////////////////////////////////////////////
+    // Links to other DB
+    ////////////////////////////////////////////////////////////////////
     var QUICK_GO_API = "http://www.ebi.ac.uk/QuickGO/GTerm?id=";
     var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
 
-    var SearchResult = Backbone.Model.extend({
 
+    //////////////////////////////////
+    // Different view for Search results
+    //////////////////////////////////
+
+    var SearchView = Backbone.View.extend({
+
+        render: function () {
+            this.$el.append("<tr><td>" + this.model.get("id") + "</td><td>" + this.model.get("label") + "</td></tr>");
+            return this;
+        }
     });
+
+
+    var SearchViews = Backbone.View.extend({
+
+        events: {
+          "click #search-button": "searchDatabase",
+          "keypress #query": "searchDatabase"
+        },
+
+        initialize: function () {
+            this.collection = new Nodes();
+            $("#result-table").hide();
+            console.log("Result view initialized.  EL = " + this.$el);
+        },
+
+        render: function () {
+            $("#result-table").empty();
+
+            this.collection.each(function (result) {
+                this.renderResult(result);
+            }, this);
+
+        },
+
+        renderResult: function (result) {
+            var resultView = new SearchView({
+                model: result
+            });
+
+            var rendered = resultView.render();
+            console.log("rendered = " + rendered.$el);
+
+            $("#result-table").append(rendered.$el.html()).fadeIn(1000);
+        },
+
+        searchDatabase: function (event) {
+
+            var charCode = event.charCode;
+
+            if (charCode === 13) {
+                event.preventDefault();
+                console.log("Start search... " + $("#query").val());
+
+                var self = this;
+
+                var query = this.parseQuery($("#query").val());
+                $.getJSON("/search/" + query, function (searchResult) {
+                    if(searchResult !== null && searchResult.length !== 0) {
+
+                        console.log("Result = " + JSON.stringify(searchResult));
+                        for(var i=0; i<searchResult.length; i++) {
+                            var node = searchResult[i];
+
+                            var newNode = new Node();
+                            newNode.set("id",node.name);
+                            newNode.set("label", node.Term);
+                            self.collection.add(newNode);
+                        }
+
+                        self.render();
+                    }
+                });
+            }
+
+        },
+
+        parseQuery: function(query) {
+            // Check it contains multiple words or not
+
+            return "*" + query +"*";
+        }
+    });
+
 
     var Node = Backbone.Model.extend({
 
@@ -87,6 +181,7 @@
         }
 
     });
+
 
     var NodeView = Backbone.View.extend({
 
@@ -135,11 +230,11 @@
         renderGeneList: function (geneList) {
             var genesTab = $("#genes");
             geneList = geneList.replace("[", "");
-            geneList = geneList.replace("]","");
+            geneList = geneList.replace("]", "");
             var genes = geneList.split(",");
 
             var table = "<table class=\"table table-striped\">";
-            for(var i = 0; i<genes.length; i++) {
+            for (var i = 0; i < genes.length; i++) {
                 table += "<tr><td>" + genes[i] + "</td></tr>"
             }
 
@@ -296,7 +391,7 @@
         model: Node,
 
         comparator: function (node) {
-            return node.get("id");
+            return node.get("name");
         }
     });
 
@@ -620,5 +715,8 @@
     ///////////// Main ////////////
     var viewManager = new NodeListView();
     var nexo = new NexoApp(CONFIG_FILE, viewManager);
+
+    // For displaying search result
+    var searchView = new SearchViews({el: $(ID_SEARCH_RESULTS)});
 
 })();

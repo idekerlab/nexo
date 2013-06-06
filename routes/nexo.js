@@ -56,22 +56,15 @@ exports.getByQuery = function (req, res) {
     var query = req.params.query;
     console.log('Query = ' + query);
 
-
-    var fullUrl = BASE_URL + "tp/gremlin?script=g.V.filter{" +
-        "it.'CC Definition'.contains('" + query + "')||it.'BP Definition'.contains('" + query + "')||" +
-        "it.'MF Definition'.contains('" + query + "')||it.'Assigned Orfs'.contains('" + query + "')||" +
-        "it.'Assigned Genes'.contains('" + query + "')}";
-
-    var searchUrl1 = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('','GO*')";
-    var searchUrl2 = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name','GO*')";
-    fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name','GO*')";
+    var fullUrl = BASE_URL + "tp/gremlin?params={query:'"+ query +"'}&script=keywordSearch()&load=[bykeyword]"
+        + "&rexster.returnKeys=[name,Term]";
 
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
             var results = JSON.parse(body);
             var resultArray = results.results;
-            if (resultArray.length != 0) {
+            if (resultArray !== null && resultArray !== undefined && resultArray.length !== 0) {
                 res.json(resultArray);
             } else {
                 res.json(EMPTY_ARRAY);
@@ -87,7 +80,6 @@ exports.getByGeneQuery = function (req, res) {
     var query = req.params.query;
     console.log('Query = ' + query);
 
-//    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('Assigned Genes','" + query + "')";
     var fullUrl = BASE_URL + "tp/gremlin?params={query='"+ query +"'}&script=search()&load=[bygene]" +
         "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
 
