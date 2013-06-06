@@ -3,8 +3,6 @@
 <head>
     <title>NeXO Web: Next Generation Ontology Browser</title>
     <meta charset="utf-8">
-
-    <link rel="stylesheet" href="js/fancybox/jquery.fancybox.css"/>
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/style.css"/>
 </head>
@@ -16,7 +14,7 @@
 
 <!-- Overlay -->
 <div id="mainpanel">
-    <h3 id="title"></h3>
+    <h4 id="title"></h4>
 
     <form class="form-search">
         <input id="query" type="text" class="input-medium">
@@ -50,9 +48,7 @@
 
 <!--Details for clicked node -->
 <div id="attributepane">
-    <div class="left-close">
-        <button class="btn" type="button">Close</button>
-    </div>
+    <button id="close-button" class="btn" type="button">Close</button>
 
     <div class="headertext"></div>
     <div class="subnetwork"></div>
@@ -72,11 +68,9 @@
 </div>
 
 <!-- Scripts TODO: use require.js -->
-
 <script src="js/jquery/jquery.min.js"></script>
 <script src="js/sigma/sigma.min.js"></script>
 <script src="js/sigma/sigma.parseJson.js"></script>
-<script src="js/fancybox/jquery.fancybox.pack.js"></script>
 <script src="js/underscore.js/underscore.js"></script>
 <script src="js/backbone/backbone.js"></script>
 <script src="js/bootstrap.min.js"></script>
@@ -92,6 +86,5 @@
     $('#result-tab a:last').tab('show');
     $('#result-tab a[href="#details"]').tab('show');
 </script>
-
 </body>
 </html>

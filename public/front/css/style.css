@@ -65,10 +65,10 @@ html, body {
     line-height: 1.1em;
 }
 
-.left-close {
+#close-button {
     float: right;
-    z-index: 99999;
-    cursor: pointer;
+    z-index: 999;
+    margin-top: 1em;
 }
 
 #commands {
@@ -147,7 +147,7 @@ html, body {
     margin-bottom: 0;
 }
 
-#myTab {
+#result-tab {
     margin: 0;
 }
 

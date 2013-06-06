@@ -43,7 +43,7 @@
     };
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "#aaaaaa";
+    var DIM_COLOR = "#bbbbbb";
 
     // IDs & classes in the HTML document
     var ID_NODE_DETAILS = "#details";
@@ -480,11 +480,7 @@
 
         initView: function (config) {
             // #title
-            $("#title").html(config.text.title);
-
-            // #titletext
-            $("#titletext").html(config.text.intro);
-
+            $("#title").html(config.title);
             this.initNetworkView(config);
         },
 
@@ -697,10 +693,11 @@
             $(".headertext").empty().append(node.label);
 
             // Show the summary panel
-            $("#attributepane").animate({width: 'show'}, 250);
+            $("#attributepane").fadeIn(200);
 
-            $("#attributepane .left-close").click(function () {
-                $("#attributepane").fadeOut(400);
+            // Hide
+            $("#close-button").click( function () {
+                $("#attributepane").fadeOut(200);
             });
         },
 

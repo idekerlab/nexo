@@ -108,7 +108,7 @@ exports.getPath = function (req, res) {
     if (nameSpace === NEXO_NAMESPACE) {
         getGraphUrl = getGraphUrl +
             "g.V.has('name', '" + id +
-            "').as('x').outE.inV.loop('x'){it.loops < 15}{it.object.name.equals('joining_root')}.path";
+            "').as('x').outE.inV.loop('x'){it.loops < 12}{it.object.name.equals('joining_root')}.path";
     } else {
         // TODO add handler for other namespace
     }
