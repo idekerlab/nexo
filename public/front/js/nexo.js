@@ -103,18 +103,19 @@
     var SearchViews = Backbone.View.extend({
 
         events: {
-          "click #search-button": "searchDatabase",
+          "click #search-button": "searchButtonPressed",
           "keypress #query": "searchDatabase"
         },
 
         initialize: function () {
             this.collection = new Nodes();
             $("#result-table").hide();
-            console.log("Result view initialized.  EL = " + this.$el);
         },
 
         render: function () {
+            console.log("Removing...");
             $("#result-table").empty();
+            console.log("Removing DONE!!");
 
             this.collection.each(function (result) {
                 this.renderResult(result);
@@ -133,34 +134,48 @@
             $("#result-table").append(rendered.$el.html()).fadeIn(1000);
         },
 
-        searchDatabase: function (event) {
+        search: function(query) {
+            var self = this;
 
+            this.collection.reset();
+
+            $.getJSON("/search/" + query, function (searchResult) {
+                if(searchResult !== null && searchResult.length !== 0) {
+
+                    console.log("Result = " + JSON.stringify(searchResult));
+                    for(var i=0; i<searchResult.length; i++) {
+                        var node = searchResult[i];
+
+                        var newNode = new Node();
+                        newNode.set("id",node.name);
+                        newNode.set("label", node.Term);
+                        self.collection.add(newNode);
+                    }
+
+                    self.render();
+                }
+            });
+        },
+
+        searchDatabase: function (event) {
             var charCode = event.charCode;
 
+            // Enter key
             if (charCode === 13) {
                 event.preventDefault();
-                console.log("Start search... " + $("#query").val());
-
-                var self = this;
-
                 var query = this.parseQuery($("#query").val());
-                $.getJSON("/search/" + query, function (searchResult) {
-                    if(searchResult !== null && searchResult.length !== 0) {
-
-                        console.log("Result = " + JSON.stringify(searchResult));
-                        for(var i=0; i<searchResult.length; i++) {
-                            var node = searchResult[i];
-
-                            var newNode = new Node();
-                            newNode.set("id",node.name);
-                            newNode.set("label", node.Term);
-                            self.collection.add(newNode);
-                        }
-
-                        self.render();
-                    }
-                });
+                this.search(query);
             }
+
+        },
+
+        searchButtonPressed: function() {
+            var originalQuery = $("#query").val();
+            if(originalQuery === null || originalQuery.length === 0) {
+                return;
+            }
+
+            this.search(this.parseQuery(originalQuery));
 
         },
 
