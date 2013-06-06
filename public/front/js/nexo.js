@@ -643,8 +643,34 @@
             });
         },
 
+
+        showAdditionalParents: function(sigmaView, targetNodes, node) {
+
+            var parentIds = [];
+
+            var queryUrl = "/nexo/" + node.id + "/parents";
+            console.log("Parent query = " + queryUrl);
+
+            $.getJSON(queryUrl, function (parents) {
+                if(parents !== null && parents.length !== 0) {
+
+                    console.log("Result = " + JSON.stringify(parents));
+                    for(var i=0; i<parents.length; i++) {
+                        var parent = parents[i];
+
+                        targetNodes[parent.name] = true;
+                    }
+                    this.highlight(sigmaView, targetNodes);
+                }
+            });
+        },
+
+
         showPath: function (sigmaView, path) {
 
+            if(path.elements === undefined) {
+                return;
+            }
             var pathNodes = path.elements.nodes;
 
             // Boolean map for enable/disable nodes.
@@ -658,6 +684,12 @@
                     targetNodes[sigmaNode.id] = true;
                 }
             }
+
+            this.highlight(sigmaView, targetNodes);
+
+        },
+
+        highlight: function(sigmaView, targetNodes) {
 
             sigmaView
                 .iterEdges(function (edge) {
@@ -694,6 +726,7 @@
 
                 .draw(2, 2, 2);
         }
+
     };
 
 
@@ -715,6 +748,7 @@
                 $("#attributepane").fadeOut(200);
             });
         },
+
 
         zoomTo: function (node, sigmaView) {
             sigmaView.position(0, 0, 1).draw();

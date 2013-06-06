@@ -56,7 +56,7 @@ exports.getByQuery = function (req, res) {
     var query = req.params.query;
     console.log('Query = ' + query);
 
-    var fullUrl = BASE_URL + "tp/gremlin?params={query:'"+ query +"'}&script=keywordSearch()&load=[bykeyword]"
+    var fullUrl = BASE_URL + "tp/gremlin?params={query:'" + query + "'}&script=keywordSearch()&load=[bykeyword]"
         + "&rexster.returnKeys=[name,Term]";
 
     console.log('FULL URL = ' + fullUrl);
@@ -80,7 +80,7 @@ exports.getByGeneQuery = function (req, res) {
     var query = req.params.query;
     console.log('Query = ' + query);
 
-    var fullUrl = BASE_URL + "tp/gremlin?params={query='"+ query +"'}&script=search()&load=[bygene]" +
+    var fullUrl = BASE_URL + "tp/gremlin?params={query='" + query + "'}&script=search()&load=[bygene]" +
         "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
 
     console.log('FULL URL = ' + fullUrl);
@@ -106,9 +106,10 @@ exports.getPath = function (req, res) {
 
     var getGraphUrl = BASE_URL + "tp/gremlin?script=";
     if (nameSpace === NEXO_NAMESPACE) {
-        getGraphUrl = getGraphUrl +
-            "g.V.has('name', '" + id +
-            "').as('x').outE.inV.loop('x'){it.loops < 12}{it.object.name.equals('joining_root')}.path";
+        getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
+            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
+            "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
+            "{it.object.name.equals('joining_root')}.path&rexster.returnKeys=[name]";
     } else {
         // TODO add handler for other namespace
     }
@@ -128,6 +129,32 @@ exports.getPath = function (req, res) {
     });
 };
 
+
+exports.getAllParents = function (req, res) {
+    "use strict";
+
+    var id = req.params.id;
+
+    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+
+    getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
+        ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}" +
+        ".inV&rexster.returnKeys=[name]";
+
+    console.log('URL = ' + getGraphUrl);
+
+    request.get(getGraphUrl, function (err, rest_res, body) {
+        if (!err) {
+            var results = JSON.parse(body);
+            var resultArray = results.results;
+            if (resultArray !== undefined && resultArray.length !== 0) {
+                res.json(resultArray);
+            } else {
+                res.json(EMPTY_ARRAY);
+            }
+        }
+    });
+};
 exports.getPathCytoscape = function (req, res) {
 
     var fullUrl = "http://localhost:3000/nexo/" + req.params.id + "/path";

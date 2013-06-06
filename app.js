@@ -26,7 +26,7 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
-if ('development' == app.get('env')) {
+if ('development' === app.get('env')) {
   app.use(express.errorHandler());
 }
 
@@ -38,6 +38,8 @@ app.get('/nexo/:id', nexo.getByID);
 
 app.get('/:namespace/:id/path', nexo.getPath);
 app.get('/nexo/:id/path.json', nexo.getPathCytoscape);
+app.get('/nexo/:id/parents', nexo.getAllParents);
+
 app.get('/nexoview/:id', nexoView.showSummary);
 
 http.createServer(app).listen(app.get('port'), function(){
