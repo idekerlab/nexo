@@ -13,7 +13,9 @@
     var CONFIG_FILE = "nexo-config.json";
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "#bbbbbb";
+    var DIM_COLOR = "#999999";
+    var SELECTED_NODE_COLOR = "#11cDcD";
+    var SELECTED_NODE_SIZE = 17;
 
     // Tags in the HTML document
     var ID_NODE_DETAILS = "#details";
@@ -79,7 +81,7 @@
             var sigmaView = this.get("renderingEngine");
             sigmaView.active = false;
             sigmaView.neighbors = {};
-            sigmaView.detail = true;
+            sigmaView.detail = false;
 
             this.fetch({
                 success: function (data) {
@@ -134,18 +136,17 @@
             });
 
             var sigmaView = this.model.get("renderingEngine");
+
             sigmaView.bind("upnodes", function (nodes) {
 
                 var selectedNodeId = nodes.content[0];
-                //activator.activate(selectedNodeId, sigmaView);
-                self.trigger("nodeSelected", selectedNodeId);
-
                 var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
-                //self.viewManager.selected(selectedNode);
+
+                self.trigger("nodeSelected", selectedNodeId);
                 self.findPath(sigmaView, selectedNode);
             });
 
-            self.bindZoomCommands();
+            self.bindCommands();
         },
 
         render: function () {
@@ -153,7 +154,24 @@
         },
 
 
-        bindZoomCommands: function () {
+        selectNodes: function (selectedNodes) {
+
+            var targetNodes = [];
+            var sigmaView = this.model.get("renderingEngine");
+            for (var i = 0; i < selectedNodes.length; i++) {
+                var id = selectedNodes[i].id;
+                var sigmaNode = sigmaView._core.graph.nodesIndex[id];
+                if (sigmaNode !== null) {
+                    targetNodes[sigmaNode.id] = true;
+                    console.log("SIGMA Selected:" + sigmaNode.id);
+                }
+            }
+
+            this.highlight(targetNodes, true);
+        },
+
+
+        bindCommands: function () {
             var self = this;
             var sigmaView = this.model.get("renderingEngine");
 
@@ -204,21 +222,6 @@
             });
         },
 
-        refresh: function (sigmaView) {
-
-            console.log("Refresh view.");
-
-            sigmaView
-                .iterEdges(function (edge) {
-                    edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
-                    edge.attr.grey = 0;
-                })
-                .iterNodes(function (node) {
-                    node.color = node.attr.grey ? node.attr.true_color : node.color;
-                    node.attr.grey = 0;
-                    node.forceLabel = false;
-                }).draw(2, 2, 2);
-        },
 
         findPath: function (sigmaView, selectedNode) {
             var self = this;
@@ -271,46 +274,65 @@
                 }
             }
 
-            this.highlight(sigmaView, targetNodes);
+            this.highlight(targetNodes, false);
 
         },
 
-        highlight: function (sigmaView, targetNodes) {
+
+        refresh: function () {
+
+            var sigmaView = this.model.get("renderingEngine");
 
             sigmaView
                 .iterEdges(function (edge) {
+                    edge.color = edge.attr.original_color;
+                    edge.attr.grey = false;
+                })
+                .iterNodes(function (node) {
+                    node.color = node.attr.original_color;
+                    node.attr.grey = false;
+                    node.forceLabel = false;
+                }).draw(2, 2, 2);
+        },
+
+        highlight: function (targetNodes, nodesOnly) {
+
+            var sigmaView = this.model.get("renderingEngine");
+
+            if (nodesOnly === false) {
+                sigmaView.iterEdges(function (edge) {
                     var sourceId = edge.source.id;
                     var targetId = edge.target.id;
 
                     if (targetNodes[sourceId] === null && targetNodes[targetId] === null) {
                         // Not on the path.  DIM all of those.
                         if (!edge.attr.grey) {
-                            edge.attr.true_color = edge.color;
+                            edge.attr.original_color = edge.color;
                             edge.color = DIM_COLOR;
-                            edge.attr.grey = 1;
+                            edge.attr.grey = true;
                         }
                     } else {
-                        edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
+                        edge.color = edge.attr.grey ? edge.attr.original_color : edge.color;
                         edge.attr.grey = false;
                     }
-                })
+                });
+            }
 
-                .iterNodes(function (node) {
-                    if (!targetNodes[node.id]) {
-                        if (!node.attr.grey) {
-                            node.attr.true_color = node.color;
-                            node.color = DIM_COLOR;
-                            node.attr.grey = true;
-                            node.forceLabel = false;
-                        }
-                    } else {
-                        node.color = node.attr.grey ? node.attr.true_color : node.color;
-                        node.attr.grey = false;
-                        node.forceLabel = true;
-                    }
-                })
+            sigmaView.iterNodes(function (node) {
+                if(node.color !== SELECTED_NODE_COLOR && node.color !== DIM_COLOR) {
+                    node.attr.original_color = node.color;
+                }
 
-                .draw(2, 2, 2);
+                if (!targetNodes[node.id]) {
+                    node.color = DIM_COLOR;
+                    node.attr.grey = true;
+                    node.forceLabel = false;
+                } else {
+                    node.color = SELECTED_NODE_COLOR;
+                    node.attr.grey = false;
+                    node.forceLabel = true;
+                }
+            }).draw(2, 2, 2);
         }
     });
 
@@ -354,6 +376,14 @@
                 console.log("App model initialized");
 
                 var selectedNodes = new NodeListView();
+                var searchView = new SearchViews({el: $(ID_SEARCH_RESULTS)});
+
+                searchView.collection.on("nodesSelected", function (nodes) {
+
+
+                    self.model.get("nexoDagView").selectNodes(nodes);
+                });
+
                 // Register listener
                 self.model.get("nexoDagView").on("nodeSelected", function (selectedNodeId) {
 
@@ -383,12 +413,12 @@
     });
 
 
-
     //////////////////////////////////
     // Different view for Search results
     //////////////////////////////////
 
     var SearchView = Backbone.View.extend({
+        model: Node,
 
         render: function () {
             this.$el.append("<tr><td>" + this.model.get("id") + "</td><td>" + this.model.get("label") + "</td></tr>");
@@ -426,7 +456,6 @@
             });
 
             var rendered = resultView.render();
-            console.log("rendered = " + rendered.$el);
 
             $("#result-table").append(rendered.$el.html()).fadeIn(1000);
         },
@@ -439,7 +468,6 @@
             $.getJSON("/search/" + query, function (searchResult) {
                 if (searchResult !== null && searchResult.length !== 0) {
 
-                    console.log("Result = " + JSON.stringify(searchResult));
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
 
@@ -448,6 +476,8 @@
                         newNode.set("label", node.Term);
                         self.collection.add(newNode);
                     }
+
+                    self.collection.trigger("nodesSelected", self.collection.models);
 
                     self.render();
                 }
@@ -763,10 +793,9 @@
         }
     });
 
-    ///////////// Main ////////////
-    var app = new Nexo();
-    // For displaying search result
-    var searchView = new SearchViews({el: $(ID_SEARCH_RESULTS)});
 
+    ////////////////// Start App /////////////////////////////////
+
+    var app = new Nexo();
 
 })();
