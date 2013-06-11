@@ -9,50 +9,16 @@
 (function () {
     "use strict";
 
-    ////////////////////////////////////////////
-    // Constants
-    ////////////////////////////////////////////
-
     // Configuration file for this application
     var CONFIG_FILE = "nexo-config.json";
-
-    // Presets for sigma.js
-    var DEF_DRAWING_PROPS = {
-        defaultLabelColor: "#000",
-        defaultLabelSize: 14,
-        defaultLabelBGColor: "#ddd",
-        defaultHoverLabelBGColor: "#002147",
-        defaultLabelHoverColor: "#fff",
-        labelThreshold: 10,
-        defaultEdgeType: "curve",
-        hoverFontStyle: "bold",
-        fontStyle: "bold",
-        activeFontStyle: "bold"
-    };
-
-    var DEF_GRAPH_PROPS = {
-        minNodeSize: 1,
-        maxNodeSize: 7,
-        minEdgeSize: 0.2,
-        maxEdgeSize: 0.5
-    };
-
-    var DEF_MOUSE_PROPS = {
-        minRatio: 0.75,
-        maxRatio: 20
-    };
 
     // Color for nodes that are not selected
     var DIM_COLOR = "#bbbbbb";
 
-    // IDs & classes in the HTML document
+    // Tags in the HTML document
     var ID_NODE_DETAILS = "#details";
-
-    // Search result panel
     var ID_SEARCH_RESULTS = "#mainpanel";
 
-
-    /////////// For rendering ///////////////////
     var CATEGORY_MAP = {
         bp: "Biological Process",
         cc: "Cellular Component",
@@ -87,6 +53,337 @@
     var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
 
 
+    // Network: Internally, store data as cytoscape.js style.
+
+    // Network object stored as Cytoscape.js style
+    var Network = Backbone.Model.extend({
+
+        // Only for getting data from fixed file location
+        urlRoot: "/front/data",
+
+        initialize: function () {
+            var self = this;
+
+            var networkConfig = this.get("config");
+            console.log("Net conf = " + networkConfig);
+            this.id = networkConfig.networkData;
+            var drawingProps = networkConfig.sigma.drawingProperties;
+            var graphProps = networkConfig.sigma.graphProperties;
+            var mouseProps = networkConfig.sigma.mouseProperties;
+
+            this.set({renderingEngine: sigma.init(document.getElementById("sigma-canvas")).
+                drawingProperties(drawingProps).
+                graphProperties(graphProps).
+                mouseProperties(mouseProps)});
+
+            var sigmaView = this.get("renderingEngine");
+            sigmaView.active = false;
+            sigmaView.neighbors = {};
+            sigmaView.detail = true;
+
+            this.fetch({
+                success: function (data) {
+                    var attr = data.attributes;
+                    self.convertGraph(attr.nodes, attr.edges);
+                    self.trigger("ready");
+                }
+            });
+        },
+
+        convertGraph: function (nodes, edges) {
+            var numberOfNodes = nodes.length;
+            for (var idx = 0; idx < numberOfNodes; idx++) {
+                var id = nodes[idx].id;
+                this.get("renderingEngine").addNode(id, nodes[idx]);
+            }
+
+            var numberOfEdges = edges.length;
+            for (idx = 0; idx < numberOfEdges; idx++) {
+                var originalEdge = edges[idx];
+
+                var source = originalEdge.source;
+                var target = originalEdge.target;
+                var label = originalEdge.relationship;
+                var weight = originalEdge.weight;
+                var edgeId = idx;
+
+                var edge = {
+                    "source": source,
+                    "target": target,
+                    "weight": weight,
+                    "label": label,
+                    "id": edgeId.toString(),
+                    "attr": {}
+                };
+                this.get("renderingEngine").addEdge(edgeId, source, target, edge);
+            }
+        }
+
+    });
+
+
+    var NetworkView = Backbone.View.extend({
+
+        model: Network,
+
+        initialize: function () {
+            var self = this;
+            this.model.once("ready", function () {
+                console.log("Render called");
+                self.render();
+            });
+
+            var sigmaView = this.model.get("renderingEngine");
+            sigmaView.bind("upnodes", function (nodes) {
+
+                var selectedNodeId = nodes.content[0];
+                //activator.activate(selectedNodeId, sigmaView);
+                self.trigger("nodeSelected", selectedNodeId);
+
+                var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
+                //self.viewManager.selected(selectedNode);
+                self.findPath(sigmaView, selectedNode);
+            });
+
+            self.bindZoomCommands();
+        },
+
+        render: function () {
+            this.model.get("renderingEngine").draw();
+        },
+
+
+        bindZoomCommands: function () {
+            var self = this;
+            var sigmaView = this.model.get("renderingEngine");
+
+            $("#commands").find("div.z").each(function () {
+
+                var zoomButton = $(this);
+                var zoomCommand = zoomButton.attr("rel");
+
+                zoomButton.click(function () {
+
+                    if (zoomCommand === "center") {
+                        // Fit to window
+                        sigmaView.position(0, 0, 1).draw();
+                    } else {
+                        // Zoom in/out
+                        var sigmaCore = sigmaView._core;
+                        var ratio = 1;
+
+                        if (zoomCommand === "in") {
+                            ratio = 1.5;
+                        } else if (zoomCommand === "out") {
+                            ratio = 0.5;
+                        }
+
+                        sigmaView.zoomTo(
+                            sigmaCore.domElements.nodes.width / 2,
+                            sigmaCore.domElements.nodes.height / 2,
+                            sigmaCore.mousecaptor.ratio * ratio
+                        );
+                    }
+
+                });
+            });
+
+            $("#commands").find("div.s").each(function () {
+
+                var button = $(this);
+                var command = button.attr("rel");
+
+                button.click(function () {
+
+                    if (command === "switch") {
+                        // Fit to window
+                        self.refresh(sigmaView);
+                    }
+
+                });
+            });
+        },
+
+        refresh: function (sigmaView) {
+
+            console.log("Refresh view.");
+
+            sigmaView
+                .iterEdges(function (edge) {
+                    edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
+                    edge.attr.grey = 0;
+                })
+                .iterNodes(function (node) {
+                    node.color = node.attr.grey ? node.attr.true_color : node.color;
+                    node.attr.grey = 0;
+                    node.forceLabel = false;
+                }).draw(2, 2, 2);
+        },
+
+        findPath: function (sigmaView, selectedNode) {
+            var self = this;
+            var nodeId = selectedNode.id;
+            var url = "/nexo/" + nodeId + "/path.json";
+            $.getJSON(url, function (path) {
+                self.showPath(sigmaView, path);
+            });
+        },
+
+
+        showAdditionalParents: function (sigmaView, targetNodes, node) {
+
+            var parentIds = [];
+
+            var queryUrl = "/nexo/" + node.id + "/parents";
+            console.log("Parent query = " + queryUrl);
+
+            $.getJSON(queryUrl, function (parents) {
+                if (parents !== null && parents.length !== 0) {
+
+                    console.log("Result = " + JSON.stringify(parents));
+                    for (var i = 0; i < parents.length; i++) {
+                        var parent = parents[i];
+
+                        targetNodes[parent.name] = true;
+                    }
+                    this.highlight(sigmaView, targetNodes);
+                }
+            });
+        },
+
+
+        showPath: function (sigmaView, path) {
+
+            if (path.elements === undefined) {
+                return;
+            }
+            var pathNodes = path.elements.nodes;
+
+            // Boolean map for enable/disable nodes.
+            var targetNodes = {};
+
+            for (var i = 0; i < pathNodes.length; i++) {
+                var cytoscapejsNode = pathNodes[i];
+                var id = cytoscapejsNode.data.id;
+                var sigmaNode = sigmaView._core.graph.nodesIndex[id];
+                if (sigmaNode !== null) {
+                    targetNodes[sigmaNode.id] = true;
+                }
+            }
+
+            this.highlight(sigmaView, targetNodes);
+
+        },
+
+        highlight: function (sigmaView, targetNodes) {
+
+            sigmaView
+                .iterEdges(function (edge) {
+                    var sourceId = edge.source.id;
+                    var targetId = edge.target.id;
+
+                    if (targetNodes[sourceId] === null && targetNodes[targetId] === null) {
+                        // Not on the path.  DIM all of those.
+                        if (!edge.attr.grey) {
+                            edge.attr.true_color = edge.color;
+                            edge.color = DIM_COLOR;
+                            edge.attr.grey = 1;
+                        }
+                    } else {
+                        edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
+                        edge.attr.grey = false;
+                    }
+                })
+
+                .iterNodes(function (node) {
+                    if (!targetNodes[node.id]) {
+                        if (!node.attr.grey) {
+                            node.attr.true_color = node.color;
+                            node.color = DIM_COLOR;
+                            node.attr.grey = true;
+                            node.forceLabel = false;
+                        }
+                    } else {
+                        node.color = node.attr.grey ? node.attr.true_color : node.color;
+                        node.attr.grey = false;
+                        node.forceLabel = true;
+                    }
+                })
+
+                .draw(2, 2, 2);
+        }
+    });
+
+    // Application configuration
+    var NexoAppModel = Backbone.Model.extend({
+
+        initialize: function () {
+            var self = this;
+            var settingFile = this.get("settingFileLocation");
+            $.getJSON(settingFile, function (configObject) {
+                self.defaults = configObject;
+
+                console.log("Got config: " + JSON.stringify(self.defaults));
+                // Load networks
+                self.loadNetworks();
+
+                self.trigger("initialized");
+            });
+        },
+
+        loadNetworks: function () {
+            var nexoDag = new Network({config: this.defaults});
+            var nexoView = new NetworkView({model: nexoDag});
+            this.set({nexoDagView: nexoView });
+        }
+    });
+
+
+    // Bootstrapping the app
+    var Nexo = Backbone.View.extend({
+        model: NexoAppModel,
+
+        el: "body",
+
+        initialize: function () {
+            var self = this;
+            this.model = new NexoAppModel({settingFileLocation: CONFIG_FILE});
+
+            this.model.once("initialized", function () {
+
+                console.log("App model initialized");
+
+                var selectedNodes = new NodeListView();
+                // Register listener
+                self.model.get("nexoDagView").on("nodeSelected", function (selectedNodeId) {
+
+                    var node = self.model.get("nexoDagView").model.get("renderingEngine")._core.graph.nodesIndex[selectedNodeId];
+                    self.showSummaryPanel(node);
+                    selectedNodes.selected(node);
+                });
+
+                self.render();
+            });
+
+
+        },
+
+        showSummaryPanel: function (node) {
+
+            $(".headertext").empty().append(node.label);
+
+            // Show the summary panel
+            $("#attributepane").fadeIn(200);
+
+            // Hide
+            $("#close-button").click(function () {
+                $("#attributepane").fadeOut(200);
+            });
+        }
+    });
+
+
+
     //////////////////////////////////
     // Different view for Search results
     //////////////////////////////////
@@ -103,8 +400,8 @@
     var SearchViews = Backbone.View.extend({
 
         events: {
-          "click #search-button": "searchButtonPressed",
-          "keypress #query": "searchDatabase"
+            "click #search-button": "searchButtonPressed",
+            "keypress #query": "searchDatabase"
         },
 
         initialize: function () {
@@ -134,20 +431,20 @@
             $("#result-table").append(rendered.$el.html()).fadeIn(1000);
         },
 
-        search: function(query) {
+        search: function (query) {
             var self = this;
 
             this.collection.reset();
 
             $.getJSON("/search/" + query, function (searchResult) {
-                if(searchResult !== null && searchResult.length !== 0) {
+                if (searchResult !== null && searchResult.length !== 0) {
 
                     console.log("Result = " + JSON.stringify(searchResult));
-                    for(var i=0; i<searchResult.length; i++) {
+                    for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
 
                         var newNode = new Node();
-                        newNode.set("id",node.name);
+                        newNode.set("id", node.name);
                         newNode.set("label", node.Term);
                         self.collection.add(newNode);
                     }
@@ -169,9 +466,9 @@
 
         },
 
-        searchButtonPressed: function() {
+        searchButtonPressed: function () {
             var originalQuery = $("#query").val();
-            if(originalQuery === null || originalQuery.length === 0) {
+            if (originalQuery === null || originalQuery.length === 0) {
                 return;
             }
 
@@ -179,10 +476,10 @@
 
         },
 
-        parseQuery: function(query) {
+        parseQuery: function (query) {
             // Check it contains multiple words or not
 
-            return "*" + query +"*";
+            return "*" + query + "*";
         }
     });
 
@@ -199,7 +496,6 @@
 
 
     var NodeView = Backbone.View.extend({
-
 
         render: function () {
 
@@ -408,6 +704,7 @@
         comparator: function (node) {
             return node.get("name");
         }
+
     });
 
     var NodeListView = Backbone.View.extend({
@@ -419,7 +716,6 @@
         },
 
         render: function () {
-
             this.collection.each(function (node) {
                 console.log("Rendering Node = " + node);
                 this.renderNode(node);
@@ -467,302 +763,10 @@
         }
     });
 
-
-    // Inject dependency: Backbone MV
-    var NexoApp = function (configFileUrl, viewManager) {
-        this.appConfig = {};
-        this.viewManager = viewManager;
-
-        this.initialize(configFileUrl);
-    };
-
-    NexoApp.prototype = {
-
-        getConfig: function () {
-            return this.appConfig;
-        },
-
-
-        initialize: function (configFileUrl) {
-            var self = this;
-
-            $.getJSON(configFileUrl, function (configObject) {
-                self.appConfig = configObject;
-
-                $(document).ready(self.initView(self.appConfig));
-            });
-        },
-
-        initView: function (config) {
-            // #title
-            $("#title").html(config.title);
-            this.initNetworkView(config);
-        },
-
-
-        initNetworkView: function (config) {
-
-            // Network data location
-            var dataFileLocation = config.data;
-
-            var drawingProps;
-            var graphProps;
-            var mouseProps;
-
-            if (config.sigma === undefined) {
-                throw new Error("Sigma configuration is missing.");
-            }
-
-            if (config.sigma.drawingProperties) {
-                drawingProps = config.sigma.drawingProperties;
-            } else {
-                drawingProps = DEF_DRAWING_PROPS;
-            }
-
-            if (config.sigma.graphProperties) {
-                graphProps = config.sigma.graphProperties;
-            } else {
-                graphProps = DEF_GRAPH_PROPS;
-            }
-
-            if (config.sigma.mouseProperties) {
-                mouseProps = config.sigma.mouseProperties;
-            } else {
-                mouseProps = DEF_MOUSE_PROPS;
-            }
-
-            var sigmaView = sigma.init(
-                    document.getElementById("sigma-canvas")).
-                drawingProperties(drawingProps).
-                graphProperties(graphProps).
-                mouseProperties(mouseProps);
-            sigmaView.active = !1;
-            sigmaView.neighbors = {};
-            sigmaView.detail = !1;
-
-            this.render(sigmaView, dataFileLocation);
-        },
-
-        render: function (sigmaView, graphFileLocation) {
-
-            var config = this.getConfig();
-            var activator = new NodeActivator(config);
-
-            var self = this;
-            sigmaView.parseJson(graphFileLocation, function () {
-
-                sigmaView.bind("upnodes", function (nodes) {
-
-                    var selectedNodeId = nodes.content[0];
-                    activator.activate(selectedNodeId, sigmaView);
-
-                    var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
-                    self.viewManager.selected(selectedNode);
-                    self.findPath(sigmaView, selectedNode);
-                });
-
-                self.zoomAction(sigmaView);
-
-                // Render the view.
-                sigmaView.draw();
-            });
-        },
-
-        zoomAction: function (sigmaView) {
-            var self = this;
-
-            $("#commands").find("div.z").each(function () {
-
-                var zoomButton = $(this);
-                var zoomCommand = zoomButton.attr("rel");
-
-                zoomButton.click(function () {
-
-                    if (zoomCommand === "center") {
-                        // Fit to window
-                        sigmaView.position(0, 0, 1).draw();
-                    } else {
-                        // Zoom in/out
-                        var sigmaCore = sigmaView._core;
-                        var ratio = 1;
-
-                        if (zoomCommand === "in") {
-                            ratio = 1.5;
-                        } else if (zoomCommand === "out") {
-                            ratio = 0.5;
-                        }
-
-                        sigmaView.zoomTo(
-                            sigmaCore.domElements.nodes.width / 2,
-                            sigmaCore.domElements.nodes.height / 2,
-                            sigmaCore.mousecaptor.ratio * ratio
-                        );
-                    }
-
-                });
-            });
-
-            $("#commands").find("div.s").each(function () {
-
-                var button = $(this);
-                var command = button.attr("rel");
-
-                button.click(function () {
-
-                    if (command === "switch") {
-                        // Fit to window
-                        self.refresh(sigmaView);
-                    }
-
-                });
-            });
-        },
-
-        refresh: function (sigmaView) {
-
-            console.log("Refresh view.");
-
-            sigmaView
-                .iterEdges(function (edge) {
-                    edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
-                    edge.attr.grey = 0;
-                })
-                .iterNodes(function (node) {
-                    node.color = node.attr.grey ? node.attr.true_color : node.color;
-                    node.attr.grey = 0;
-                    node.forceLabel = false;
-                }).draw(2, 2, 2);
-        },
-
-        findPath: function (sigmaView, selectedNode) {
-            var self = this;
-            var nodeId = selectedNode.id;
-            var url = "/nexo/" + nodeId + "/path.json";
-            $.getJSON(url, function (path) {
-                self.showPath(sigmaView, path);
-            });
-        },
-
-
-        showAdditionalParents: function(sigmaView, targetNodes, node) {
-
-            var parentIds = [];
-
-            var queryUrl = "/nexo/" + node.id + "/parents";
-            console.log("Parent query = " + queryUrl);
-
-            $.getJSON(queryUrl, function (parents) {
-                if(parents !== null && parents.length !== 0) {
-
-                    console.log("Result = " + JSON.stringify(parents));
-                    for(var i=0; i<parents.length; i++) {
-                        var parent = parents[i];
-
-                        targetNodes[parent.name] = true;
-                    }
-                    this.highlight(sigmaView, targetNodes);
-                }
-            });
-        },
-
-
-        showPath: function (sigmaView, path) {
-
-            if(path.elements === undefined) {
-                return;
-            }
-            var pathNodes = path.elements.nodes;
-
-            // Boolean map for enable/disable nodes.
-            var targetNodes = {};
-
-            for (var i = 0; i < pathNodes.length; i++) {
-                var cytoscapejsNode = pathNodes[i];
-                var id = cytoscapejsNode.data.id;
-                var sigmaNode = sigmaView._core.graph.nodesIndex[id];
-                if (sigmaNode !== null) {
-                    targetNodes[sigmaNode.id] = true;
-                }
-            }
-
-            this.highlight(sigmaView, targetNodes);
-
-        },
-
-        highlight: function(sigmaView, targetNodes) {
-
-            sigmaView
-                .iterEdges(function (edge) {
-                    var sourceId = edge.source.id;
-                    var targetId = edge.target.id;
-
-                    if (targetNodes[sourceId] === null && targetNodes[targetId] === null) {
-                        // Not on the path.  DIM all of those.
-                        if (!edge.attr.grey) {
-                            edge.attr.true_color = edge.color;
-                            edge.color = DIM_COLOR;
-                            edge.attr.grey = 1;
-                        }
-                    } else {
-                        edge.color = edge.attr.grey ? edge.attr.true_color : edge.color;
-                        edge.attr.grey = false;
-                    }
-                })
-
-                .iterNodes(function (node) {
-                    if (!targetNodes[node.id]) {
-                        if (!node.attr.grey) {
-                            node.attr.true_color = node.color;
-                            node.color = DIM_COLOR;
-                            node.attr.grey = true;
-                            node.forceLabel = false;
-                        }
-                    } else {
-                        node.color = node.attr.grey ? node.attr.true_color : node.color;
-                        node.attr.grey = false;
-                        node.forceLabel = true;
-                    }
-                })
-
-                .draw(2, 2, 2);
-        }
-
-    };
-
-
-    var NodeActivator = function (appConfig) {
-        this.appConfig = appConfig;
-    };
-
-    NodeActivator.prototype = {
-        activate: function (nodeIndex, sigmaView) {
-            var node = sigmaView._core.graph.nodesIndex[nodeIndex];
-
-            $(".headertext").empty().append(node.label);
-
-            // Show the summary panel
-            $("#attributepane").fadeIn(200);
-
-            // Hide
-            $("#close-button").click( function () {
-                $("#attributepane").fadeOut(200);
-            });
-        },
-
-
-        zoomTo: function (node, sigmaView) {
-            sigmaView.position(0, 0, 1).draw();
-            sigmaView.zoomTo(node.displayX, node.displayY, 20);
-            sigmaView.draw(2, 2, 2);
-        }
-    };
-
-
     ///////////// Main ////////////
-    var viewManager = new NodeListView();
-    var nexo = new NexoApp(CONFIG_FILE, viewManager);
-
+    var app = new Nexo();
     // For displaying search result
     var searchView = new SearchViews({el: $(ID_SEARCH_RESULTS)});
+
 
 })();

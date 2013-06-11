@@ -1,7 +1,5 @@
 {
-    "title": "NeXO",
-
-    "data": "data/nexo2.json",
+    "networkData": "nexo2.json",
 
     "sigma": {
         "drawingProperties": {
@@ -11,7 +9,7 @@
             "defaultHoverLabelBGColor": "#cccccc",
             "defaultLabelHoverColor": "#555",
             "labelThreshold": 10,
-            "font": "Helvetica Neue",
+            "font": "Quicksand",
             "defaultEdgeType": "line",
             "hoverFontStyle": "normal",
             "fontStyle": "normal",
