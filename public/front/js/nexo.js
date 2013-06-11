@@ -5,6 +5,7 @@
 /* global Backbone */
 /* global sigma */
 /* global d3 */
+/* global $ */
 
 (function () {
     "use strict";
@@ -168,6 +169,16 @@
             }
 
             this.highlight(targetNodes, true);
+        },
+
+        zoomTo: function(id) {
+            console.log("Zooming to " + id);
+//            function MyZoomToId(a){
+//                var b =  sigInst._core.graph.nodesIndex[a];
+//                sigInst.position(0,0,1).draw();
+//                sigInst.zoomTo(b['displayX'],b['displayY'],80);
+//                sigInst.draw(2,2,2);
+//            }
         },
 
 
@@ -379,9 +390,11 @@
                 var searchView = new SearchViews({el: $(ID_SEARCH_RESULTS)});
 
                 searchView.collection.on("nodesSelected", function (nodes) {
-
-
                     self.model.get("nexoDagView").selectNodes(nodes);
+                });
+
+                searchView.collection.on("listNodeSelected", function (id) {
+                    self.model.get("nexoDagView").zoomTo(id);
                 });
 
                 // Register listener
@@ -440,9 +453,16 @@
         },
 
         render: function () {
-            console.log("Removing...");
-            $("#result-table").empty();
+            var self = this;
+
+            var resultTableElement = $("#result-table");
+            resultTableElement.empty();
             console.log("Removing DONE!!");
+
+            $("#result-table tr").live("click", function(){
+                var id = $(this).children("td")[0].firstChild.nodeValue;
+                self.collection.trigger("listNodeSelected", id);
+            });
 
             this.collection.each(function (result) {
                 this.renderResult(result);
