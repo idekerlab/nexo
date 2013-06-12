@@ -79,7 +79,7 @@ html, body {
 
 #commands {
     opacity: 0.7;
-    z-index: 999;
+    z-index: 100;
     position: fixed;
     left: 20px;
     bottom: 25px;
@@ -181,4 +181,8 @@ html, body {
 #result-table tr:active {
     color: #ef8283;
     background-color:rgba(250,0,0,0.5);
+}
+
+#myModal {
+    z-index: 200;
 }
