@@ -41,11 +41,13 @@
 
 <!-- Navigation UI -->
 <div id="commands">
-    <div class="z" rel="in"></div>
+    <div class="z" rel="in">
+    </div>
     <div class="z" rel="out"></div>
     <div class="z" rel="center"></div>
 
-    <div class="s" rel="switch"></div>
+    <div class="s" rel="refresh"></div>
+    <div class="s" rel="swap" title="Current Ontology"></div>
     <div class="s" rel="settings"></div>
 </div>
 
@@ -74,7 +76,7 @@
 <!-- Scripts TODO: use require.js -->
 <script src="js/jquery/jquery.min.js"></script>
 <script src="js/async/async.js"></script>
-<script src="js/sigma/sigma.min.js"></script>
+<script src="js/sigma/sigma.concat.js"></script>
 <script src="js/underscore.js/underscore.js"></script>
 <script src="js/backbone/backbone.js"></script>
 <script src="js/bootstrap.min.js"></script>
@@ -89,6 +91,8 @@
 
     $('#result-tab a:last').tab('show');
     $('#result-tab a[href="#details"]').tab('show');
+
+
 </script>
 </body>
 </html>

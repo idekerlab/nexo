@@ -1,0 +1,37 @@
+{
+    "networkData": "bp-info.json",
+
+    "sigma": {
+        "drawingProperties": {
+            "defaultLabelColor": "#eeeeee",
+            "defaultLabelSize": 24,
+            "defaultLabelBGColor": "#fff",
+            "defaultHoverLabelBGColor": "#fff",
+            "defaultLabelHoverColor": "#555",
+            "labelThreshold": 7,
+            "font": "Quicksand",
+            "defaultLabelColor": "#32CCB6",
+
+            "defaultEdgeType": "line",
+            "hoverFontStyle": "normal",
+            "fontStyle": "bold",
+            "activeFontStyle": "normal",
+            "edgeColor": "default",
+            "defaultEdgeColor": "#28222A",
+            "defaultNodeColor": "red",
+            "defaultNodeActiveColor": "pink",
+            "defaultNodeBorderColor": "yellow",
+            "defaultNodeHoverColor": "green"
+        },
+        "graphProperties": {
+            "minNodeSize": 1.5,
+            "maxNodeSize": 2,
+            "minEdgeSize": 0.5,
+            "maxEdgeSize": 2
+        },
+        "mouseProperties": {
+            "minRatio": 0.7,
+            "maxRatio": 150
+        }
+    }
+}

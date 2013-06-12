@@ -1,5 +1,5 @@
 {
-    "networkData": "nexo2.json",
+    "networkData": "bp-info.json",
 
     "sigma": {
         "drawingProperties": {
@@ -8,18 +8,26 @@
             "defaultLabelBGColor": "#ddd",
             "defaultHoverLabelBGColor": "#cccccc",
             "defaultLabelHoverColor": "#555",
-            "labelThreshold": 10,
+            "labelThreshold": 5,
+            "labelSize": "proportional",
             "font": "Quicksand",
             "defaultEdgeType": "line",
             "hoverFontStyle": "normal",
-            "fontStyle": "normal",
-            "activeFontStyle": "normal"
+            "fontStyle": "bold",
+            "activeFontStyle": "normal",
+            "edgeColor": "default",
+            "defaultEdgeColor": "#666666",
+            "defaultNodeColor": "red",
+            "defaultNodeActiveColor": "pink",
+            "defaultNodeBorderColor": "yellow",
+            "defaultNodeHoverColor": "green"
+
         },
         "graphProperties": {
-            "minNodeSize": 0.5,
-            "maxNodeSize": 18,
+            "minNodeSize": 1.5,
+            "maxNodeSize": 2,
             "minEdgeSize": 0.2,
-            "maxEdgeSize": 20
+            "maxEdgeSize": 5
         },
         "mouseProperties": {
             "minRatio": 0.7,

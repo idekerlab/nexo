@@ -1649,7 +1649,7 @@ sigma.classes.EventDispatcher = function () {
             //   - 'fixed'
             //   - 'proportional'
             labelSize: 'fixed',
-            defaultLabelSize: 12, // for fixed display only
+            defaultLabelSize: 24, // for fixed display only
             labelSizeRatio: 2,    // for proportional display only
             labelThreshold: 6,
             font: 'Arial',
@@ -1667,12 +1667,12 @@ sigma.classes.EventDispatcher = function () {
             //   - default (then defaultEdgeColor or edge['color']
             //              will be used instead)
             edgeColor: 'source',
-            defaultEdgeColor: '#aaa',
+            defaultEdgeColor: '#ccc',
             defaultEdgeType: 'line',
             // ------
             // NODES:
             // ------
-            defaultNodeColor: '#aaa',
+            defaultNodeColor: '#f00',
             // HOVER:
             //   Node hover color:
             //   - 'node'

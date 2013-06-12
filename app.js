@@ -23,7 +23,7 @@ app.use(express.logger('dev'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '/public')));
 
 // development only
 if ('development' === app.get('env')) {
@@ -34,7 +34,7 @@ app.get('/users', user.list);
 app.get('/result', result.index);
 app.get('/search/:query', nexo.getByQuery);
 app.get('/search/genes/:query', nexo.getByGeneQuery);
-app.get('/nexo/:id', nexo.getByID);
+app.get('/:namespace/:id', nexo.getByID);
 
 app.get('/:namespace/:id/path', nexo.getPath);
 app.get('/nexo/:id/path.json', nexo.getPathCytoscape);

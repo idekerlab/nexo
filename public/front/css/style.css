@@ -15,10 +15,11 @@ html, body {
     height: 100%;
     top: 0;
     left: 0;
-    color: #222222;
+    color: #888888;
     font-weight: 100;
     font-size: 24px;
-    background: linear-gradient(#777777, #dddddd);
+    /*background: linear-gradient(#777777, #dddddd);*/
+    background-color: #f7f8f2;
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -116,7 +117,11 @@ html, body {
     background-image: url('../images/zoomout.png');
 }
 
-#commands .s[rel=switch] {
+#commands .s[rel=swap] {
+    background-image: url('../images/swap.png');
+}
+
+#commands .s[rel=refresh] {
     background-image: url('../images/switch.png');
 }
 

@@ -25,14 +25,15 @@ exports.getByID = function (req, res) {
 
     "use strict";
 
-    var nameSpace = "nexo";
     var id = req.params.id;
+    var nameSpace = req.params.namespace;
 
     var fullUrl = BASE_URL + "vertices/?key=name&value=";
+
     if (nameSpace === NEXO_NAMESPACE) {
         fullUrl = fullUrl + id;
     } else {
-        fullUrl = fullUrl + nameSpace + ":" + id;
+        fullUrl = fullUrl + nameSpace.toUpperCase() + ":" + id;
     }
 
     console.log("URL = " + fullUrl);

@@ -11,7 +11,7 @@
     "use strict";
 
     // Configuration file for this application
-    var CONFIG_FILE = "nexo-config.json";
+    var CONFIG_FILE = "../nexo-config.json";
 
     // Color for nodes that are not selected
     var DIM_COLOR = "#999999";
@@ -164,29 +164,38 @@
                 var sigmaNode = sigmaView._core.graph.nodesIndex[id];
                 if (sigmaNode !== null) {
                     targetNodes[sigmaNode.id] = true;
-                    console.log("SIGMA Selected:" + sigmaNode.id);
                 }
             }
 
             this.highlight(targetNodes, true);
         },
 
-        zoomTo: function(id) {
+        zoomTo: function (id) {
+            var lastNode = this.model.get("lastSelected");
+            console.log("Last = " + lastNode);
             console.log("Zooming to " + id);
-//            function MyZoomToId(a){
-//                var b =  sigInst._core.graph.nodesIndex[a];
-//                sigInst.position(0,0,1).draw();
-//                sigInst.zoomTo(b['displayX'],b['displayY'],80);
-//                sigInst.draw(2,2,2);
-//            }
+            if (lastNode != null) {
+                // Clear last selection
+                lastNode.color = lastNode.original_color;
+                lastNode.original_color = null;
+            }
+            var sigmaView = this.model.get("renderingEngine");
+            var node = sigmaView._core.graph.nodesIndex[id];
+            node.original_color = node.color;
+            node.color = "red";
+            sigmaView.position(0, 0, 1).draw();
+            sigmaView.zoomTo(node['displayX'], node['displayY'], 80);
+            sigmaView.draw(2, 2, 2);
+            this.model.set("lastSelected", node);
         },
 
 
         bindCommands: function () {
             var self = this;
             var sigmaView = this.model.get("renderingEngine");
+            var commands = $("#commands");
 
-            $("#commands").find("div.z").each(function () {
+            commands.find("div.z").each(function () {
 
                 var zoomButton = $(this);
                 var zoomCommand = zoomButton.attr("rel");
@@ -217,19 +226,27 @@
                 });
             });
 
-            $("#commands").find("div.s").each(function () {
+            commands.find("div.s").each(function () {
 
                 var button = $(this);
                 var command = button.attr("rel");
 
-                button.click(function () {
+                button.popover({ placement: 'top', trigger: 'hover'});
 
-                    if (command === "switch") {
-                        // Fit to window
-                        self.refresh(sigmaView);
-                    }
+                if (command === "swap") {
+                    button.hover(function () {
+                        button.attr("data-content", "NeXO Tree");
+                        console.log("Update called");
+                    });
+                    button.click(function () {
+                        console.log("Update called");
+                    });
+                } else if (command === "refresh") {
+                    button.click(function () {
+                        console.log("Refresh called");
+                    });
+                }
 
-                });
             });
         },
 
@@ -311,26 +328,42 @@
             var sigmaView = this.model.get("renderingEngine");
 
             if (nodesOnly === false) {
+
                 sigmaView.iterEdges(function (edge) {
+                    if (edge.color !== SELECTED_NODE_COLOR && edge.color !== DIM_COLOR) {
+                        edge.attr.original_color = edge.color;
+                    }
                     var sourceId = edge.source.id;
                     var targetId = edge.target.id;
 
                     if (targetNodes[sourceId] === null && targetNodes[targetId] === null) {
                         // Not on the path.  DIM all of those.
                         if (!edge.attr.grey) {
-                            edge.attr.original_color = edge.color;
                             edge.color = DIM_COLOR;
                             edge.attr.grey = true;
                         }
                     } else {
-                        edge.color = edge.attr.grey ? edge.attr.original_color : edge.color;
+                        if (edge.attr.grey) {
+                            edge.color = SELECTED_NODE_COLOR;
+                        }
                         edge.attr.grey = false;
                     }
                 });
+            } else {
+                sigmaView.iterEdges(function (edge) {
+                    if (edge.color !== SELECTED_NODE_COLOR && edge.color !== DIM_COLOR) {
+                        edge.attr.original_color = edge.color;
+                    }
+
+                    edge.color = DIM_COLOR;
+                    edge.attr.grey = true;
+
+                });
+                console.log("%%%%%%%%%%%%%%% edge clear");
             }
 
             sigmaView.iterNodes(function (node) {
-                if(node.color !== SELECTED_NODE_COLOR && node.color !== DIM_COLOR) {
+                if (node.color !== SELECTED_NODE_COLOR && node.color !== DIM_COLOR) {
                     node.attr.original_color = node.color;
                 }
 
@@ -454,12 +487,11 @@
 
         render: function () {
             var self = this;
-
             var resultTableElement = $("#result-table");
             resultTableElement.empty();
             console.log("Removing DONE!!");
 
-            $("#result-table tr").live("click", function(){
+            $("#result-table tr").live("click", function () {
                 var id = $(this).children("td")[0].firstChild.nodeValue;
                 self.collection.trigger("listNodeSelected", id);
             });
@@ -467,7 +499,6 @@
             this.collection.each(function (result) {
                 this.renderResult(result);
             }, this);
-
         },
 
         renderResult: function (result) {
@@ -476,7 +507,6 @@
             });
 
             var rendered = resultView.render();
-
             $("#result-table").append(rendered.$el.html()).fadeIn(1000);
         },
 
@@ -553,6 +583,13 @@
 
             // Manually render summary view.
             var entryId = this.model.get("name");
+            if(entryId.indexOf("GO:") != -1) {
+                var summary = "<h3>Term ID: " + entryId + "</h3>";
+                this.$el.html(summary).fadeIn(1000);
+
+                return this;
+            }
+
             var bestAlignedGoCategory = this.model.get("Best Alignment Ontology");
             var alignedCategory = "-";
             var category = "";
@@ -586,6 +623,10 @@
             this.$el.html(summary).fadeIn(1000);
 
             return this;
+        },
+
+        renderGO: function() {
+
         },
 
         renderGeneList: function (geneList) {
