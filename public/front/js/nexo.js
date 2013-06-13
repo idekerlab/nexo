@@ -11,16 +11,21 @@
     "use strict";
 
     // Configuration file for this application
-    var CONFIG_FILE = "../nexo-config.json";
+    var CONFIG_FILE = "../app-config.json";
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "#999999";
+    var DIM_COLOR = "rgba(230,230,230,0.4)";
     var SELECTED_NODE_COLOR = "#11cDcD";
     var SELECTED_NODE_SIZE = 17;
 
     // Tags in the HTML document
     var ID_NODE_DETAILS = "#details";
     var ID_SEARCH_RESULTS = "#mainpanel";
+
+    // Events for module-module communication
+    var INITIALIZED = "initialized";
+
+    var DEFAULT_NETWORK = "NeXO";
 
     var CATEGORY_MAP = {
         bp: "Biological Process",
@@ -54,9 +59,6 @@
     ////////////////////////////////////////////////////////////////////
     var QUICK_GO_API = "http://www.ebi.ac.uk/QuickGO/GTerm?id=";
     var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
-
-
-    // Network: Internally, store data as cytoscape.js style.
 
     // Network object stored as Cytoscape.js style
     var Network = Backbone.Model.extend({
@@ -126,6 +128,12 @@
 
 
     var NetworkView = Backbone.View.extend({
+
+        el: "#sigma-canvas",
+
+        events: {
+            "dblclick": "refresh"
+        },
 
         model: Network,
 
@@ -236,7 +244,6 @@
                 if (command === "swap") {
                     button.hover(function () {
                         button.attr("data-content", "NeXO Tree");
-                        console.log("Update called");
                     });
                     button.click(function () {
                         console.log("Update called");
@@ -244,6 +251,7 @@
                 } else if (command === "refresh") {
                     button.click(function () {
                         console.log("Refresh called");
+                        self.refresh();
                     });
                 }
 
@@ -301,14 +309,11 @@
                     targetNodes[sigmaNode.id] = true;
                 }
             }
-
             this.highlight(targetNodes, false);
-
         },
 
 
         refresh: function () {
-
             var sigmaView = this.model.get("renderingEngine");
 
             sigmaView
@@ -328,24 +333,21 @@
             var sigmaView = this.model.get("renderingEngine");
 
             if (nodesOnly === false) {
-
                 sigmaView.iterEdges(function (edge) {
                     if (edge.color !== SELECTED_NODE_COLOR && edge.color !== DIM_COLOR) {
                         edge.attr.original_color = edge.color;
                     }
-                    var sourceId = edge.source.id;
-                    var targetId = edge.target.id;
+                    var sourceId = edge.source;
+                    var targetId = edge.target;
 
-                    if (targetNodes[sourceId] === null && targetNodes[targetId] === null) {
+                    if (targetNodes[sourceId] === undefined || targetNodes[targetId] === undefined) {
                         // Not on the path.  DIM all of those.
                         if (!edge.attr.grey) {
                             edge.color = DIM_COLOR;
                             edge.attr.grey = true;
                         }
                     } else {
-                        if (edge.attr.grey) {
-                            edge.color = SELECTED_NODE_COLOR;
-                        }
+                        edge.color = SELECTED_NODE_COLOR;
                         edge.attr.grey = false;
                     }
                 });
@@ -359,7 +361,6 @@
                     edge.attr.grey = true;
 
                 });
-                console.log("%%%%%%%%%%%%%%% edge clear");
             }
 
             sigmaView.iterNodes(function (node) {
@@ -385,20 +386,32 @@
 
         initialize: function () {
             var self = this;
-            var settingFile = this.get("settingFileLocation");
-            $.getJSON(settingFile, function (configObject) {
-                self.defaults = configObject;
+            $.getJSON(self.get("settingFileLocation"), function (configObject) {
+                self.set("appConfig", configObject);
 
-                console.log("Got config: " + JSON.stringify(self.defaults));
+                console.log("Application config: " + JSON.stringify(self.get("appConfig")));
+
                 // Load networks
                 self.loadNetworks();
 
-                self.trigger("initialized");
+                // Fire event: Application is ready to use.
+                self.trigger(INITIALIZED);
             });
         },
 
         loadNetworks: function () {
-            var nexoDag = new Network({config: this.defaults});
+            var networks = this.get("appConfig").networks;
+
+            var nexoConfig = {};
+            for(var i = 0; i<networks.length; i++) {
+                var network = networks[i];
+                if(network.name === DEFAULT_NETWORK) {
+                    nexoConfig = network;
+                    break;
+                }
+            }
+
+            var nexoDag = new Network({config: nexoConfig});
             var nexoView = new NetworkView({model: nexoDag});
             this.set({nexoDagView: nexoView });
         }
@@ -415,7 +428,7 @@
             var self = this;
             this.model = new NexoAppModel({settingFileLocation: CONFIG_FILE});
 
-            this.model.once("initialized", function () {
+            this.model.once(INITIALIZED, function () {
 
                 console.log("App model initialized");
 

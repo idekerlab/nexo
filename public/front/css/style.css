@@ -18,8 +18,9 @@ html, body {
     color: #888888;
     font-weight: 100;
     font-size: 24px;
-    /*background: linear-gradient(#777777, #dddddd);*/
-    background-color: #f7f8f2;
+    background: linear-gradient(#f0f0f0, #f7f8f2);
+    /*background-color: #f7f8f2;*/
+    /*background-color: #000000;*/
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;

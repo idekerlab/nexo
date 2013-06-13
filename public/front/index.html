@@ -16,7 +16,6 @@
 <!-- Main Network View -->
 <div class="overview" id="sigma-canvas"></div>
 
-<!-- Overlay -->
 <div id="mainpanel">
     <h1 id="title"></h1>
 
@@ -65,17 +64,16 @@
     <div class="modal-body">
         <ul id="trees" class="nav nav-list">
             <li class="nav-header">NeXO (Machine generated hierarchy from interaction data)</li>
-            <li><a href="#">NeXO Tree</a></li>
+            <li><a href="">NeXO Tree</a></li>
             <li class="divider"></li>
             <li class="nav-header">Gene Ontology</li>
-            <li><a href="#">Biological Process</a></li>
-            <li><a href="#">Celular Component</a></li>
-            <li><a href="#">Molecular Function</a></li>
+            <li><a href="">Biological Process</a></li>
+            <li><a href="">Celular Component</a></li>
+            <li><a href="">Molecular Function</a></li>
         </ul>
     </div>
     <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button class="btn btn-primary" data-dismiss="modal">Save changes</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Apply</button>
     </div>
 </div>
 
@@ -121,12 +119,27 @@
 
     $('#myModal').modal({backdrop: false, show: false});
 
-    $('#trees li').click(function(e) {
-        var selected = $(this);
+
+    var treeItems = $('#trees li');
+    var selected = null;
+    treeItems.click(function (e) {
+        selected = $(this);
         if (!selected.hasClass('active')) {
             selected.addClass('active');
+            console.log("Activating: " + selected.first().text());
         }
         e.preventDefault();
+
+        var selectedName = selected.first().text();
+        treeItems.each(function () {
+
+            //console.log("Selected === " + selected.first().text());
+            if (selectedName !== $(this).first().text() && $(this).hasClass("active")) {
+
+                console.log("Disable: " + $(this).first().text());
+                $(this).removeClass("active");
+            }
+        });
     });
 </script>
 </body>
