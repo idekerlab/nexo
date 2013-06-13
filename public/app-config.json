@@ -9,25 +9,21 @@
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelColor": "#eeeeee",
                     "defaultLabelSize": 24,
                     "defaultLabelBGColor": "#fff",
                     "defaultHoverLabelBGColor": "#fff",
                     "defaultLabelHoverColor": "#555",
                     "labelThreshold": 10,
                     "font": "Quicksand",
-                    "defaultLabelColor": "#32CCB6",
+                    "defaultLabelColor": "#4C4C4C",
 
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
-                    "fontStyle": "bold",
+                    "fontStyle": "oblique",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(96,96,96,0.4)",
-                    "defaultNodeColor": "red",
-                    "defaultNodeActiveColor": "pink",
-                    "defaultNodeBorderColor": "yellow",
-                    "defaultNodeHoverColor": "green"
+                    "defaultEdgeColor": "rgba(106,106,106,0.4)",
+                    "defaultNodeActiveColor": "black"
                 },
                 "graphProperties": {
                     "minNodeSize": 0.5,

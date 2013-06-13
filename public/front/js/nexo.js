@@ -14,8 +14,8 @@
     var CONFIG_FILE = "../app-config.json";
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "rgba(230,230,230,0.4)";
-    var SELECTED_NODE_COLOR = "#11cDcD";
+    var DIM_COLOR = "rgba(230,230,230,0.6)";
+    var SELECTED_NODE_COLOR = "rgba(70,130,180,0.9)";
     var SELECTED_NODE_SIZE = 17;
 
     // Tags in the HTML document
@@ -411,6 +411,7 @@
                 }
             }
 
+            $("#network-title").html(nexoConfig.name);
             var nexoDag = new Network({config: nexoConfig});
             var nexoView = new NetworkView({model: nexoDag});
             this.set({nexoDagView: nexoView });
@@ -472,10 +473,8 @@
     });
 
 
-    //////////////////////////////////
-    // Different view for Search results
-    //////////////////////////////////
 
+    //
     var SearchView = Backbone.View.extend({
         model: Node,
 
@@ -561,18 +560,30 @@
 
         searchButtonPressed: function () {
             var originalQuery = $("#query").val();
-            if (originalQuery === null || originalQuery.length === 0) {
+
+            // Ignore empty
+            if (!originalQuery || originalQuery === "") {
                 return;
             }
 
+            // Validate input
             this.search(this.parseQuery(originalQuery));
 
         },
 
         parseQuery: function (query) {
             // Check it contains multiple words or not
+            var entries = query.split(" ");
 
-            return "*" + query + "*";
+            var newQuery = "";
+            for(var i = 0; i<entries.length; i++) {
+                if(i != entries.length - 1) {
+                    newQuery += "*" + entries[i] + "* OR ";
+                } else {
+                    newQuery += "*" + entries[i] + "*";
+                }
+            }
+            return newQuery;
         }
     });
 
@@ -869,7 +880,6 @@
 
 
     ////////////////// Start App /////////////////////////////////
-
     var app = new Nexo();
 
 })();

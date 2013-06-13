@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>NeXO Web: Next Generation Ontology Browser</title>
     <meta charset="utf-8">
 
     <!-- For Web Fonts -->
-    <link href='http://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Quicksand:300,400,700' rel='stylesheet'>
 
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/style.css"/>
@@ -17,11 +17,12 @@
 <div class="overview" id="sigma-canvas"></div>
 
 <div id="mainpanel">
-    <h1 id="title"></h1>
+    <div id="network-title"></div>
 
     <form class="form-search">
-        <input id="query" type="text" class="input-medium">
-        <button id="search-button" type="button" class="btn">Search</button>
+        <input id="query" type="text" class="input-medium flat">
+        <button id="search-button" type="button" class="flat-btn">Search</button>
+        <button id="help-button" type="button" class="flat-btn">?</button>
     </form>
     <label class="radio">
         <input type="radio" name="optionsRadios" id="byKeyword" value="option1" checked>
@@ -45,11 +46,9 @@
     <div class="z" rel="out"></div>
     <div class="z" rel="center"></div>
 
-    <div class="s" rel="refresh"></div>
     <a href="#myModal" data-toggle="modal">
         <div class="s" rel="swap" title="Current Ontology"></div>
     </a>
-
     <div class="s" rel="settings"></div>
 
 
@@ -79,7 +78,7 @@
 
 <!--Details for clicked node -->
 <div id="attributepane">
-    <button id="close-button" class="btn" type="button">Close</button>
+    <button id="close-button" class="flat-btn" type="button">Close</button>
 
     <div class="headertext"></div>
     <div class="subnetwork"></div>
