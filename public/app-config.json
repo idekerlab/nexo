@@ -13,8 +13,8 @@
                     "defaultLabelBGColor": "#fff",
                     "defaultHoverLabelBGColor": "#fff",
                     "defaultLabelHoverColor": "#555",
-                    "labelThreshold": 10,
-                    "font": "Quicksand",
+                    "labelThreshold": 5,
+                    "font": "Raleway",
                     "defaultLabelColor": "#4C4C4C",
 
                     "defaultEdgeType": "line",

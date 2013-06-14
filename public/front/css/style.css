@@ -1,5 +1,5 @@
 @font-face {
-    font-family: 'Quicksand', sans-serif;
+    font-family: 'Raleway', sans-serif;
 }
 
 html, body {
@@ -7,12 +7,12 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: "Quicksand";
-    font-weight: 300;
+    font-family: Raleway;
+    font-weight: 400;
 }
 
 .flat-btn {
-    font-family: "Quicksand";
+    font-family: Raleway;
     font-weight: 700;
     font-size: 14px;
     background-color: #009ccc;
@@ -69,15 +69,14 @@ html, body {
     padding-top: 5px;
 }
 
-#attributepane {
+#summary-panel {
     display: none;
     position: absolute;
     height: auto;
     bottom: 0;
     top: 0;
     right: 0;
-    width: 500px;
-    margin-right: 10px;
+    width: 400px;
     word-wrap: break-word;
     overflow-y: auto;
     background-color: rgba(255, 255, 255, 0.95);
@@ -206,4 +205,23 @@ html, body {
 
 #myModal {
     z-index: 200;
+}
+
+#draggable {
+    width: 600px;
+    height: 400px;
+    padding: 0.5em;
+    background-color: #434343;
+    opacity: 0.5;
+    z-index: 99;
+
+     margin-top: 10px;
+    margin-left: 10px;
+    padding-top: 1em;
+    padding-right: 1em;
+    padding-left: 1em;
+    padding-bottom: 1em;
+    position: fixed;
+    top: 0;
+
 }

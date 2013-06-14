@@ -30,13 +30,13 @@ if ('development' === app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/users', user.list);
-app.get('/result', result.index);
+// Search queries
 app.get('/search/:query', nexo.getByQuery);
 app.get('/search/genes/:query', nexo.getByGeneQuery);
-app.get('/:namespace/:id', nexo.getByID);
-app.get('/search/:id/interactions', nexo.getRawInteractions);
 
+// ID query
+app.get('/:namespace/:id', nexo.getByID);
+app.get('/:namespace/:id/interactions', nexo.getRawInteractions);
 app.get('/:namespace/:id/path', nexo.getPath);
 app.get('/nexo/:id/path.json', nexo.getPathCytoscape);
 app.get('/nexo/:id/parents', nexo.getAllParents);

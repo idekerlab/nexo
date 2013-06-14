@@ -103,10 +103,13 @@ exports.getRawInteractions = function (req, res) {
     "use strict";
 
     var id = req.params.id;
+    var namespace = req.params.namespace;
+
     // Query should be list of genes
     console.log('ID = ' + id);
 
     var fullUrl = BASE_URL + "vertices/?key=name&value=" + id + "&rexster.returnKeys=[name,Assigned Genes]";
+
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
             var results = JSON.parse(body);
@@ -118,11 +121,9 @@ exports.getRawInteractions = function (req, res) {
                 genes = genes.replace(/ /g, "");
                 genes = genes.replace(/,/g, " ");
 
-
                 var nextUrl = BASE_URL + "tp/gremlin?params={query='" + genes +
                     "'}&script=getRawInteractions()&load=[getinteractions]" +
                     "&rexster.returnKeys=[name,Assigned Genes]";
-
 
                 console.log("URL == " + nextUrl);
                 request.get(nextUrl, function (err2, rest_res2, body2) {
@@ -136,7 +137,6 @@ exports.getRawInteractions = function (req, res) {
                         }
                     }
                 });
-
             } else {
                 res.json(EMPTY_OBJ);
             }

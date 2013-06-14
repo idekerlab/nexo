@@ -16,14 +16,11 @@
     // Color for nodes that are not selected
     var DIM_COLOR = "rgba(230,230,230,0.6)";
     var SELECTED_NODE_COLOR = "rgba(70,130,180,0.9)";
-    var SELECTED_NODE_SIZE = 17;
 
     // Tags in the HTML document
     var ID_NODE_DETAILS = "#details";
+    var ID_SUMMARY_PANEL = "#summary-panel";
     var ID_SEARCH_RESULTS = "#mainpanel";
-
-    // Events for module-module communication
-    var INITIALIZED = "initialized";
 
     var DEFAULT_NETWORK = "NeXO";
 
@@ -60,6 +57,39 @@
     var QUICK_GO_API = "http://www.ebi.ac.uk/QuickGO/GTerm?id=";
     var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
 
+
+    /*
+     EventHelper (Mediator): This object listens to all events.
+     */
+    var eventHelper = _.extend({}, Backbone.Events);
+
+
+    /*
+     Custom Events
+     */
+    var NETWORK_LOADED = "networkLoaded";
+    var INITIALIZED = "initialized";
+    var NODE_SELECTED = "nodeSelected";
+    var NODES_SELECTED = "nodesSelected";
+    var SEARCH_RESULT_SELECTED = "searchResultSelected";
+
+    /*
+     Network States
+     */
+    var SELECTED_NODE_ID = "selectedNodeId";
+
+
+    var CyNetwork = Backbone.Model.extend({
+
+        urlRoot: "/",
+
+        initialize: function () {
+            this.id = this.get("namespace") + "/" + this.get("termId") + "/interactions";
+            console.log("ID = " + this.id);
+        }
+    });
+
+
     // Network object stored as Cytoscape.js style
     var Network = Backbone.Model.extend({
 
@@ -90,7 +120,7 @@
                 success: function (data) {
                     var attr = data.attributes;
                     self.convertGraph(attr.nodes, attr.edges);
-                    self.trigger("ready");
+                    self.trigger(NETWORK_LOADED);
                 }
             });
         },
@@ -123,11 +153,12 @@
                 this.get("renderingEngine").addEdge(edgeId, source, target, edge);
             }
         }
-
     });
 
 
     var NetworkView = Backbone.View.extend({
+
+        model: Network,
 
         el: "#sigma-canvas",
 
@@ -135,14 +166,8 @@
             "dblclick": "refresh"
         },
 
-        model: Network,
-
         initialize: function () {
             var self = this;
-            this.model.once("ready", function () {
-                console.log("Render called");
-                self.render();
-            });
 
             var sigmaView = this.model.get("renderingEngine");
 
@@ -151,11 +176,16 @@
                 var selectedNodeId = nodes.content[0];
                 var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
 
-                self.trigger("nodeSelected", selectedNodeId);
+                // Fire nodeSelected event.
+                self.trigger(NODE_SELECTED, selectedNodeId);
+
                 self.findPath(sigmaView, selectedNode);
             });
 
             self.bindCommands();
+
+            // Render the network once its model is ready.
+            eventHelper.listenToOnce(this.model, NETWORK_LOADED, _.bind(this.render, this));
         },
 
         render: function () {
@@ -192,7 +222,7 @@
             node.original_color = node.color;
             node.color = "red";
             sigmaView.position(0, 0, 1).draw();
-            sigmaView.zoomTo(node['displayX'], node['displayY'], 80);
+            sigmaView.zoomTo(node['displayX'], node['displayY'], 20);
             sigmaView.draw(2, 2, 2);
             this.model.set("lastSelected", node);
         },
@@ -389,8 +419,6 @@
             $.getJSON(self.get("settingFileLocation"), function (configObject) {
                 self.set("appConfig", configObject);
 
-                console.log("Application config: " + JSON.stringify(self.get("appConfig")));
-
                 // Load networks
                 self.loadNetworks();
 
@@ -403,9 +431,9 @@
             var networks = this.get("appConfig").networks;
 
             var nexoConfig = {};
-            for(var i = 0; i<networks.length; i++) {
+            for (var i = 0; i < networks.length; i++) {
                 var network = networks[i];
-                if(network.name === DEFAULT_NETWORK) {
+                if (network.name === DEFAULT_NETWORK) {
                     nexoConfig = network;
                     break;
                 }
@@ -414,6 +442,11 @@
             $("#network-title").html(nexoConfig.name);
             var nexoDag = new Network({config: nexoConfig});
             var nexoView = new NetworkView({model: nexoDag});
+
+            // Set current
+            this.set("currentNetwork", nexoDag);
+            this.set("currentNetworkView", nexoView);
+
             this.set({nexoDagView: nexoView });
         }
     });
@@ -429,54 +462,30 @@
             var self = this;
             this.model = new NexoAppModel({settingFileLocation: CONFIG_FILE});
 
-            this.model.once(INITIALIZED, function () {
-
+            this.listenToOnce(this.model, INITIALIZED, function () {
                 console.log("App model initialized");
+                var currentNetworkView = this.model.get("currentNetworkView");
+                var searchView = new SearchResultTableView({el: $(ID_SEARCH_RESULTS)});
+                eventHelper.listenTo(searchView.collection, NODES_SELECTED, _.bind(currentNetworkView.selectNodes, currentNetworkView));
+                eventHelper.listenTo(searchView.collection, SEARCH_RESULT_SELECTED, _.bind(currentNetworkView.zoomTo, currentNetworkView));
 
-                var selectedNodes = new NodeListView();
-                var searchView = new SearchViews({el: $(ID_SEARCH_RESULTS)});
-
-                searchView.collection.on("nodesSelected", function (nodes) {
-                    self.model.get("nexoDagView").selectNodes(nodes);
-                });
-
-                searchView.collection.on("listNodeSelected", function (id) {
-                    self.model.get("nexoDagView").zoomTo(id);
-                });
-
-                // Register listener
-                self.model.get("nexoDagView").on("nodeSelected", function (selectedNodeId) {
-
-                    var node = self.model.get("nexoDagView").model.get("renderingEngine")._core.graph.nodesIndex[selectedNodeId];
-                    self.showSummaryPanel(node);
-                    selectedNodes.selected(node);
-                });
-
-                self.render();
+                var summaryView = new NodeDetailsView();
+                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
+                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
             });
-
-
         },
 
-        showSummaryPanel: function (node) {
+        registerListeners: function() {
 
-            $(".headertext").empty().append(node.label);
-
-            // Show the summary panel
-            $("#attributepane").fadeIn(200);
-
-            // Hide
-            $("#close-button").click(function () {
-                $("#attributepane").fadeOut(200);
-            });
         }
     });
 
 
-
-    //
+    /*
+     A row in the search result table.
+     */
     var SearchView = Backbone.View.extend({
-        model: Node,
+        model: NodeDetails,
 
         render: function () {
             this.$el.append("<tr><td>" + this.model.get("id") + "</td><td>" + this.model.get("label") + "</td></tr>");
@@ -485,7 +494,14 @@
     });
 
 
-    var SearchViews = Backbone.View.extend({
+    /*
+     Search result table
+     */
+    var SearchResultTableView = Backbone.View.extend({
+
+        el: ID_SEARCH_RESULTS,
+
+        collection: NodeDetailsList,
 
         events: {
             "click #search-button": "searchButtonPressed",
@@ -493,7 +509,7 @@
         },
 
         initialize: function () {
-            this.collection = new Nodes();
+            this.collection = new NodeDetailsList();
             $("#result-table").hide();
         },
 
@@ -505,7 +521,7 @@
 
             $("#result-table tr").live("click", function () {
                 var id = $(this).children("td")[0].firstChild.nodeValue;
-                self.collection.trigger("listNodeSelected", id);
+                self.collection.trigger(SEARCH_RESULT_SELECTED, id);
             });
 
             this.collection.each(function (result) {
@@ -533,13 +549,13 @@
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
 
-                        var newNode = new Node();
+                        var newNode = new NodeDetails();
                         newNode.set("id", node.name);
                         newNode.set("label", node.Term);
                         self.collection.add(newNode);
                     }
 
-                    self.collection.trigger("nodesSelected", self.collection.models);
+                    self.collection.trigger(NODES_SELECTED, self.collection.models);
 
                     self.render();
                 }
@@ -555,7 +571,6 @@
                 var query = this.parseQuery($("#query").val());
                 this.search(query);
             }
-
         },
 
         searchButtonPressed: function () {
@@ -576,8 +591,8 @@
             var entries = query.split(" ");
 
             var newQuery = "";
-            for(var i = 0; i<entries.length; i++) {
-                if(i != entries.length - 1) {
+            for (var i = 0; i < entries.length; i++) {
+                if (i != entries.length - 1) {
                     newQuery += "*" + entries[i] + "* OR ";
                 } else {
                     newQuery += "*" + entries[i] + "*";
@@ -588,26 +603,69 @@
     });
 
 
-    var Node = Backbone.Model.extend({
+    /*
+     Data model for the node View.
+     */
+    var NodeDetails = Backbone.Model.extend({
 
-        urlRoot: "/nexo",
+        urlRoot: "/",
 
-        initialize: function () {
-            console.log("Model Init called !!!!!!!!!!");
+        getDetails: function (selectedNodeId) {
+            if (selectedNodeId === null || selectedNodeId === undefined) {
+                //  Do nothing.
+                return;
+            }
+
+            var checkNamespace = selectedNodeId.split(":");
+            if (checkNamespace.length === 1) {
+                this.urlRoot = "/nexo";
+                this.id = selectedNodeId;
+            } else if (checkNamespace.lenght === 2) {
+                this.urlRoot = "/" + checkNamespace[0];
+                this.id = checkNamespace[1];
+            }
+
+            var self = this;
+            this.fetch({
+                success: function (data) {
+                    var attr = data.attributes;
+                    for (var key in attr) {
+                        self.set(key, attr[key]);
+                    }
+                }
+            });
         }
-
     });
 
 
-    var NodeView = Backbone.View.extend({
+    /*
+     Summary view
+     */
+    var NodeDetailsView = Backbone.View.extend({
+
+        el: ID_SUMMARY_PANEL,
+
+        model: NodeDetails,
+
+        events: {
+            "click #close-button": "hide"
+        },
+
+        initialize: function () {
+            this.model = new NodeDetails();
+            eventHelper.listenTo(this.model, "change", _.bind(this.render, this));
+        },
 
         render: function () {
+            this.$(ID_NODE_DETAILS).empty();
+            this.$("#genes").empty();
 
-            var genesTab = $("#genes").empty();
+            var label = this.model.get("Term");
+            this.$(".headertext").empty().append(label);
 
             // Manually render summary view.
             var entryId = this.model.get("name");
-            if(entryId.indexOf("GO:") != -1) {
+            if (entryId.indexOf("GO:") != -1) {
                 var summary = "<h3>Term ID: " + entryId + "</h3>";
                 this.$el.html(summary).fadeIn(1000);
 
@@ -644,12 +702,13 @@
             }
             summary += "</table>";
 
-            this.$el.html(summary).fadeIn(1000);
+            this.$(ID_NODE_DETAILS).append(summary);
 
+            console.log("RENDERED: " + entryId);
             return this;
         },
 
-        renderGO: function() {
+        renderGO: function () {
 
         },
 
@@ -809,75 +868,24 @@
             }
 
             return allValues;
+        },
+
+        show: function () {
+            this.$el.fadeIn(400);
+        },
+
+        hide: function() {
+            this.$el.fadeOut(400);
         }
     });
 
-    var Nodes = Backbone.Collection.extend({
-
-        model: Node,
+    var NodeDetailsList = Backbone.Collection.extend({
+        model: NodeDetails,
 
         comparator: function (node) {
             return node.get("name");
         }
-
     });
-
-    var NodeListView = Backbone.View.extend({
-
-        el: ID_NODE_DETAILS,
-
-        initialize: function () {
-            this.collection = new Nodes();
-        },
-
-        render: function () {
-            this.collection.each(function (node) {
-                console.log("Rendering Node = " + node);
-                this.renderNode(node);
-            }, this);
-        },
-
-        renderNode: function (node) {
-            var nodeView = new NodeView({
-                model: node
-            });
-
-            var rendered = nodeView.render();
-            console.log("rendered = " + rendered);
-
-            this.$el.append(rendered.$el);
-        },
-
-        selected: function (selectedNode) {
-            var id = selectedNode.id;
-
-            var newNode = new Node();
-            newNode.set("id", id);
-            var self = this;
-
-            this.collection.pop();
-            this.collection.add(newNode);
-
-
-            this.$el.empty();
-
-            newNode.fetch({
-
-                success: function (data) {
-
-                    var attr = data.attributes;
-                    for (var key in attr) {
-                        newNode.set(key, attr[key]);
-                    }
-                    self.render();
-
-                }
-            });
-
-
-        }
-    });
-
 
     ////////////////// Start App /////////////////////////////////
     var app = new Nexo();

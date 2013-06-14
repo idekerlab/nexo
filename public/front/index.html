@@ -5,7 +5,7 @@
     <meta charset="utf-8">
 
     <!-- For Web Fonts -->
-    <link href='http://fonts.googleapis.com/css?family=Quicksand:300,400,700' rel='stylesheet'>
+    <link href='http://fonts.googleapis.com/css?family=Raleway:400,200,500,700,100,300' rel='stylesheet'>
 
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/style.css"/>
@@ -36,7 +36,6 @@
     <div id="results">
         <table id="result-table" class="table"></table>
     </div>
-
 </div>
 
 <!-- Navigation UI -->
@@ -65,7 +64,7 @@
             <li class="divider"></li>
             <li class="nav-header">Gene Ontology</li>
             <li><a href="">Biological Process</a></li>
-            <li><a href="">Celular Component</a></li>
+            <li><a href="">Cellular Component</a></li>
             <li><a href="">Molecular Function</a></li>
         </ul>
     </div>
@@ -75,11 +74,10 @@
 </div>
 
 <!--Details for clicked node -->
-<div id="attributepane">
+<div id="summary-panel">
     <button id="close-button" class="flat-btn" type="button">Close</button>
 
     <div class="headertext"></div>
-    <div class="subnetwork"></div>
 
     <div class="tabbable">
         <ul id="result-tab" class="nav nav-tabs">
@@ -95,8 +93,17 @@
     </div>
 </div>
 
+
+
+<div id="draggable" class="ui-widget-content">
+    <p>cy</p>
+</div>
+
+
+
 <!-- Scripts TODO: use require.js -->
 <script src="js/jquery/jquery.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src="js/async/async.js"></script>
 <script src="js/sigma/sigma.concat.js"></script>
 <script src="js/cytoscape.js/cytoscape.js"></script>
@@ -138,6 +145,10 @@
                 $(this).removeClass("active");
             }
         });
+    });
+
+    $(function() {
+        $( "#draggable" ).draggable().hide();
     });
 </script>
 </body>
