@@ -98,6 +98,52 @@ exports.getByGeneQuery = function (req, res) {
     });
 };
 
+exports.getRawInteractions = function (req, res) {
+
+    "use strict";
+
+    var id = req.params.id;
+    // Query should be list of genes
+    console.log('ID = ' + id);
+
+    var fullUrl = BASE_URL + "vertices/?key=name&value=" + id + "&rexster.returnKeys=[name,Assigned Genes]";
+    request.get(fullUrl, function (err, rest_res, body) {
+        if (!err) {
+            var results = JSON.parse(body);
+            var resultArray = results.results;
+            if (resultArray.length !== 0) {
+                var genes = resultArray[0]["Assigned Genes"];
+                genes = genes.replace("[", "");
+                genes = genes.replace("]", "");
+                genes = genes.replace(/ /g, "");
+                genes = genes.replace(/,/g, " ");
+
+
+                var nextUrl = BASE_URL + "tp/gremlin?params={query='" + genes +
+                    "'}&script=getRawInteractions()&load=[getinteractions]" +
+                    "&rexster.returnKeys=[name,Assigned Genes]";
+
+
+                console.log("URL == " + nextUrl);
+                request.get(nextUrl, function (err2, rest_res2, body2) {
+                    if (!err2) {
+                        var results = JSON.parse(body2);
+                        var resultArray = results.results;
+                        if (resultArray.length !== 0) {
+                            res.json(resultArray);
+                        } else {
+                            res.json(EMPTY_ARRAY);
+                        }
+                    }
+                });
+
+            } else {
+                res.json(EMPTY_OBJ);
+            }
+        }
+    });
+
+};
 
 exports.getPath = function (req, res) {
     "use strict";

@@ -35,6 +35,7 @@ app.get('/result', result.index);
 app.get('/search/:query', nexo.getByQuery);
 app.get('/search/genes/:query', nexo.getByGeneQuery);
 app.get('/:namespace/:id', nexo.getByID);
+app.get('/search/:id/interactions', nexo.getRawInteractions);
 
 app.get('/:namespace/:id/path', nexo.getPath);
 app.get('/nexo/:id/path.json', nexo.getPathCytoscape);
