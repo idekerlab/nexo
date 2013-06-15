@@ -81,12 +81,124 @@
 
     var CyNetwork = Backbone.Model.extend({
 
-        urlRoot: "/",
+        initialize: function () {
+
+            this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
+            console.log("URL = " + this.url);
+//            this.fetch({
+//                success: function (data) {
+//                    console.log("data = " + JSON.stringify(data));
+//                    var attr = data.attributes;
+//                }
+//            });
+
+            this.setup();
+        },
+
+        setup: function () {
+            console.log("Rendering!!!!!!!!!! = ");
+
+            var options = {
+                showOverlay: true,
+                minZoom: 0.5,
+                maxZoom: 2,
+                layout: {
+                    name: "circle"
+                },
+
+                style: cytoscape.stylesheet()
+                    .selector('node')
+                    .css({
+                        'font-family': 'Raleway',
+                        'font-size': 14,
+                        'text-outline-width': 3,
+                        'text-outline-color': '#ffffff',
+                        'text-valign': 'center',
+                        'color': '#fff',
+                        'width': 50,
+                        'height': 50,
+                        'border-color': '#fff',
+                        "background-color": "#ffffff"
+                    })
+                    .selector(':selected')
+                    .css({
+                        'background-color': '#000',
+                        'line-color': '#000',
+                        'target-arrow-color': '#000',
+                        'text-outline-color': '#000'
+                    })
+                    .selector('edge')
+                    .css({
+                        'width': 5,
+                        "line-color": "white",
+                        'target-arrow-shape': 'triangle'
+                    }),
+
+                elements: {
+                    nodes: [
+                        {
+                            data: { id: 'j', name: 'Jerry', weight: 65, height: 160 }
+                        },
+
+                        {
+                            data: { id: 'e', name: 'Elaine', weight: 48, height: 160 }
+                        },
+
+                        {
+                            data: { id: 'k', name: 'Kramer', weight: 75, height: 160 }
+                        },
+
+                        {
+                            data: { id: 'g', name: 'George', weight: 70, height: 160 }
+                        }
+                    ],
+
+                    edges: [
+                        { data: { source: 'j', target: 'e' } },
+
+                        { data: { source: 'e', target: 'j' } },
+                        { data: { source: 'e', target: 'k' } },
+
+                        { data: { source: 'k', target: 'j' } },
+
+                        { data: { source: 'g', target: 'j' } }
+                    ]
+                },
+
+                ready: function () {
+                    var cy = this;
+                }
+            };
+
+            $('#cyjs').cytoscape(options);
+        }
+    });
+
+
+    /*
+     Sub-network view by cytoscape.js
+     */
+    var CyNetworkView = Backbone.View.extend({
+
+        el: "#cy-network",
+
+        model: CyNetwork,
+
+        events: {},
 
         initialize: function () {
-            this.id = this.get("namespace") + "/" + this.get("termId") + "/interactions";
-            console.log("ID = " + this.id);
+            console.log("CyNetworkview initialized.");
+        },
+
+        show: function (nodeId) {
+            this.model = new CyNetwork({namespace: "nexo", termId: nodeId});
+            console.log("Rendering ================ CyNetworkview");
         }
+
+
+
+
+
     });
 
 
@@ -470,12 +582,16 @@
                 eventHelper.listenTo(searchView.collection, SEARCH_RESULT_SELECTED, _.bind(currentNetworkView.zoomTo, currentNetworkView));
 
                 var summaryView = new NodeDetailsView();
+                var subNetworkView = new CyNetworkView();
+
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
+
+                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.show, subNetworkView));
             });
         },
 
-        registerListeners: function() {
+        registerListeners: function () {
 
         }
     });
@@ -874,7 +990,7 @@
             this.$el.fadeIn(400);
         },
 
-        hide: function() {
+        hide: function () {
             this.$el.fadeOut(400);
         }
     });
