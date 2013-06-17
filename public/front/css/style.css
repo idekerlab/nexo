@@ -7,12 +7,12 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: Raleway;
+    font-family: Exo;
     font-weight: 400;
 }
 
 .flat-btn {
-    font-family: Raleway;
+    font-family: Exo;
     font-weight: 700;
     font-size: 14px;
     background-color: #009ccc;
@@ -77,7 +77,7 @@ html, body {
     bottom: 0;
     top: 0;
     right: 0;
-    width: 400px;
+    width: 800px;
     word-wrap: break-word;
     overflow-y: auto;
     overflow-x: hidden;
@@ -167,9 +167,10 @@ html, body {
 }
 
 #subnetwork-view {
-    background-color: #56638F;
+    /*background-color: #222222;*/
+    background: radial-gradient(circle farthest-corner at center center, #8a8a8a 0%, #222222 100%);
     width: 100%;
-    height: 400px;
+    height: 550px;
 }
 
 #details svg {

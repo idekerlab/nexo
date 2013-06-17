@@ -152,23 +152,23 @@
                         cyObj.layout({
                             name: 'arbor',
                             liveUpdate: true, // whether to show the layout as it's running
-                            maxSimulationTime: 4000, // max length in ms to run the layout
+                            maxSimulationTime: 5000, // max length in ms to run the layout
                             fit: true, // fit to viewport
                             padding: [ 30, 30, 30, 30 ], // top, right, bottom, left
                             ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
 
                             // forces used by arbor (use arbor default on undefined)
-                            repulsion: 800,
-                            stiffness: undefined,
-                            friction: undefined,
+                            repulsion: 9800,
+                            stiffness: 1500,
+                            friction: 0.8,
                             gravity: true,
                             fps: undefined,
                             precision: undefined,
 
                             // static numbers or functions that dynamically return what these
                             // values should be for each element
-                            nodeMass: undefined,
-                            edgeLength: undefined,
+                            nodeMass: 5000,
+                            edgeLength: 0.5,
 
                             stepSize: 1, // size of timestep in simulation
 
@@ -204,35 +204,36 @@
 
             var options = {
                 showOverlay: false,
+                boxSelectionEnabled: false,
                 minZoom: 0.1,
                 maxZoom: 3,
 
                 style: cytoscape.stylesheet()
                     .selector('node')
                     .css({
-                        'font-family': 'Raleway',
-                        'font-size': 14,
+                        'font-family': 'Exo',
+                        'font-size': 11,
+                        'font-weight': 300,
                         'content': 'data(id)',
-                        'text-outline-width': 0,
-                        'text-outline-color': '#333333',
                         'text-valign': 'center',
-                        'color': '#333333',
-                        'width': 30,
-                        'height': 30,
-                        'border-color': '#fff',
-                        "background-color": "#ffffff"
+                        'color': 'rgba(250, 250, 250, 1)',
+                        'width': 60,
+                        'height': 20,
+                        'border-color': 'white',
+                        "background-color": "rgb(67,135,233)",
+                        "background-opacity": 0.8,
+                        "shape": "ellipse"
                     })
                     .selector(':selected')
                     .css({
                         'background-color': '#400000',
-                        'line-color': '#000',
-                        'target-arrow-color': '#000',
-                        'text-outline-color': '#000'
+                        'line-color': '#000'
                     })
                     .selector('edge')
                     .css({
-                        'width': 2,
-                        "line-color": "white"
+                        'width': 0.7,
+                        "line-color": "#cccccc",
+                        "opacity": 0.5
                     }),
 
                 elements: {

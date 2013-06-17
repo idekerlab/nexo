@@ -14,7 +14,7 @@
                     "defaultHoverLabelBGColor": "#fff",
                     "defaultLabelHoverColor": "#555",
                     "labelThreshold": 5,
-                    "font": "Raleway",
+                    "font": "Exo",
                     "defaultLabelColor": "#4C4C4C",
 
                     "defaultEdgeType": "line",
