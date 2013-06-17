@@ -14,7 +14,7 @@
     var CONFIG_FILE = "../app-config.json";
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "rgba(230,230,230,0.6)";
+    var DIM_COLOR = "rgba(230,230,230,0.9)";
     var SELECTED_NODE_COLOR = "rgba(70,130,180,0.9)";
 
     // Tags in the HTML document
@@ -82,95 +82,34 @@
     var CyNetwork = Backbone.Model.extend({
 
         initialize: function () {
-
             this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
             console.log("URL = " + this.url);
-//            this.fetch({
-//                success: function (data) {
-//                    console.log("data = " + JSON.stringify(data));
-//                    var attr = data.attributes;
-//                }
-//            });
-
-            this.setup();
         },
 
-        setup: function () {
-            console.log("Rendering!!!!!!!!!! = ");
+        buildNetworkModel: function (paths) {
+            var pathLength = paths.length;
+            console.log("# of path = " + pathLength);
 
-            var options = {
-                showOverlay: true,
-                minZoom: 0.5,
-                maxZoom: 2,
-                layout: {
-                    name: "circle"
-                },
-
-                style: cytoscape.stylesheet()
-                    .selector('node')
-                    .css({
-                        'font-family': 'Raleway',
-                        'font-size': 14,
-                        'text-outline-width': 3,
-                        'text-outline-color': '#ffffff',
-                        'text-valign': 'center',
-                        'color': '#fff',
-                        'width': 50,
-                        'height': 50,
-                        'border-color': '#fff',
-                        "background-color": "#ffffff"
-                    })
-                    .selector(':selected')
-                    .css({
-                        'background-color': '#000',
-                        'line-color': '#000',
-                        'target-arrow-color': '#000',
-                        'text-outline-color': '#000'
-                    })
-                    .selector('edge')
-                    .css({
-                        'width': 5,
-                        "line-color": "white",
-                        'target-arrow-shape': 'triangle'
-                    }),
-
+            var graph = {
                 elements: {
-                    nodes: [
-                        {
-                            data: { id: 'j', name: 'Jerry', weight: 65, height: 160 }
-                        },
-
-                        {
-                            data: { id: 'e', name: 'Elaine', weight: 48, height: 160 }
-                        },
-
-                        {
-                            data: { id: 'k', name: 'Kramer', weight: 75, height: 160 }
-                        },
-
-                        {
-                            data: { id: 'g', name: 'George', weight: 70, height: 160 }
-                        }
-                    ],
-
-                    edges: [
-                        { data: { source: 'j', target: 'e' } },
-
-                        { data: { source: 'e', target: 'j' } },
-                        { data: { source: 'e', target: 'k' } },
-
-                        { data: { source: 'k', target: 'j' } },
-
-                        { data: { source: 'g', target: 'j' } }
-                    ]
-                },
-
-                ready: function () {
-                    var cy = this;
+                    nodes: [],
+                    edges: []
                 }
             };
 
-            $('#cyjs').cytoscape(options);
+
+            for (var i = 0; i < pathLength; i++) {
+                var path = paths[i];
+                for (var j = 0; j < path.length; j++) {
+                    var edge = path[j];
+                    var source = edge[0];
+                    var target = edge[1];
+                    console.log(source["Assigned Genes"] + " --- " + target["Assigned Genes"]);
+
+                }
+
+            }
+
         }
     });
 
@@ -187,18 +126,159 @@
         events: {},
 
         initialize: function () {
-            console.log("CyNetworkview initialized.");
+            console.log("CyNetworkview initialized.  This should be called only once.");
         },
 
-        show: function (nodeId) {
+        update: function (nodeId) {
+            var self = this;
+
             this.model = new CyNetwork({namespace: "nexo", termId: nodeId});
+
+            var options = this.model.get("options");
+
+            if (options === null || options === undefined) {
+                this.model.set("options", this.initSubnetworkView());
+            }
             console.log("Rendering ================ CyNetworkview");
+
+            this.model.fetch({
+                success: function (data) {
+
+                    var graph = data.attributes.graph;
+                    console.log(graph);
+                    var cyObj = self.model.get("cy");
+                    console.log(cyObj);
+                    cyObj.load(graph.elements,
+                        cyObj.layout({
+                            name: 'arbor',
+                            liveUpdate: true, // whether to show the layout as it's running
+                            maxSimulationTime: 4000, // max length in ms to run the layout
+                            fit: true, // fit to viewport
+                            padding: [ 30, 30, 30, 30 ], // top, right, bottom, left
+                            ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+
+                            // forces used by arbor (use arbor default on undefined)
+                            repulsion: 800,
+                            stiffness: undefined,
+                            friction: undefined,
+                            gravity: true,
+                            fps: undefined,
+                            precision: undefined,
+
+                            // static numbers or functions that dynamically return what these
+                            // values should be for each element
+                            nodeMass: undefined,
+                            edgeLength: undefined,
+
+                            stepSize: 1, // size of timestep in simulation
+
+                            // function that returns true if the system is stable to indicate
+                            // that the layout can be stopped
+                            stableEnergy: function (energy) {
+                                var e = energy;
+                                return (e.max <= 0.5) || (e.mean <= 0.3);
+                            }
+                        }), function () {
+                            console.log("DONE!!!!!!!!!")
+                        });
+//                    cyObj.add([
+//                        { group: "nodes", data: { id: "n0" }, position: { x: 100, y: 100 } },
+//                        { group: "nodes", data: { id: "n1" }, position: { x: 200, y: 200 } },
+//                        { group: "edges", data: { id: "e0", source: "n0", target: "n1" } }
+//                    ]);
+//                    cyObj.layout({
+//                        name: "arbor",
+//                        fit: true,
+//                        liveUpdate: true
+//                    });
+//                    cyObj.fit();
+                    // Send signal to renderer.
+                }
+            });
+
+        },
+
+        initSubnetworkView: function () {
+            console.log("Initialize");
+            var self = this;
+
+            var options = {
+                showOverlay: false,
+                minZoom: 0.1,
+                maxZoom: 3,
+
+                style: cytoscape.stylesheet()
+                    .selector('node')
+                    .css({
+                        'font-family': 'Raleway',
+                        'font-size': 14,
+                        'content': 'data(id)',
+                        'text-outline-width': 0,
+                        'text-outline-color': '#333333',
+                        'text-valign': 'center',
+                        'color': '#333333',
+                        'width': 30,
+                        'height': 30,
+                        'border-color': '#fff',
+                        "background-color": "#ffffff"
+                    })
+                    .selector(':selected')
+                    .css({
+                        'background-color': '#400000',
+                        'line-color': '#000',
+                        'target-arrow-color': '#000',
+                        'text-outline-color': '#000'
+                    })
+                    .selector('edge')
+                    .css({
+                        'width': 2,
+                        "line-color": "white"
+                    }),
+
+                elements: {
+                    nodes: [],
+                    edges: []
+                },
+//                elements: {
+//                    nodes: [
+//                        {
+//                            data: { id: 'j', name: 'Jerry', weight: 65, height: 160 }
+//                        },
+//
+//                        {
+//                            data: { id: 'e', name: 'Elaine', weight: 48, height: 160 }
+//                        },
+//
+//                        {
+//                            data: { id: 'k', name: 'Kramer', weight: 75, height: 160 }
+//                        },
+//
+//                        {
+//                            data: { id: 'g', name: 'George', weight: 70, height: 160 }
+//                        }
+//                    ],
+//
+//                    edges: [
+//                        { data: { source: 'j', target: 'e' } },
+//
+//                        { data: { source: 'e', target: 'j' } },
+//                        { data: { source: 'e', target: 'k' } },
+//
+//                        { data: { source: 'k', target: 'j' } },
+//
+//                        { data: { source: 'g', target: 'j' } }
+//                    ]
+//                },
+
+                ready: function () {
+                    var cy = this;
+                    self.model.set("cy", cy);
+                }
+            };
+
+            $("#cyjs").cytoscape(options);
+            return options;
         }
-
-
-
-
-
     });
 
 
@@ -587,7 +667,8 @@
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
 
-                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.show, subNetworkView));
+                // Update subnetwork view when a term is selected.
+                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
             });
         },
 

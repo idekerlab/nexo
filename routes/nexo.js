@@ -18,6 +18,157 @@ var NEXO_NAMESPACE = "nexo";
 var EMPTY_OBJ = {};
 var EMPTY_ARRAY = [];
 
+var GraphUtil = function () {
+};
+
+GraphUtil.prototype = {
+
+    generateInteractions: function (paths) {
+        var pathLength = paths.length;
+        console.log("# of path = " + pathLength);
+
+        var graph = {
+            elements: {
+                nodes: [],
+                edges: []
+            }
+        };
+
+        var nodes = [];
+
+        for (var i = 0; i < pathLength; i++) {
+            var path = paths[i];
+            for (var j = 0; j < path.length; j++) {
+                var edge = path[j];
+                var source = edge[0];
+                var target = edge[1];
+                var sourceId = source["Assigned Genes"]
+                var targetId = target["Assigned Genes"];
+
+                if (_.contains(nodes, sourceId) == false) {
+                    var sourceNode = {
+                        data: {
+                            id: sourceId
+                        }
+                    };
+                    graph.elements.nodes.push(sourceNode);
+                    nodes.push(sourceId);
+                }
+
+                if (_.contains(nodes, targetId) == false) {
+                    var targetNode = {
+                        data: {
+                            id: targetId
+                        }
+                    };
+                    graph.elements.nodes.push(targetNode);
+                    nodes.push(targetId);
+                }
+
+                var newEdge = {
+                    data: {
+                        id: sourceId + "(raw_interaction) " + targetId,
+                        source: sourceId,
+                        target: targetId
+                    }
+                };
+
+                graph.elements.edges.push(newEdge);
+            }
+
+        }
+        return graph;
+    },
+
+    graphGenerator: function (graphJson) {
+
+        // Cytoscape.js style graph object.
+        var graph = {
+            elements: {
+                nodes: [],
+                edges: []
+            }
+        };
+
+        var nodeIdArray = [];
+        var edgeIdArray = [];
+
+        for (var key in graphJson) {
+            var path = graphJson[key];
+            this.parsePathEntry(nodeIdArray, edgeIdArray, graph, path);
+        }
+
+        nodeIdArray = null;
+        edgeIdArray = null;
+
+        return graph;
+    },
+
+    parsePathEntry: function (nodes, edges, graph, path) {
+        var pathLength = path.length;
+
+        var node = {};
+
+        for (var i = 0; i < pathLength; i++) {
+            var graphObject = path[i];
+            if (graphObject['_type'] === "vertex") {
+
+                node.data = {};
+                node.data.id = graphObject.name;
+                if (graphObject.name === "joining_root") {
+                    node.data["size"] = 50;
+                    node.data["border"] = 5;
+                    node.data["border-color"] = "rgb(51,10,10)";
+                    node.data["type"] = "root";
+                } else if (i == 0) {
+                    node.data["size"] = 50;
+                    node.data["border"] = 5;
+                    node.data["border-color"] = "rgb(0,0,50)";
+                    node.data["type"] = "start";
+                } else {
+                    node.data["size"] = 20;
+                    node.data["border"] = 2;
+                    node.data["border-color"] = "rgb(10,10,10)";
+                    node.data["type"] = "path";
+                }
+                if (_.contains(nodes, node.data.id) == false) {
+                    graph.elements.nodes.push(node);
+                    nodes.push(node.data.id);
+                }
+            } else {
+                var sourceName = node.data.id;
+                var target = path[i + 1];
+                var targetName = "";
+                if (target['_type'] != "vertex") {
+                    var ex = new Error("Wrong input JSON.");
+                    throw ex;
+                } else {
+                    targetName = target.name;
+                }
+
+                var edgeName = sourceName + " (" + graphObject.interaction + ") " + targetName;
+                if (_.contains(edges, edgeName) == false) {
+
+                    var edge = {
+                        data: {
+                            id: edgeName,
+                            interaction: graphObject.interaction,
+                            source: sourceName,
+                            target: targetName
+                        }
+                    };
+                    graph.elements.edges.push(edge);
+                    edges.push(edgeName);
+                }
+
+                node = {};
+            }
+        }
+    }
+};
+
+var graphUtil = new GraphUtil();
+
 //
 // Get a term by ID.
 //
@@ -131,7 +282,11 @@ exports.getRawInteractions = function (req, res) {
                         var results = JSON.parse(body2);
                         var resultArray = results.results;
                         if (resultArray.length !== 0) {
-                            res.json(resultArray);
+                            var graph = graphUtil.generateInteractions(resultArray);
+                            var returnValue = {
+                                graph: graph
+                            };
+                            res.json(returnValue);
                         } else {
                             res.json(EMPTY_ARRAY);
                         }
@@ -203,6 +358,7 @@ exports.getAllParents = function (req, res) {
     });
 };
 exports.getPathCytoscape = function (req, res) {
+    "use strict";
 
     var fullUrl = "http://localhost:3000/nexo/" + req.params.id + "/path";
 
@@ -213,7 +369,7 @@ exports.getPathCytoscape = function (req, res) {
             // This is an array.
             var results = JSON.parse(body);
             if (results != "" && results.length != 0) {
-                var graph = graphGenerator(results);
+                var graph = graphUtil.graphGenerator(results);
                 res.json(graph);
             } else {
                 res.json(EMPTY_ARRAY);
@@ -221,90 +377,5 @@ exports.getPathCytoscape = function (req, res) {
         }
     });
 
-    function graphGenerator(graphJson) {
-
-        // Cytoscape.js style graph object.
-        var graph = {
-            elements: {
-                nodes: [],
-                edges: []
-            }
-        };
-
-        var nodeIdArray = [];
-        var edgeIdArray = [];
-
-        for (var key in graphJson) {
-            var path = graphJson[key];
-            parsePathEntry(nodeIdArray, edgeIdArray, graph, path);
-        }
-
-        nodeIdArray = null;
-        edgeIdArray = null;
-
-        return graph;
-    }
-
-    function parsePathEntry(nodes, edges, graph, path) {
-        var pathLength = path.length;
-
-        var node = {};
-
-        for (var i = 0; i < pathLength; i++) {
-            var graphObject = path[i];
-            if (graphObject['_type'] === "vertex") {
-
-                node.data = {};
-                node.data.id = graphObject.name;
-                if (graphObject.name === "joining_root") {
-                    node.data["size"] = 50;
-                    node.data["border"] = 5;
-                    node.data["border-color"] = "rgb(51,10,10)";
-                    node.data["type"] = "root";
-                } else if (i == 0) {
-                    node.data["size"] = 50;
-                    node.data["border"] = 5;
-                    node.data["border-color"] = "rgb(0,0,50)";
-                    node.data["type"] = "start";
-                } else {
-                    node.data["size"] = 20;
-                    node.data["border"] = 2;
-                    node.data["border-color"] = "rgb(10,10,10)";
-                    node.data["type"] = "path";
-                }
-                if (_.contains(nodes, node.data.id) == false) {
-                    graph.elements.nodes.push(node);
-                    nodes.push(node.data.id);
-                }
-            } else {
-                var sourceName = node.data.id;
-                var target = path[i + 1];
-                var targetName = "";
-                if (target['_type'] != "vertex") {
-                    var ex = new Error("Wrong input JSON.");
-                    throw ex;
-                } else {
-                    targetName = target.name;
-                }
-
-                var edgeName = sourceName + " (" + graphObject.interaction + ") " + targetName;
-                if (_.contains(edges, edgeName) == false) {
-
-                    var edge = {
-                        data: {
-                            id: edgeName,
-                            interaction: graphObject.interaction,
-                            source: sourceName,
-                            target: targetName
-                        }
-                    };
-                    graph.elements.edges.push(edge);
-                    edges.push(edgeName);
-                }
-
-                node = {};
-            }
-        }
-    }
-
 };
+

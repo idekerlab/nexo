@@ -9,6 +9,8 @@
 
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/style.css"/>
+    <script src="js/jquery/jquery.min.js"></script>
+    <script src="js/cytoscape.js/arbor.js"></script>
 </head>
 
 <body>
@@ -79,6 +81,10 @@
 
     <div class="headertext"></div>
 
+    <div id="subnetwork-view">
+        <div id="cyjs"></div>
+    </div>
+
     <div class="tabbable">
         <ul id="result-tab" class="nav nav-tabs">
             <li class="active"><a href="#details" data-toggle="tab">Summary</a></li>
@@ -93,15 +99,7 @@
     </div>
 </div>
 
-<div id="draggable" class="ui-widget-content">
-    <h2>Raw Interactions</h2>
-    <div id="cyjs"></div>
-</div>
-
-
 <!-- Scripts TODO: use require.js -->
-<script src="js/jquery/jquery.min.js"></script>
-<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src="js/async/async.js"></script>
 <script src="js/sigma/sigma.concat.js"></script>
 <script src="js/cytoscape.js/cytoscape.js"></script>
@@ -143,10 +141,6 @@
                 $(this).removeClass("active");
             }
         });
-    });
-
-    $(function() {
-        $( "#draggable" ).draggable();
     });
 </script>
 </body>
