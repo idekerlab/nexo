@@ -51,7 +51,7 @@ GraphUtil.prototype = {
                 var edge = path[j];
                 var source = edge[0];
                 var target = edge[1];
-                var sourceId = source["Assigned Genes"]
+                var sourceId = source["Assigned Genes"];
                 var targetId = target["Assigned Genes"];
 
                 if (_.contains(nodes, sourceId) == false) {

@@ -78,6 +78,27 @@
     var SIGMA_RENDERER = sigma.init(document.getElementById("sigma-canvas"));
 
 
+    /**
+     * Manager object for network views.
+     *
+     * @constructor
+     */
+    var NetworkViewManager = function(){
+        this.views = {};
+    };
+    NetworkViewManager.prototype = {
+        getNetworkView: function(viewId) {
+            return this.views[viewId];
+        },
+
+        addNetworkView: function(viewId, view) {
+           this.views[viewId] = view;
+        }
+    };
+
+    var VIEW_MANAGER = new NetworkViewManager();
+
+
     var CyNetwork = Backbone.Model.extend({
 
         initialize: function () {
@@ -242,7 +263,6 @@
                     var attr = data.attributes;
                     self.convertGraph(attr.nodes, attr.edges);
                     self.trigger(NETWORK_LOADED);
-                    self.trigger("change");
                 }
             });
         },
@@ -316,9 +336,9 @@
 
         networkSelected: function (e) {
             var selectedNetworkName = e.currentTarget.textContent;
+            console.log("@@@@@@@@Network Selected ===> " + selectedNetworkName);
             var selectedNetwork = this.collection.where({name: selectedNetworkName});
             this.collection.trigger(NETWORK_SELECTED, selectedNetwork);
-            console.log("Network Selected ===> " + selectedNetworkName);
         }
     });
 
@@ -606,14 +626,14 @@
                 self.set("networkManager", networkManager);
 
                 // Load networks
-                self.loadNetworks();
+                self.loadNetworkSettings();
 
                 // Fire event: Application is ready to use.
                 self.trigger(INITIALIZED);
             });
         },
 
-        loadNetworks: function () {
+        loadNetworkSettings: function () {
             var networks = this.get("appConfig").networks;
 
             var nexoTree= {};
@@ -628,31 +648,43 @@
 
                     tree = new Network({name: network.name, config: network, loadAtInit: false});
                 }
-
                 this.get("networkManager").add(tree);
             }
 
-            $("#network-title").html("App");
+            // Initialize NeXO view only.
+            $("#network-title").html(network.name);
             var nexoView = new NetworkView({model: nexoTree});
+            VIEW_MANAGER.addNetworkView(nexoTree.get("name"), nexoView);
 
             // Set current
             this.set("currentNetwork", nexoTree);
             this.set("currentNetworkView", nexoView);
-
         },
 
         loadNetworkDataFile: function(targetNetwork) {
 
-            console.log("GOT Network Selected ===>");
-            console.log(targetNetwork[0]);
-            targetNetwork[0].loadNetworkData();
+            console.log(targetNetwork);
+            var network = targetNetwork[0];
+            var networkName = network.get("name");
+            console.log("GOT Network Selected ===> " + networkName);
+            var networkView = VIEW_MANAGER.getNetworkView(networkName);
 
-            $("#network-title").html("App2");
-            var newView = new NetworkView({model: targetNetwork[0]});
+            console.log(networkView);
+
+            network.loadNetworkData();
+            if(networkView === undefined || networkView === null) {
+
+                console.log("Need to create view ===> " + networkName);
+                networkView = new NetworkView({model: network});
+            }
+
+            networkView.render();
+
+            $("#network-title").html(networkName);
 
             // Set current
-            this.set("currentNetwork", targetNetwork[0]);
-            this.set("currentNetworkView", newView);
+            this.set("currentNetwork", network);
+            this.set("currentNetworkView", networkView);
         }
     });
 
