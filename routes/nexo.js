@@ -25,7 +25,7 @@ var EMPTY_CYNETWORK = {
         }
     }
 };
-var GENE_COUNT_THRESHOLD = 500;
+var GENE_COUNT_THRESHOLD = 100;
 
 var GraphUtil = function () {
 };
@@ -155,13 +155,13 @@ GraphUtil.prototype = {
                     targetName = target.name;
                 }
 
-                var edgeName = sourceName + " (" + graphObject.interaction + ") " + targetName;
+                var edgeName = sourceName + " (" + graphObject._label + ") " + targetName;
                 if (_.contains(edges, edgeName) == false) {
 
                     var edge = {
                         data: {
                             id: edgeName,
-                            interaction: graphObject.interaction,
+                            interaction: graphObject._label,
                             source: sourceName,
                             target: targetName
                         }
@@ -322,18 +322,27 @@ exports.getRawInteractions = function (req, res) {
 exports.getPath = function (req, res) {
     "use strict";
 
+    var rootNode = "joining_root";
+
     var nameSpace = req.params.namespace;
     var id = req.params.id;
 
     var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+
     if (nameSpace === NEXO_NAMESPACE) {
         getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
             ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
             "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
-            "{it.object.name.equals('joining_root')}.path&rexster.returnKeys=[name]";
+            "{it.object.name.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
     } else {
-        // TODO add handler for other namespace
+        // TODO: provide map oof ROOTS
+        rootNode = "biological_process";
+        getGraphUrl = getGraphUrl + "g.V.has('name', '" + nameSpace + ":" + id + "')" +
+            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
+            "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
+            "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
     }
+
 
     console.log('URL = ' + getGraphUrl);
 
@@ -379,7 +388,10 @@ exports.getAllParents = function (req, res) {
 exports.getPathCytoscape = function (req, res) {
     "use strict";
 
-    var fullUrl = "http://localhost:3000/nexo/" + req.params.id + "/path";
+    var nameSpace = req.params.namespace;
+    var id = req.params.id;
+
+    var fullUrl = "http://localhost:3000/" + nameSpace + "/" + id + "/path";
 
     console.log('Cy URL = ' + fullUrl);
 
@@ -395,6 +407,4 @@ exports.getPathCytoscape = function (req, res) {
             }
         }
     });
-
 };
-

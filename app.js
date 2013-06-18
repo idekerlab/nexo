@@ -38,8 +38,8 @@ app.get('/search/genes/:query', nexo.getByGeneQuery);
 app.get('/:namespace/:id', nexo.getByID);
 app.get('/:namespace/:id/interactions', nexo.getRawInteractions);
 app.get('/:namespace/:id/path', nexo.getPath);
-app.get('/nexo/:id/path.json', nexo.getPathCytoscape);
-app.get('/nexo/:id/parents', nexo.getAllParents);
+app.get('/:namespace/:id/path.json', nexo.getPathCytoscape);
+app.get('/:namespace/:id/parents', nexo.getAllParents);
 
 app.get('/nexoview/:id', nexoView.showSummary);
 

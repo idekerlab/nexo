@@ -58,8 +58,7 @@
                     "fontStyle": "bold",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "#666666",
-                    "defaultNodeColor": "red",
+                    "defaultEdgeColor": "rgba(30,30,30,0.5)",
                     "defaultNodeActiveColor": "pink",
                     "defaultNodeBorderColor": "yellow",
                     "defaultNodeHoverColor": "green"

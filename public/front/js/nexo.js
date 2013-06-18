@@ -57,12 +57,10 @@
     var QUICK_GO_API = "http://www.ebi.ac.uk/QuickGO/GTerm?id=";
     var SGD_API = "http://www.yeastgenome.org/cgi-bin/locus.fpl?dbid=";
 
-
     /*
      EventHelper (Mediator): This object listens to all events.
      */
     var eventHelper = _.extend({}, Backbone.Events);
-
 
     /*
      Custom Events
@@ -124,6 +122,15 @@
         },
 
         update: function (nodeId) {
+            // TODO: remove dependency!
+            // check current network model:
+            var currentNetwork = app.model.get("currentNetwork");
+            var currentNetworkName = currentNetwork.get("name");
+            if(currentNetworkName !== DEFAULT_NETWORK) {
+                // No need to update
+                return;
+            }
+
             var self = this;
 
             this.model = new CyNetwork({namespace: "nexo", termId: nodeId});
@@ -246,29 +253,47 @@
             var networkConfig = this.get("config");
             this.id = networkConfig.networkData;
 
+            // Data status:
+            this.set({hasNetworkData: false});
+
             if (this.get("loadAtInit")) {
                 this.loadNetworkData();
             }
         },
 
         loadNetworkData: function () {
-
-           console.log("LOAD called!");
-
             var self = this;
+            // Reset the Sigma view
             SIGMA_RENDERER.emptyGraph();
 
-            this.fetch({
-                success: function (data) {
-                    var attr = data.attributes;
-                    self.convertGraph(attr.nodes, attr.edges);
-                    self.trigger(NETWORK_LOADED);
-                }
-            });
+            var isNetworkLoaded = self.get("hasNetworkData");
+
+            if(isNetworkLoaded) {
+                console.log("Alredy has data");
+                var graph = this.get("graph");
+                this.convertGraph(graph.nodes, graph.edges);
+                this.trigger(NETWORK_LOADED);
+            } else {
+                // Feed data to network only when necessary
+                this.fetch({
+                    success: function (data) {
+                        console.log("Downloading data");
+                        self.set({hasNetworkData: true});
+                        var attr = data.attributes;
+                        self.convertGraph(attr.nodes, attr.edges);
+                        self.trigger(NETWORK_LOADED);
+                    }
+                });
+            }
         },
 
 
         convertGraph: function (nodes, edges) {
+            var graph = {
+              nodes: [],
+              edges: []
+            };
+
             var numberOfNodes = nodes.length;
             for (var idx = 0; idx < numberOfNodes; idx++) {
                 var id = nodes[idx].id;
@@ -295,6 +320,11 @@
                 };
                 SIGMA_RENDERER.addEdge(edgeId, source, target, edge);
             }
+
+            // Save the data to model
+            graph.nodes = nodes;
+            graph.edges = edges;
+            this.set({graph: graph});
         }
     });
 
@@ -495,7 +525,17 @@
         findPath: function (sigmaView, selectedNode) {
             var self = this;
             var nodeId = selectedNode.id;
-            var url = "/nexo/" + nodeId + "/path.json";
+            var parts = nodeId.split(":");
+
+            console.log("len = " + parts.length + ": query0 = " + parts[0]);
+            var url = "";
+
+            if(parts.length == 1) {
+                url = "/nexo/" + nodeId + "/path.json";
+            } else {
+                url = "/" + parts[0] + "/" + parts[1] + "/path.json";
+            }
+            console.log("PATH query = " + url);
             $.getJSON(url, function (path) {
                 self.showPath(sigmaView, path);
             });
@@ -538,7 +578,8 @@
                 var cytoscapejsNode = pathNodes[i];
                 var id = cytoscapejsNode.data.id;
                 var sigmaNode = sigmaView._core.graph.nodesIndex[id];
-                if (sigmaNode !== null) {
+                if (sigmaNode !== null && sigmaNode !== undefined) {
+                    console.log(sigmaNode);
                     targetNodes[sigmaNode.id] = true;
                 }
             }
@@ -561,7 +602,7 @@
                 }).draw(2, 2, 2);
         },
 
-        highlight: function (targetNodes, nodesOnly) {
+        highlight: function (targetNodes, nodesOnly, queryNode) {
 
             var sigmaView = SIGMA_RENDERER;
 
@@ -652,7 +693,7 @@
             }
 
             // Initialize NeXO view only.
-            $("#network-title").html(network.name);
+            $("#network-title").html(nexoTree.get("name"));
             var nexoView = new NetworkView({model: nexoTree});
             VIEW_MANAGER.addNetworkView(nexoTree.get("name"), nexoView);
 
