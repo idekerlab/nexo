@@ -14,8 +14,9 @@
     var CONFIG_FILE = "../app-config.json";
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "rgba(230,230,230,0.9)";
+    var DIM_COLOR = "rgba(200,200,200,0.9)";
     var SELECTED_NODE_COLOR = "rgba(70,130,180,0.9)";
+    var QUERY_NODE_COLOR = "rgb(255,94,25)";
 
     // Tags in the HTML document
     var ID_NODE_DETAILS = "#details";
@@ -574,16 +575,21 @@
             // Boolean map for enable/disable nodes.
             var targetNodes = {};
 
+            var startNode = {};
             for (var i = 0; i < pathNodes.length; i++) {
                 var cytoscapejsNode = pathNodes[i];
                 var id = cytoscapejsNode.data.id;
+                var nodeType = cytoscapejsNode.data.type;
                 var sigmaNode = sigmaView._core.graph.nodesIndex[id];
                 if (sigmaNode !== null && sigmaNode !== undefined) {
-                    console.log(sigmaNode);
                     targetNodes[sigmaNode.id] = true;
+                    if(nodeType === "start") {
+                        startNode = sigmaNode;
+                        console.log("*********** START: " + id);
+                    }
                 }
             }
-            this.highlight(targetNodes, false);
+            this.highlight(targetNodes, false, startNode);
         },
 
 
@@ -605,6 +611,8 @@
         highlight: function (targetNodes, nodesOnly, queryNode) {
 
             var sigmaView = SIGMA_RENDERER;
+
+            console.log(queryNode);
 
             if (nodesOnly === false) {
                 sigmaView.iterEdges(function (edge) {
@@ -638,11 +646,16 @@
             }
 
             sigmaView.iterNodes(function (node) {
-                if (node.color !== SELECTED_NODE_COLOR && node.color !== DIM_COLOR) {
+                if (node.color !== SELECTED_NODE_COLOR && node.color !== DIM_COLOR
+                    && node.color !== QUERY_NODE_COLOR) {
                     node.attr.original_color = node.color;
                 }
 
-                if (!targetNodes[node.id]) {
+                if(node.id === queryNode.id) {
+                    node.color = QUERY_NODE_COLOR;
+                    node.attr.grey = false;
+                    node.forceLabel = true;
+                } else if (!targetNodes[node.id]) {
                     node.color = DIM_COLOR;
                     node.attr.grey = true;
                     node.forceLabel = false;
@@ -740,15 +753,25 @@
             var self = this;
             this.model = new NexoAppModel({settingFileLocation: CONFIG_FILE});
 
+            // Initialize sub components of this view
+            var searchView = new SearchResultTableView({el: $(ID_SEARCH_RESULTS)});
+            var summaryView = new NodeDetailsView();
+            var subNetworkView = new CyNetworkView();
+
+            this.model.set({
+                searchView: searchView,
+                summaryView: summaryView,
+                subNetworkView: subNetworkView
+            });
+
+
+
             this.listenToOnce(this.model, INITIALIZED, function () {
-                console.log("App model initialized");
+
                 var currentNetworkView = this.model.get("currentNetworkView");
-                var searchView = new SearchResultTableView({el: $(ID_SEARCH_RESULTS)});
+
                 eventHelper.listenTo(searchView.collection, NODES_SELECTED, _.bind(currentNetworkView.selectNodes, currentNetworkView));
                 eventHelper.listenTo(searchView.collection, SEARCH_RESULT_SELECTED, _.bind(currentNetworkView.zoomTo, currentNetworkView));
-
-                var summaryView = new NodeDetailsView();
-                var subNetworkView = new CyNetworkView();
 
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
@@ -761,8 +784,16 @@
                 var networkManagerView = new NetworkManagerView({collection: networkCollection});
                 eventHelper.listenTo(networkCollection, NETWORK_SELECTED, _.bind(self.model.loadNetworkDataFile, self.model));
 
+                eventHelper.listenTo(self.model, "change", _.bind(self.networkViewSwitched, self.model));
             });
+        },
+
+        networkViewSwitched: function(event) {
+
+            console.log("############## App model changed.");
+            console.log(event);
         }
+
     });
 
 
