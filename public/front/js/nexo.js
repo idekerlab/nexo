@@ -73,10 +73,9 @@
     var NODES_SELECTED = "nodesSelected";
     var SEARCH_RESULT_SELECTED = "searchResultSelected";
 
-    /*
-     Network States
-     */
-    var SELECTED_NODE_ID = "selectedNodeId";
+    var NETWORK_SELECTED = "networkSelected";
+
+    var SIGMA_RENDERER = sigma.init(document.getElementById("sigma-canvas"));
 
 
     var CyNetwork = Backbone.Model.extend({
@@ -84,32 +83,6 @@
         initialize: function () {
             this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
             console.log("URL = " + this.url);
-        },
-
-        buildNetworkModel: function (paths) {
-            var pathLength = paths.length;
-            console.log("# of path = " + pathLength);
-
-            var graph = {
-                elements: {
-                    nodes: [],
-                    edges: []
-                }
-            };
-
-
-            for (var i = 0; i < pathLength; i++) {
-                var path = paths[i];
-                for (var j = 0; j < path.length; j++) {
-                    var edge = path[j];
-                    var source = edge[0];
-                    var target = edge[1];
-                    console.log(source["Assigned Genes"] + " --- " + target["Assigned Genes"]);
-
-                }
-
-            }
-
         }
     });
 
@@ -179,20 +152,8 @@
                                 return (e.max <= 0.5) || (e.mean <= 0.3);
                             }
                         }), function () {
-                            console.log("DONE!!!!!!!!!")
+                            console.log("DONE!!!!!!!!!");
                         });
-//                    cyObj.add([
-//                        { group: "nodes", data: { id: "n0" }, position: { x: 100, y: 100 } },
-//                        { group: "nodes", data: { id: "n1" }, position: { x: 200, y: 200 } },
-//                        { group: "edges", data: { id: "e0", source: "n0", target: "n1" } }
-//                    ]);
-//                    cyObj.layout({
-//                        name: "arbor",
-//                        fit: true,
-//                        liveUpdate: true
-//                    });
-//                    cyObj.fit();
-                    // Send signal to renderer.
                 }
             });
 
@@ -240,36 +201,6 @@
                     nodes: [],
                     edges: []
                 },
-//                elements: {
-//                    nodes: [
-//                        {
-//                            data: { id: 'j', name: 'Jerry', weight: 65, height: 160 }
-//                        },
-//
-//                        {
-//                            data: { id: 'e', name: 'Elaine', weight: 48, height: 160 }
-//                        },
-//
-//                        {
-//                            data: { id: 'k', name: 'Kramer', weight: 75, height: 160 }
-//                        },
-//
-//                        {
-//                            data: { id: 'g', name: 'George', weight: 70, height: 160 }
-//                        }
-//                    ],
-//
-//                    edges: [
-//                        { data: { source: 'j', target: 'e' } },
-//
-//                        { data: { source: 'e', target: 'j' } },
-//                        { data: { source: 'e', target: 'k' } },
-//
-//                        { data: { source: 'k', target: 'j' } },
-//
-//                        { data: { source: 'g', target: 'j' } }
-//                    ]
-//                },
 
                 ready: function () {
                     var cy = this;
@@ -290,39 +221,38 @@
         urlRoot: "/front/data",
 
         initialize: function () {
-            var self = this;
 
             var networkConfig = this.get("config");
-            console.log("Net conf = " + networkConfig);
             this.id = networkConfig.networkData;
-            var drawingProps = networkConfig.sigma.drawingProperties;
-            var graphProps = networkConfig.sigma.graphProperties;
-            var mouseProps = networkConfig.sigma.mouseProperties;
 
-            this.set({renderingEngine: sigma.init(document.getElementById("sigma-canvas")).
-                drawingProperties(drawingProps).
-                graphProperties(graphProps).
-                mouseProperties(mouseProps)});
+            if (this.get("loadAtInit")) {
+                this.loadNetworkData();
+            }
+        },
 
-            var sigmaView = this.get("renderingEngine");
-            sigmaView.active = false;
-            sigmaView.neighbors = {};
-            sigmaView.detail = false;
+        loadNetworkData: function () {
+
+           console.log("LOAD called!");
+
+            var self = this;
+            SIGMA_RENDERER.emptyGraph();
 
             this.fetch({
                 success: function (data) {
                     var attr = data.attributes;
                     self.convertGraph(attr.nodes, attr.edges);
                     self.trigger(NETWORK_LOADED);
+                    self.trigger("change");
                 }
             });
         },
+
 
         convertGraph: function (nodes, edges) {
             var numberOfNodes = nodes.length;
             for (var idx = 0; idx < numberOfNodes; idx++) {
                 var id = nodes[idx].id;
-                this.get("renderingEngine").addNode(id, nodes[idx]);
+                SIGMA_RENDERER.addNode(id, nodes[idx]);
             }
 
             var numberOfEdges = edges.length;
@@ -343,8 +273,52 @@
                     "id": edgeId.toString(),
                     "attr": {}
                 };
-                this.get("renderingEngine").addEdge(edgeId, source, target, edge);
+                SIGMA_RENDERER.addEdge(edgeId, source, target, edge);
             }
+        }
+    });
+
+
+    var Networks = Backbone.Collection.extend({
+        model: Network
+
+    });
+
+    var NetworkManagerView = Backbone.View.extend({
+        el: "#networkSelector",
+
+        events: {
+            "click .networkName": "networkSelected"
+        },
+
+        collection: Networks,
+
+        initialize: function () {
+            this.render();
+        },
+
+        render: function () {
+            var trees = $("#trees");
+            trees.empty();
+
+            var listString = "";
+            var treeCount = this.collection.length;
+            console.log("rendering modal window================== " + treeCount);
+            for (var i = 0; i < treeCount; i++) {
+                var network = this.collection.at(i);
+                var networkName = network.get("config").name;
+                console.log(networkName);
+                listString += "<li class='networkName'>" + networkName + "</li>";
+            }
+
+            trees.append(listString);
+        },
+
+        networkSelected: function (e) {
+            var selectedNetworkName = e.currentTarget.textContent;
+            var selectedNetwork = this.collection.where({name: selectedNetworkName});
+            this.collection.trigger(NETWORK_SELECTED, selectedNetwork);
+            console.log("Network Selected ===> " + selectedNetworkName);
         }
     });
 
@@ -362,37 +336,53 @@
         initialize: function () {
             var self = this;
 
-            var sigmaView = this.model.get("renderingEngine");
-
-            sigmaView.bind("upnodes", function (nodes) {
+            SIGMA_RENDERER.bind("upnodes", function (nodes) {
 
                 var selectedNodeId = nodes.content[0];
-                var selectedNode = sigmaView._core.graph.nodesIndex[selectedNodeId];
+                var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
 
                 // Fire nodeSelected event.
                 self.trigger(NODE_SELECTED, selectedNodeId);
 
-                self.findPath(sigmaView, selectedNode);
+                self.findPath(SIGMA_RENDERER, selectedNode);
             });
 
             self.bindCommands();
 
             // Render the network once its model is ready.
-            eventHelper.listenToOnce(this.model, NETWORK_LOADED, _.bind(this.render, this));
+            eventHelper.listenTo(this.model, NETWORK_LOADED, _.bind(this.rebuildView, this));
         },
 
         render: function () {
-            this.model.get("renderingEngine").draw();
+            console.log("Refreshing2");
+
+            var networkConfig = this.model.get("config");
+            var drawingProps = networkConfig.sigma.drawingProperties;
+            var graphProps = networkConfig.sigma.graphProperties;
+            var mouseProps = networkConfig.sigma.mouseProperties;
+
+            SIGMA_RENDERER.
+                drawingProperties(drawingProps).
+                graphProperties(graphProps).
+                mouseProperties(mouseProps);
+
+            SIGMA_RENDERER.refresh();
+            SIGMA_RENDERER.draw();
+        },
+
+        rebuildView: function() {
+
+            console.log("Refreshing==========");
+            this.render();
         },
 
 
         selectNodes: function (selectedNodes) {
 
             var targetNodes = [];
-            var sigmaView = this.model.get("renderingEngine");
             for (var i = 0; i < selectedNodes.length; i++) {
                 var id = selectedNodes[i].id;
-                var sigmaNode = sigmaView._core.graph.nodesIndex[id];
+                var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
                 if (sigmaNode !== null) {
                     targetNodes[sigmaNode.id] = true;
                 }
@@ -410,7 +400,7 @@
                 lastNode.color = lastNode.original_color;
                 lastNode.original_color = null;
             }
-            var sigmaView = this.model.get("renderingEngine");
+            var sigmaView = SIGMA_RENDERER;
             var node = sigmaView._core.graph.nodesIndex[id];
             node.original_color = node.color;
             node.color = "red";
@@ -423,7 +413,7 @@
 
         bindCommands: function () {
             var self = this;
-            var sigmaView = this.model.get("renderingEngine");
+            var sigmaView = SIGMA_RENDERER;
             var commands = $("#commands");
 
             commands.find("div.z").each(function () {
@@ -537,7 +527,7 @@
 
 
         refresh: function () {
-            var sigmaView = this.model.get("renderingEngine");
+            var sigmaView = SIGMA_RENDERER;
 
             sigmaView
                 .iterEdges(function (edge) {
@@ -553,7 +543,7 @@
 
         highlight: function (targetNodes, nodesOnly) {
 
-            var sigmaView = this.model.get("renderingEngine");
+            var sigmaView = SIGMA_RENDERER;
 
             if (nodesOnly === false) {
                 sigmaView.iterEdges(function (edge) {
@@ -604,6 +594,7 @@
         }
     });
 
+
     // Application configuration
     var NexoAppModel = Backbone.Model.extend({
 
@@ -611,6 +602,8 @@
             var self = this;
             $.getJSON(self.get("settingFileLocation"), function (configObject) {
                 self.set("appConfig", configObject);
+                var networkManager = new Networks();
+                self.set("networkManager", networkManager);
 
                 // Load networks
                 self.loadNetworks();
@@ -623,24 +616,43 @@
         loadNetworks: function () {
             var networks = this.get("appConfig").networks;
 
-            var nexoConfig = {};
+            var nexoTree= {};
             for (var i = 0; i < networks.length; i++) {
                 var network = networks[i];
+                var tree = {};
                 if (network.name === DEFAULT_NETWORK) {
-                    nexoConfig = network;
-                    break;
+
+                    tree = new Network({name: network.name, config: network, loadAtInit: true});
+                    nexoTree = tree;
+                } else {
+
+                    tree = new Network({name: network.name, config: network, loadAtInit: false});
                 }
+
+                this.get("networkManager").add(tree);
             }
 
-            $("#network-title").html(nexoConfig.name);
-            var nexoDag = new Network({config: nexoConfig});
-            var nexoView = new NetworkView({model: nexoDag});
+            $("#network-title").html("App");
+            var nexoView = new NetworkView({model: nexoTree});
 
             // Set current
-            this.set("currentNetwork", nexoDag);
+            this.set("currentNetwork", nexoTree);
             this.set("currentNetworkView", nexoView);
 
-            this.set({nexoDagView: nexoView });
+        },
+
+        loadNetworkDataFile: function(targetNetwork) {
+
+            console.log("GOT Network Selected ===>");
+            console.log(targetNetwork[0]);
+            targetNetwork[0].loadNetworkData();
+
+            $("#network-title").html("App2");
+            var newView = new NetworkView({model: targetNetwork[0]});
+
+            // Set current
+            this.set("currentNetwork", targetNetwork[0]);
+            this.set("currentNetworkView", newView);
         }
     });
 
@@ -670,11 +682,13 @@
 
                 // Update subnetwork view when a term is selected.
                 eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
+
+                // Network collection manager
+                var networkCollection = self.model.get("networkManager");
+                var networkManagerView = new NetworkManagerView({collection: networkCollection});
+                eventHelper.listenTo(networkCollection, NETWORK_SELECTED, _.bind(self.model.loadNetworkDataFile, self.model));
+
             });
-        },
-
-        registerListeners: function () {
-
         }
     });
 

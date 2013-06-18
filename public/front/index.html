@@ -47,28 +47,21 @@
     <div class="z" rel="out"></div>
     <div class="z" rel="center"></div>
 
-    <a href="#myModal" data-toggle="modal">
+    <a href="#networkSelector" data-toggle="modal">
         <div class="s" rel="swap" title="Current Ontology"></div>
     </a>
+
     <div class="s" rel="settings"></div>
 </div>
 
 
-<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="networkSelector" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel">Select Ontology</h3>
     </div>
     <div class="modal-body">
-        <ul id="trees" class="nav nav-list">
-            <li class="nav-header">NeXO (Machine generated hierarchy from interaction data)</li>
-            <li><a href="">NeXO Tree</a></li>
-            <li class="divider"></li>
-            <li class="nav-header">Gene Ontology</li>
-            <li><a href="">Biological Process</a></li>
-            <li><a href="">Cellular Component</a></li>
-            <li><a href="">Molecular Function</a></li>
-        </ul>
+        <ul id="trees" class="nav nav-list"></ul>
     </div>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true">Apply</button>
@@ -118,7 +111,7 @@
     $('#result-tab a:last').tab('show');
     $('#result-tab a[href="#details"]').tab('show');
 
-    $('#myModal').modal({backdrop: false, show: false});
+    $('#networkSelector').modal({backdrop: false, show: false});
 
 
     var treeItems = $('#trees li');

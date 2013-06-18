@@ -17,6 +17,15 @@ var NEXO_NAMESPACE = "nexo";
 
 var EMPTY_OBJ = {};
 var EMPTY_ARRAY = [];
+var EMPTY_CYNETWORK = {
+    graph: {
+        elements: {
+            nodes: [],
+            edges: []
+        }
+    }
+};
+var GENE_COUNT_THRESHOLD = 500;
 
 var GraphUtil = function () {
 };
@@ -272,6 +281,16 @@ exports.getRawInteractions = function (req, res) {
                 genes = genes.replace(/ /g, "");
                 genes = genes.replace(/,/g, " ");
 
+                // Too many results
+                var numGenes = genes.split(" ").length;
+                if (numGenes > GENE_COUNT_THRESHOLD) {
+                    console.log("TOO MANY inputs: " + numGenes);
+                    res.json(EMPTY_CYNETWORK);
+                    return;
+                } else {
+                    console.log("OK: " + numGenes);
+                }
+
                 var nextUrl = BASE_URL + "tp/gremlin?params={query='" + genes +
                     "'}&script=getRawInteractions()&load=[getinteractions]" +
                     "&rexster.returnKeys=[name,Assigned Genes]";
@@ -288,7 +307,7 @@ exports.getRawInteractions = function (req, res) {
                             };
                             res.json(returnValue);
                         } else {
-                            res.json(EMPTY_ARRAY);
+                            res.json(EMPTY_OBJ);
                         }
                     }
                 });

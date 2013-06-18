@@ -45,14 +45,14 @@
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelColor": "#eeeeee",
+                    "defaultLabelColor": "#4C4C4C",
                     "defaultLabelSize": 24,
                     "defaultLabelBGColor": "#ddd",
                     "defaultHoverLabelBGColor": "#cccccc",
                     "defaultLabelHoverColor": "#555",
                     "labelThreshold": 5,
                     "labelSize": "proportional",
-                    "font": "Quicksand",
+                    "font": "Exo",
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
                     "fontStyle": "bold",
