@@ -63,6 +63,7 @@
      */
     var eventHelper = _.extend({}, Backbone.Events);
 
+    var viewEventHelper = _.extend({}, Backbone.Events);
     /*
      Custom Events
      */
@@ -82,16 +83,16 @@
      *
      * @constructor
      */
-    var NetworkViewManager = function(){
+    var NetworkViewManager = function () {
         this.views = {};
     };
     NetworkViewManager.prototype = {
-        getNetworkView: function(viewId) {
+        getNetworkView: function (viewId) {
             return this.views[viewId];
         },
 
-        addNetworkView: function(viewId, view) {
-           this.views[viewId] = view;
+        addNetworkView: function (viewId, view) {
+            this.views[viewId] = view;
         }
     };
 
@@ -127,7 +128,7 @@
             // check current network model:
             var currentNetwork = app.model.get("currentNetwork");
             var currentNetworkName = currentNetwork.get("name");
-            if(currentNetworkName !== DEFAULT_NETWORK) {
+            if (currentNetworkName !== DEFAULT_NETWORK) {
                 // No need to update
                 return;
             }
@@ -269,7 +270,7 @@
 
             var isNetworkLoaded = self.get("hasNetworkData");
 
-            if(isNetworkLoaded) {
+            if (isNetworkLoaded) {
                 console.log("Alredy has data");
                 var graph = this.get("graph");
                 this.convertGraph(graph.nodes, graph.edges);
@@ -291,8 +292,8 @@
 
         convertGraph: function (nodes, edges) {
             var graph = {
-              nodes: [],
-              edges: []
+                nodes: [],
+                edges: []
             };
 
             var numberOfNodes = nodes.length;
@@ -421,7 +422,7 @@
             SIGMA_RENDERER.draw();
         },
 
-        rebuildView: function() {
+        rebuildView: function () {
 
             console.log("Refreshing==========");
             this.render();
@@ -531,7 +532,7 @@
             console.log("len = " + parts.length + ": query0 = " + parts[0]);
             var url = "";
 
-            if(parts.length == 1) {
+            if (parts.length == 1) {
                 url = "/nexo/" + nodeId + "/path.json";
             } else {
                 url = "/" + parts[0] + "/" + parts[1] + "/path.json";
@@ -583,7 +584,7 @@
                 var sigmaNode = sigmaView._core.graph.nodesIndex[id];
                 if (sigmaNode !== null && sigmaNode !== undefined) {
                     targetNodes[sigmaNode.id] = true;
-                    if(nodeType === "start") {
+                    if (nodeType === "start") {
                         startNode = sigmaNode;
                         console.log("*********** START: " + id);
                     }
@@ -651,7 +652,7 @@
                     node.attr.original_color = node.color;
                 }
 
-                if(node.id === queryNode.id) {
+                if (node.id === queryNode.id) {
                     node.color = QUERY_NODE_COLOR;
                     node.attr.grey = false;
                     node.forceLabel = true;
@@ -690,7 +691,7 @@
         loadNetworkSettings: function () {
             var networks = this.get("appConfig").networks;
 
-            var nexoTree= {};
+            var nexoTree = {};
             for (var i = 0; i < networks.length; i++) {
                 var network = networks[i];
                 var tree = {};
@@ -715,7 +716,7 @@
             this.set("currentNetworkView", nexoView);
         },
 
-        loadNetworkDataFile: function(targetNetwork) {
+        loadNetworkDataFile: function (targetNetwork) {
 
             console.log(targetNetwork);
             var network = targetNetwork[0];
@@ -726,7 +727,7 @@
             console.log(networkView);
 
             network.loadNetworkData();
-            if(networkView === undefined || networkView === null) {
+            if (networkView === undefined || networkView === null) {
 
                 console.log("Need to create view ===> " + networkName);
                 networkView = new NetworkView({model: network});
@@ -738,14 +739,13 @@
 
             // Set current
             this.set("currentNetwork", network);
-            this.set("currentNetworkView", networkView);
+            this.set({currentNetworkView: networkView});
         }
     });
 
 
     // Bootstrapping the app
     var Nexo = Backbone.View.extend({
-        model: NexoAppModel,
 
         el: "body",
 
@@ -764,34 +764,56 @@
                 subNetworkView: subNetworkView
             });
 
-
-
             this.listenToOnce(this.model, INITIALIZED, function () {
 
-                var currentNetworkView = this.model.get("currentNetworkView");
+                var currentNetworkView = self.model.get("currentNetworkView");
 
-                eventHelper.listenTo(searchView.collection, NODES_SELECTED, _.bind(currentNetworkView.selectNodes, currentNetworkView));
-                eventHelper.listenTo(searchView.collection, SEARCH_RESULT_SELECTED, _.bind(currentNetworkView.zoomTo, currentNetworkView));
+                viewEventHelper.listenTo(searchView.collection, NODES_SELECTED, _.bind(currentNetworkView.selectNodes, currentNetworkView));
+                viewEventHelper.listenTo(searchView.collection, SEARCH_RESULT_SELECTED, _.bind(currentNetworkView.zoomTo, currentNetworkView));
 
-                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
-                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
+                viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
+                viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
 
                 // Update subnetwork view when a term is selected.
-                eventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
+                viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
 
                 // Network collection manager
                 var networkCollection = self.model.get("networkManager");
                 var networkManagerView = new NetworkManagerView({collection: networkCollection});
                 eventHelper.listenTo(networkCollection, NETWORK_SELECTED, _.bind(self.model.loadNetworkDataFile, self.model));
 
-                eventHelper.listenTo(self.model, "change", _.bind(self.networkViewSwitched, self.model));
+                // Listening to the current network view change event.
+                self.listenTo(self.model, "change:currentNetworkView", self.networkViewSwitched);
+                console.log(self);
             });
+
+
         },
 
-        networkViewSwitched: function(event) {
+        networkViewSwitched: function () {
 
-            console.log("############## App model changed.");
-            console.log(event);
+            var currentNetworkView = this.model.get("currentNetworkView");
+            console.log("############## App model changed. model = ");
+            console.log(currentNetworkView);
+
+            this.updateListeners(currentNetworkView);
+        },
+
+        updateListeners: function (currentNetworkView) {
+            var summaryView = this.model.get("summaryView");
+            var subNetworkView = this.model.get("subNetworkView");
+            var searchView = this.model.get("searchView");
+
+            viewEventHelper.stopListening();
+
+            viewEventHelper.listenTo(searchView.collection, NODES_SELECTED, _.bind(currentNetworkView.selectNodes, currentNetworkView));
+            viewEventHelper.listenTo(searchView.collection, SEARCH_RESULT_SELECTED, _.bind(currentNetworkView.zoomTo, currentNetworkView));
+
+            viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.show, summaryView));
+            viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(summaryView.model.getDetails, summaryView.model));
+
+            // Update subnetwork view when a term is selected.
+            viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
         }
 
     });
@@ -924,24 +946,33 @@
      */
     var NodeDetails = Backbone.Model.extend({
 
-        urlRoot: "/",
-
         getDetails: function (selectedNodeId) {
+
+
             if (selectedNodeId === null || selectedNodeId === undefined) {
                 //  Do nothing.
                 return;
             }
 
+            var namespace = "nexo";
             var checkNamespace = selectedNodeId.split(":");
-            if (checkNamespace.length === 1) {
-                this.urlRoot = "/nexo";
+            console.log("len - " + checkNamespace.length);
+            var size = checkNamespace.length;
+
+            if (size === 1) {
+                this.url = "/" + namespace + "/" + selectedNodeId;
                 this.id = selectedNodeId;
-            } else if (checkNamespace.lenght === 2) {
-                this.urlRoot = "/" + checkNamespace[0];
+            } else if (size === 2) {
+                this.url = "/" + checkNamespace[0].toLowerCase() + "/" + checkNamespace[1];
                 this.id = checkNamespace[1];
+                namespace = checkNamespace[0];
+            } else {
+               console.log("ERROR!!!!!!!!");
             }
 
+
             var self = this;
+            console.log(selectedNodeId + ": ******************DETAILS called: " + this.url);
             this.fetch({
                 success: function (data) {
                     var attr = data.attributes;
@@ -961,32 +992,41 @@
 
         el: ID_SUMMARY_PANEL,
 
-        model: NodeDetails,
-
         events: {
             "click #close-button": "hide"
         },
 
         initialize: function () {
             this.model = new NodeDetails();
-            eventHelper.listenTo(this.model, "change", _.bind(this.render, this));
+            this.listenTo(this.model, "change", this.render);
         },
 
-        render: function () {
-            this.$(ID_NODE_DETAILS).empty();
-            this.$("#genes").empty();
+
+        /*
+         * Render term details for GO
+         */
+        goRenderer: function (id) {
+
+            console.log("GO rendering: " + id);
+
+            var label = this.model.get("term name");
+            var description = this.model.get("def");
+
+            this.$("#subnetwork-view").hide();
+            this.$(".headertext").empty().append(label);
+
+            var summary = "<h3>Term ID: " + id + "</h3>";
+            summary += "<h4>Description</h4><p>" + description + "</p>";
+            this.$(ID_NODE_DETAILS).append(summary);
+        },
+
+        nexoRenderer: function (id) {
+
+            console.log("--- NEXO: " +  id );
 
             var label = this.model.get("Term");
             this.$(".headertext").empty().append(label);
-
-            // Manually render summary view.
-            var entryId = this.model.get("name");
-            if (entryId.indexOf("GO:") != -1) {
-                var summary = "<h3>Term ID: " + entryId + "</h3>";
-                this.$el.html(summary).fadeIn(1000);
-
-                return this;
-            }
+            this.$("#subnetwork-view").show();
 
             var bestAlignedGoCategory = this.model.get("Best Alignment Ontology");
             var alignedCategory = "-";
@@ -1000,10 +1040,9 @@
             var interactionDensity = this.model.get("Interaction Density");
             var bootstrap = this.model.get("Bootstrap");
 
-            var summary = "<h3>Term ID: " + entryId + "</h3>";
+            var summary = "<h3>Term ID: " + id + "</h3>";
 
-            if (entryId.indexOf("S") === -1) {
-                console.log("FOUND! " + entryId);
+            if (id.indexOf("S") === -1) {
                 summary += "<table class=\"table table-striped\">";
                 summary += "<tr><td>Robustness</td><td>" + robustness + "</td></tr>";
                 summary += "<tr><td>Interaction Density</td><td>" + interactionDensity + "</td></tr>";
@@ -1013,19 +1052,29 @@
                 this.renderChart();
                 this.renderGeneList(this.model.get("Assigned Genes"));
             } else {
-                console.log("NOT FOUND! " + entryId);
                 summary = this.processGeneEntry(summary);
             }
             summary += "</table>";
 
             this.$(ID_NODE_DETAILS).append(summary);
 
-            console.log("RENDERED: " + entryId);
-            return this;
         },
 
-        renderGO: function () {
+        render: function () {
 
+            console.log("--------------------> drender detail:" );
+
+            this.$(ID_NODE_DETAILS).empty();
+            this.$("#genes").empty();
+
+            var entryId = this.model.get("name");
+            if (entryId.indexOf("GO") === -1) {
+                this.nexoRenderer(entryId);
+            } else {
+                this.goRenderer(entryId);
+            }
+
+            return this;
         },
 
         renderGeneList: function (geneList) {

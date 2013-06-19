@@ -5,7 +5,7 @@
         {
             "name": "NeXO",
 
-            "networkData": "nexo2.json",
+            "networkData": "nexo3.json",
 
             "sigma": {
                 "drawingProperties": {
