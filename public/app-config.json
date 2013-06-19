@@ -71,6 +71,76 @@
                     "maxRatio": 150
                 }
             }
+        },
+
+        {
+            "name": "GO Cellular Component",
+
+            "networkData": "cc-info.json",
+
+            "sigma": {
+                "drawingProperties": {
+                    "defaultLabelColor": "#4C4C4C",
+                    "defaultLabelSize": 14,
+                    "defaultLabelBGColor": "#ddd",
+                    "defaultHoverLabelBGColor": "#cccccc",
+                    "defaultLabelHoverColor": "#555",
+                    "labelThreshold": 10,
+                    "labelSize": "proportional",
+                    "font": "Exo",
+                    "defaultEdgeType": "line",
+                    "hoverFontStyle": "normal",
+                    "fontStyle": "bold",
+                    "activeFontStyle": "normal",
+                    "edgeColor": "default",
+                    "defaultEdgeColor": "rgba(30,30,30,0.5)"
+                },
+                "graphProperties": {
+                    "minNodeSize": 1.5,
+                    "maxNodeSize": 4,
+                    "minEdgeSize": 2,
+                    "maxEdgeSize": 7
+                },
+                "mouseProperties": {
+                    "minRatio": 0.7,
+                    "maxRatio": 150
+                }
+            }
+        },
+
+        {
+            "name": "GO Molecular Function",
+
+            "networkData": "mf-info.json",
+
+            "sigma": {
+                "drawingProperties": {
+                    "defaultLabelColor": "#4C4C4C",
+                    "defaultLabelSize": 14,
+                    "defaultLabelBGColor": "#ddd",
+                    "defaultHoverLabelBGColor": "#cccccc",
+                    "defaultLabelHoverColor": "#555",
+                    "labelThreshold": 10,
+                    "labelSize": "proportional",
+                    "font": "Exo",
+                    "defaultEdgeType": "line",
+                    "hoverFontStyle": "normal",
+                    "fontStyle": "bold",
+                    "activeFontStyle": "normal",
+                    "edgeColor": "default",
+                    "defaultEdgeColor": "rgba(30,30,30,0.5)"
+                },
+                "graphProperties": {
+                    "minNodeSize": 1.5,
+                    "maxNodeSize": 4,
+                    "minEdgeSize": 2,
+                    "maxEdgeSize": 7
+                },
+                "mouseProperties": {
+                    "minRatio": 0.7,
+                    "maxRatio": 150
+                }
+            }
         }
     ]
 }
