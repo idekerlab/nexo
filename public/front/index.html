@@ -6,6 +6,7 @@
 
     <!-- Download Web Fonts -->
     <link href='http://fonts.googleapis.com/css?family=Exo:100,400,700' rel='stylesheet'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,400,700' rel='stylesheet'>
 
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/style.css"/>
@@ -56,7 +57,8 @@
 
 
 <!-- Ontology Selector Popup -->
-<div id="networkSelector" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="networkSelector" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel">Select Ontology</h3>
@@ -71,12 +73,18 @@
 
 <!--Details for clicked node -->
 <div id="summary-panel">
-    <button id="close-button" class="flat-btn" type="button">Close</button>
-
-    <div class="headertext"></div>
-
     <div id="subnetwork-view">
         <div id="cyjs"></div>
+    </div>
+
+    <div class="row">
+
+        <div class="span1">
+            <div id="close-button"></div>
+        </div>
+        <div class="span8">
+            <div class="headertext"></div>
+        </div>
     </div>
 
     <div class="tabbable">
@@ -101,6 +109,7 @@
 <script src="js/backbone/backbone.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/d3/d3.v3.js"></script>
+<script src="js/highcharts/highcharts.js"></script>
 
 <script src="js/nexo.js"></script>
 <script>

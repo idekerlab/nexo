@@ -9,27 +9,27 @@
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelSize": 24,
                     "defaultLabelBGColor": "#fff",
                     "defaultHoverLabelBGColor": "#fff",
                     "defaultLabelHoverColor": "#555",
                     "labelThreshold": 5,
-                    "font": "Exo",
-                    "defaultLabelColor": "#4C4C4C",
+                    "font": "Lato",
+                    "fontStyle": "normal ",
+                    "defaultLabelSize": 16,
+                    "defaultLabelColor": "#42466F",
 
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
-                    "fontStyle": "oblique",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(106,106,106,0.4)",
+                    "defaultEdgeColor": "rgba(90,90,90,0.4)",
                     "defaultNodeActiveColor": "black"
                 },
                 "graphProperties": {
                     "minNodeSize": 0.5,
                     "maxNodeSize": 20,
-                    "minEdgeSize": 0.5,
-                    "maxEdgeSize": 15
+                    "minEdgeSize": 0.2,
+                    "maxEdgeSize": 4
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,
@@ -41,30 +41,29 @@
         {
             "name": "GO Biological Process",
 
-            "networkData": "bp-info.json",
+            "networkData": "bp2.json",
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelColor": "#4C4C4C",
-                    "defaultLabelSize": 14,
                     "defaultLabelBGColor": "#ddd",
                     "defaultHoverLabelBGColor": "#cccccc",
                     "defaultLabelHoverColor": "#555",
                     "labelThreshold": 10,
-                    "labelSize": "proportional",
-                    "font": "Exo",
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
-                    "fontStyle": "bold",
+                    "font": "Lato",
+                    "fontStyle": "normal ",
+                    "defaultLabelSize": 18,
+                    "defaultLabelColor": "rgba(59,66,77,0.9)",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(30,30,30,0.5)"
+                    "defaultEdgeColor": "rgba(70,70,60,0.4)"
                 },
                 "graphProperties": {
-                    "minNodeSize": 1.5,
-                    "maxNodeSize": 4,
-                    "minEdgeSize": 2,
-                    "maxEdgeSize": 7
+                    "minNodeSize": 0.5,
+                    "maxNodeSize": 12,
+                    "minEdgeSize": 0.2,
+                    "maxEdgeSize": 3
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,

@@ -1,5 +1,6 @@
 #!/opt/local/bin/python
 import json
+import math
 
 genes = open("biological_process.info_gain.gene_term", "r")
 
@@ -38,14 +39,13 @@ for edge in edges:
 	graph[target] = children
 
 # count nodes
-for key in term2geneMap:
-	geneList = term2geneMap[key]
-	for key2 in geneList:
-		print(key2)
 
 
 root = "GO:0008150"
 weights = {}
+minWeight = 10000
+maxWeight = 0
+
 
 def walk(node):
 	geneList = []
@@ -73,4 +73,30 @@ def walk(node):
 val = walk(root)
 print(val)
 for key in weights:
-	print(key + " = " + str(weights[key]));
+	w = weights[key]
+	if maxWeight< w:
+		maxWeight = w;
+	
+	if minWeight > w:
+		minWeight = w
+
+
+print("Min = " + str(minWeight))
+print("Max = " + str(maxWeight))
+
+
+# Convert score to size
+
+outOntology = open("bp2.json", "w")
+
+for node in nodes:
+	nodeId = node["id"]
+	w = weights[nodeId]
+	node["size"] = math.log(w+1, 1.5) + 1
+	print(nodeId + ": size = " + str(node["size"]))
+
+
+outOntology.write(json.dumps(tree, sort_keys=True, indent=4))
+outOntology.close()
+
+

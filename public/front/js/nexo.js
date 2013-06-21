@@ -299,6 +299,12 @@
             var numberOfNodes = nodes.length;
             for (var idx = 0; idx < numberOfNodes; idx++) {
                 var id = nodes[idx].id;
+                var nodeLabel = nodes[idx].label;
+                // Truncate if long
+                if(nodeLabel.length > 15) {
+                    nodeLabel = nodeLabel.substring(0,20) + "...";
+                    nodes[idx].label = nodeLabel;
+                }
                 SIGMA_RENDERER.addNode(id, nodes[idx]);
             }
 
@@ -311,6 +317,7 @@
                 var label = originalEdge.relationship;
                 var weight = originalEdge.weight;
                 var edgeId = idx;
+
 
                 var edge = {
                     "source": source,
@@ -455,7 +462,8 @@
             var sigmaView = SIGMA_RENDERER;
             var node = sigmaView._core.graph.nodesIndex[id];
             node.original_color = node.color;
-            node.color = "red";
+            node.color = QUERY_NODE_COLOR;
+
             sigmaView.position(0, 0, 1).draw();
             sigmaView.zoomTo(node['displayX'], node['displayY'], 20);
             sigmaView.draw(2, 2, 2);
@@ -652,7 +660,7 @@
                     node.attr.original_color = node.color;
                 }
 
-                if (node.id === queryNode.id) {
+                if (queryNode !== undefined && node.id === queryNode.id) {
                     node.color = QUERY_NODE_COLOR;
                     node.attr.grey = false;
                     node.forceLabel = true;
@@ -793,7 +801,6 @@
         networkViewSwitched: function () {
 
             var currentNetworkView = this.model.get("currentNetworkView");
-            console.log("############## App model changed. model = ");
             console.log(currentNetworkView);
 
             this.updateListeners(currentNetworkView);
@@ -847,20 +854,20 @@
         },
 
         initialize: function () {
+            var self= this;
             this.collection = new NodeDetailsList();
+            $("#result-table tr").live("click", function () {
+                var id = $(this).children("td")[0].firstChild.nodeValue;
+                console.log("############## FIRE!!!!!!!!! ");
+                self.collection.trigger(SEARCH_RESULT_SELECTED, id);
+            });
             $("#result-table").hide();
         },
 
         render: function () {
-            var self = this;
             var resultTableElement = $("#result-table");
             resultTableElement.empty();
             console.log("Removing DONE!!");
-
-            $("#result-table tr").live("click", function () {
-                var id = $(this).children("td")[0].firstChild.nodeValue;
-                self.collection.trigger(SEARCH_RESULT_SELECTED, id);
-            });
 
             this.collection.each(function (result) {
                 this.renderResult(result);
@@ -1022,9 +1029,11 @@
 
         nexoRenderer: function (id) {
 
-            console.log("--- NEXO: " +  id );
+            var label = this.model.get("CC Annotation");
+            if(label === undefined || label === null || label === "") {
+                label = "NeXO:" + id;
+            }
 
-            var label = this.model.get("Term");
             this.$(".headertext").empty().append(label);
             this.$("#subnetwork-view").show();
 
@@ -1049,7 +1058,9 @@
                 summary += "<tr><td>Bootstrap</td><td>" + bootstrap + "</td></tr>";
                 summary += "<tr><td>Best Aligned GO</td><td>" + alignedCategory + "</td></tr>";
                 summary = this.processEntry(summary);
-                this.renderChart();
+
+                this.renderScores();
+
                 this.renderGeneList(this.model.get("Assigned Genes"));
             } else {
                 summary = this.processGeneEntry(summary);
@@ -1062,8 +1073,6 @@
 
         render: function () {
 
-            console.log("--------------------> drender detail:" );
-
             this.$(ID_NODE_DETAILS).empty();
             this.$("#genes").empty();
 
@@ -1075,6 +1084,70 @@
             }
 
             return this;
+        },
+
+        renderScores: function() {
+            var bp = this.model.get("BP Score");
+            var cc = this.model.get("CC Score");
+            var mf = this.model.get("MF Score");
+
+            $(ID_NODE_DETAILS).highcharts({
+                chart: {
+                    type: 'bar',
+                    height: 180,
+                    spacingBottom: 5,
+                    spacingTop: 5,
+                    backgroundColor: "rgba(255,255,255,0)"
+                },
+
+                title: {
+                    text: 'GO Alignment'
+                },
+                xAxis: {
+                    categories: ['Biological Process', 'Cellular Component', 'Molecular Function'],
+                    labels: {
+                        style: {
+                            fontSize: '14px',
+                            fontFamily: 'Lato'
+                        }
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    max: 1.0,
+                    title: {
+                        text: 'Score'
+                    }
+                },
+                series: [{
+                    data: [bp, cc, mf],
+                    dataLabels: {
+                        enabled: true,
+                        color: '#FFFFFF',
+                        align: 'right',
+                        x: 0,
+                        y: 0,
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'Lato'
+                        }
+                    }
+                }],
+                plotOptions: {
+                    series: {
+                        pointPadding: 0,
+                        groupPadding: 0,
+                        borderWidth: 0,
+                        pointWidth: 22
+                    }
+                },
+                credits: {
+                    enabled: false
+                },
+                legend: {
+                    enabled: false
+                }
+            });
         },
 
         renderGeneList: function (geneList) {
