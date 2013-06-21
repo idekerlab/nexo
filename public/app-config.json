@@ -57,13 +57,13 @@
                     "defaultLabelColor": "rgba(59,66,77,0.9)",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(70,70,60,0.4)"
+                    "defaultEdgeColor": "rgba(100,100,100,0.5)"
                 },
                 "graphProperties": {
                     "minNodeSize": 0.5,
                     "maxNodeSize": 12,
                     "minEdgeSize": 0.2,
-                    "maxEdgeSize": 3
+                    "maxEdgeSize": 4
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,
