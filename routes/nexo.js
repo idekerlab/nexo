@@ -269,7 +269,7 @@ exports.getRawInteractions = function (req, res) {
     // Query should be list of genes
     console.log('ID = ' + id);
 
-    var fullUrl = BASE_URL + "vertices/?key=name&value=" + id + "&rexster.returnKeys=[name,Assigned Genes]";
+    var fullUrl = BASE_URL + "indices/Vertex?key=name&value=" + id + "&rexster.returnKeys=[name,Assigned Genes]";
 
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
