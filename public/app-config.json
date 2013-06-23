@@ -18,6 +18,7 @@
                     "defaultLabelSize": 16,
                     "defaultLabelColor": "#42466F",
 
+                    "labelSize": "proportional",
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
                     "activeFontStyle": "normal",
@@ -52,6 +53,7 @@
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
                     "font": "Lato",
+                    "labelSize": "proportional",
                     "fontStyle": "normal ",
                     "defaultLabelSize": 18,
                     "defaultLabelColor": "rgba(59,66,77,0.9)",

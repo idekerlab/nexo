@@ -14,6 +14,14 @@ var _ = require("underscore");
 var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
 
 var NEXO_NAMESPACE = "nexo";
+var GO_NAMESPACE = "go";
+
+var ROOTS = {
+    nexo: "joining_root",
+    bp: "biological_process",
+    cc: "",
+    mf: ""
+};
 
 var EMPTY_OBJ = {};
 var EMPTY_ARRAY = [];
@@ -323,21 +331,20 @@ exports.getRawInteractions = function (req, res) {
 exports.getPath = function (req, res) {
     "use strict";
 
-    var rootNode = "joining_root";
-
     var nameSpace = req.params.namespace;
     var id = req.params.id;
 
     var getGraphUrl = BASE_URL + "tp/gremlin?script=";
 
+    var rootNode = ROOTS.nexo;
     if (nameSpace === NEXO_NAMESPACE) {
-        getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
+        getGraphUrl = getGraphUrl + "g.idx('Vertex')[[name: '" + id + "']]" +
             ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
             "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
-            "{it.object.name.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
+            "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
     } else {
         // TODO: provide map oof ROOTS
-        rootNode = "biological_process";
+        rootNode = ROOTS.bp;
         getGraphUrl = getGraphUrl + "g.V.has('name', '" + nameSpace + ":" + id + "')" +
             ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
             "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
