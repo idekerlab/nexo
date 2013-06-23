@@ -15,7 +15,7 @@
                     "labelThreshold": 5,
                     "font": "Lato",
                     "fontStyle": "normal ",
-                    "defaultLabelSize": 16,
+                    "defaultLabelSize": 12,
                     "defaultLabelColor": "#42466F",
 
                     "labelSize": "proportional",

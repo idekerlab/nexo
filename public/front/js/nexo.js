@@ -102,8 +102,12 @@
     var CyNetwork = Backbone.Model.extend({
 
         initialize: function () {
-            this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
+            this.updateURL();
             console.log("URL = " + this.url);
+        },
+
+        updateURL: function() {
+            this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
         }
     });
 
@@ -115,12 +119,10 @@
 
         el: "#cy-network",
 
-        model: CyNetwork,
-
         events: {},
 
-        initialize: function () {
-            console.log("CyNetworkview initialized.  This should be called only once.");
+        render: function() {
+            $("#cyjs").cytoscape(this.initSubnetworkView());
         },
 
         update: function (nodeId) {
@@ -133,36 +135,36 @@
                 return;
             }
 
-            var self = this;
-
-            this.model = new CyNetwork({namespace: "nexo", termId: nodeId});
-
-            var options = this.model.get("options");
-
-            if (options === null || options === undefined) {
-                this.model.set("options", this.initSubnetworkView());
+            if(this.model === undefined || this.model === null) {
+                this.model = new CyNetwork({namespace: "nexo", termId: nodeId});
+            } else {
+               this.model.set("termId", nodeId);
+                this.model.updateURL();
             }
-            console.log("Rendering ================ CyNetworkview");
 
+            this.render();
+        },
+
+        loadData: function() {
+            var self = this;
             this.model.fetch({
                 success: function (data) {
 
                     var graph = data.attributes.graph;
-                    console.log(graph);
-                    var cyObj = self.model.get("cy");
-                    console.log(cyObj);
-                    cyObj.load(graph.elements,
-                        cyObj.layout({
+                    var cy = self.model.get("cy");
+
+                    cy.load(graph.elements,
+                        cy.layout({
                             name: 'arbor',
                             liveUpdate: true, // whether to show the layout as it's running
-                            maxSimulationTime: 5000, // max length in ms to run the layout
+                            maxSimulationTime: 3000, // max length in ms to run the layout
                             fit: true, // fit to viewport
                             padding: [ 30, 30, 30, 30 ], // top, right, bottom, left
-                            ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+                            ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
 
                             // forces used by arbor (use arbor default on undefined)
-                            repulsion: 9800,
-                            stiffness: 1500,
+                            repulsion: 19800,
+                            stiffness: 11500,
                             friction: 0.8,
                             gravity: true,
                             fps: undefined,
@@ -170,13 +172,9 @@
 
                             // static numbers or functions that dynamically return what these
                             // values should be for each element
-                            nodeMass: 5000,
-                            edgeLength: 0.5,
-
+                            nodeMass: 9000,
+                            edgeLength: 1.5,
                             stepSize: 1, // size of timestep in simulation
-
-                            // function that returns true if the system is stable to indicate
-                            // that the layout can be stopped
                             stableEnergy: function (energy) {
                                 var e = energy;
                                 return (e.max <= 0.5) || (e.mean <= 0.3);
@@ -186,14 +184,13 @@
                         });
                 }
             });
-
         },
 
         initSubnetworkView: function () {
-            console.log("Initialize");
+
             var self = this;
 
-            var options = {
+            var options =  {
                 showOverlay: false,
                 boxSelectionEnabled: false,
                 minZoom: 0.1,
@@ -203,16 +200,15 @@
                     .selector('node')
                     .css({
                         'font-family': 'Exo',
-                        'font-size': 11,
-                        'font-weight': 300,
+                        'font-size': 4,
+                        'font-weight': 400,
                         'content': 'data(id)',
                         'text-valign': 'center',
-                        'color': 'rgba(250, 250, 250, 1)',
-                        'width': 60,
-                        'height': 20,
+                        'color': 'rgb(25, 25, 25)',
+                        'width': 40,
+                        'height': 15,
                         'border-color': 'white',
-                        "background-color": "rgb(67,135,233)",
-                        "background-opacity": 0.8,
+                        "background-color": "rgb(240,240,240)",
                         "shape": "ellipse"
                     })
                     .selector(':selected')
@@ -222,9 +218,9 @@
                     })
                     .selector('edge')
                     .css({
-                        'width': 0.7,
+                        'width': 1.2,
                         "line-color": "#cccccc",
-                        "opacity": 0.5
+                        "opacity": 0.8
                     }),
 
                 elements: {
@@ -233,12 +229,11 @@
                 },
 
                 ready: function () {
-                    var cy = this;
-                    self.model.set("cy", cy);
+                    self.model.set("cy", this);
+                    self.model.set("options", options);
+                    self.loadData();
                 }
             };
-
-            $("#cyjs").cytoscape(options);
             return options;
         }
     });
@@ -400,10 +395,8 @@
                 var selectedNodeId = nodes.content[0];
                 var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
 
-                // Fire nodeSelected event.
+                self.findPath(selectedNode);
                 self.trigger(NODE_SELECTED, selectedNodeId);
-
-                self.findPath(SIGMA_RENDERER, selectedNode);
             });
 
             self.bindCommands();
@@ -459,14 +452,13 @@
                 lastNode.color = lastNode.original_color;
                 lastNode.original_color = null;
             }
-            var sigmaView = SIGMA_RENDERER;
-            var node = sigmaView._core.graph.nodesIndex[id];
+            var node = SIGMA_RENDERER._core.graph.nodesIndex[id];
             node.original_color = node.color;
             node.color = QUERY_NODE_COLOR;
 
-            sigmaView.position(0, 0, 1).draw();
-            sigmaView.zoomTo(node['displayX'], node['displayY'], 20);
-            sigmaView.draw(2, 2, 2);
+            SIGMA_RENDERER.position(0, 0, 1).draw();
+            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 20);
+            SIGMA_RENDERER.draw(2, 2, 2);
             this.model.set("lastSelected", node);
         },
 
@@ -532,12 +524,11 @@
         },
 
 
-        findPath: function (sigmaView, selectedNode) {
+        findPath: function (selectedNode) {
             var self = this;
             var nodeId = selectedNode.id;
             var parts = nodeId.split(":");
 
-            console.log("len = " + parts.length + ": query0 = " + parts[0]);
             var url = "";
 
             if (parts.length == 1) {
@@ -547,7 +538,7 @@
             }
             console.log("PATH query = " + url);
             $.getJSON(url, function (path) {
-                self.showPath(sigmaView, path);
+                self.showPath(path);
             });
         },
 
@@ -574,7 +565,7 @@
         },
 
 
-        showPath: function (sigmaView, path) {
+        showPath: function (path) {
 
             if (path.elements === undefined) {
                 return;
@@ -589,7 +580,7 @@
                 var cytoscapejsNode = pathNodes[i];
                 var id = cytoscapejsNode.data.id;
                 var nodeType = cytoscapejsNode.data.type;
-                var sigmaNode = sigmaView._core.graph.nodesIndex[id];
+                var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
                 if (sigmaNode !== null && sigmaNode !== undefined) {
                     targetNodes[sigmaNode.id] = true;
                     if (nodeType === "start") {
@@ -603,9 +594,8 @@
 
 
         refresh: function () {
-            var sigmaView = SIGMA_RENDERER;
 
-            sigmaView
+            SIGMA_RENDERER
                 .iterEdges(function (edge) {
                     edge.color = edge.attr.original_color;
                     edge.attr.grey = false;
