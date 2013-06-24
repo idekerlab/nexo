@@ -13,6 +13,8 @@
     // Configuration file for this application
     var CONFIG_FILE = "../app-config.json";
 
+    var LABEL_LENGTH_TH = 15;
+
     // Color for nodes that are not selected
     var DIM_COLOR = "rgba(200,200,200,0.9)";
     var SELECTED_NODE_COLOR = "rgba(70,130,180,0.9)";
@@ -106,7 +108,7 @@
             console.log("URL = " + this.url);
         },
 
-        updateURL: function() {
+        updateURL: function () {
             this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
         }
     });
@@ -121,7 +123,7 @@
 
         events: {},
 
-        render: function() {
+        render: function () {
             $("#cyjs").cytoscape(this.initSubnetworkView());
         },
 
@@ -135,17 +137,17 @@
                 return;
             }
 
-            if(this.model === undefined || this.model === null) {
+            if (this.model === undefined || this.model === null) {
                 this.model = new CyNetwork({namespace: "nexo", termId: nodeId});
             } else {
-               this.model.set("termId", nodeId);
+                this.model.set("termId", nodeId);
                 this.model.updateURL();
             }
 
             this.render();
         },
 
-        loadData: function() {
+        loadData: function () {
             var self = this;
             this.model.fetch({
                 success: function (data) {
@@ -190,7 +192,7 @@
 
             var self = this;
 
-            var options =  {
+            var options = {
                 showOverlay: false,
                 boxSelectionEnabled: false,
                 minZoom: 0.1,
@@ -296,8 +298,8 @@
                 var id = nodes[idx].id;
                 var nodeLabel = nodes[idx].label;
                 // Truncate if long
-                if(nodeLabel.length > 15) {
-                    nodeLabel = nodeLabel.substring(0,20) + "...";
+                if (nodeLabel.length > LABEL_LENGTH_TH) {
+                    nodeLabel = nodeLabel.substring(0, LABEL_LENGTH_TH) + "...";
                     nodes[idx].label = nodeLabel;
                 }
                 SIGMA_RENDERER.addNode(id, nodes[idx]);
@@ -571,12 +573,54 @@
                 return;
             }
             var pathNodes = path.elements.nodes;
+            var pathEdges = path.elements.edges;
+
+
+            // Add Edge
+            var edgeNames = {};
+            SIGMA_RENDERER
+                .iterEdges(function (edge) {
+                    var edgeName = edge.source + "-" + edge.target;
+                    edgeNames[edgeName] = true;
+                });
+
+            for (var i = 0; i < pathEdges.length; i++) {
+
+                var source = pathEdges[i].data.source;
+                var target = pathEdges[i].data.target;
+
+                var edgeName = source + "-" + target;
+                if (edgeNames[edgeName]) {
+                    // exists.  Do nothing.
+                } else {
+                    if (SIGMA_RENDERER._core.graph.nodesIndex[source] &&
+                        SIGMA_RENDERER._core.graph.nodesIndex[target] ) {
+
+                        // Add edge
+                        var newEdge = {
+                            source: source,
+                            target: target,
+                            weight: 0.3,
+                            size: 0.3,
+                            label: "extra",
+                            id: edgeName,
+                            type: "curve",
+                            attr: {
+                                type: "extra"
+                            }
+                        };
+                        SIGMA_RENDERER.addEdge(edgeName, source, target, newEdge);
+                    }
+                }
+            }
+
+            edgeNames = null;
 
             // Boolean map for enable/disable nodes.
             var targetNodes = {};
 
             var startNode = {};
-            for (var i = 0; i < pathNodes.length; i++) {
+            for (i = 0; i < pathNodes.length; i++) {
                 var cytoscapejsNode = pathNodes[i];
                 var id = cytoscapejsNode.data.id;
                 var nodeType = cytoscapejsNode.data.type;
@@ -585,7 +629,6 @@
                     targetNodes[sigmaNode.id] = true;
                     if (nodeType === "start") {
                         startNode = sigmaNode;
-                        console.log("*********** START: " + id);
                     }
                 }
             }
@@ -609,12 +652,10 @@
 
         highlight: function (targetNodes, nodesOnly, queryNode) {
 
-            var sigmaView = SIGMA_RENDERER;
-
             console.log(queryNode);
 
             if (nodesOnly === false) {
-                sigmaView.iterEdges(function (edge) {
+                SIGMA_RENDERER.iterEdges(function (edge) {
                     if (edge.color !== SELECTED_NODE_COLOR && edge.color !== DIM_COLOR) {
                         edge.attr.original_color = edge.color;
                     }
@@ -627,13 +668,16 @@
                             edge.color = DIM_COLOR;
                             edge.attr.grey = true;
                         }
+                    } else if(edge.label === "extra") {
+                        edge.color = "rgba(255,94,25,0.7)";
+                        edge.attr.grey = false;
                     } else {
                         edge.color = SELECTED_NODE_COLOR;
                         edge.attr.grey = false;
                     }
                 });
             } else {
-                sigmaView.iterEdges(function (edge) {
+                SIGMA_RENDERER.iterEdges(function (edge) {
                     if (edge.color !== SELECTED_NODE_COLOR && edge.color !== DIM_COLOR) {
                         edge.attr.original_color = edge.color;
                     }
@@ -644,7 +688,7 @@
                 });
             }
 
-            sigmaView.iterNodes(function (node) {
+            SIGMA_RENDERER.iterNodes(function (node) {
                 if (node.color !== SELECTED_NODE_COLOR && node.color !== DIM_COLOR
                     && node.color !== QUERY_NODE_COLOR) {
                     node.attr.original_color = node.color;
@@ -844,7 +888,7 @@
         },
 
         initialize: function () {
-            var self= this;
+            var self = this;
             this.collection = new NodeDetailsList();
             $("#result-table tr").live("click", function () {
                 var id = $(this).children("td")[0].firstChild.nodeValue;
@@ -964,7 +1008,7 @@
                 this.id = checkNamespace[1];
                 namespace = checkNamespace[0];
             } else {
-               console.log("ERROR!!!!!!!!");
+                console.log("ERROR!!!!!!!!");
             }
 
 
@@ -1020,7 +1064,7 @@
         nexoRenderer: function (id) {
 
             var label = this.model.get("CC Annotation");
-            if(label === undefined || label === null || label === "") {
+            if (label === undefined || label === null || label === "") {
                 label = "NeXO:" + id;
             }
 
@@ -1076,7 +1120,7 @@
             return this;
         },
 
-        renderScores: function() {
+        renderScores: function () {
             var bp = this.model.get("BP Score");
             var cc = this.model.get("CC Score");
             var mf = this.model.get("MF Score");
@@ -1109,20 +1153,22 @@
                         text: 'Score'
                     }
                 },
-                series: [{
-                    data: [bp, cc, mf],
-                    dataLabels: {
-                        enabled: true,
-                        color: '#FFFFFF',
-                        align: 'right',
-                        x: 0,
-                        y: 0,
-                        style: {
-                            fontSize: '12px',
-                            fontFamily: 'Lato'
+                series: [
+                    {
+                        data: [bp, cc, mf],
+                        dataLabels: {
+                            enabled: true,
+                            color: '#FFFFFF',
+                            align: 'right',
+                            x: 0,
+                            y: 0,
+                            style: {
+                                fontSize: '12px',
+                                fontFamily: 'Lato'
+                            }
                         }
                     }
-                }],
+                ],
                 plotOptions: {
                     series: {
                         pointPadding: 0,

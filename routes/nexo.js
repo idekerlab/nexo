@@ -345,9 +345,8 @@ exports.getPath = function (req, res) {
     } else {
         // TODO: provide map oof ROOTS
         rootNode = ROOTS.bp;
-        getGraphUrl = getGraphUrl + "g.V.has('name', '" + nameSpace + ":" + id + "')" +
-            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
-            "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
+        getGraphUrl = getGraphUrl + "g.idx('Vertex')[[name: '" + nameSpace + ":" + id + "']]" +
+            ".as('x').outE.inV.loop('x'){it.loops < 20}" +
             "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
     }
 

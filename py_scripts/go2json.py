@@ -2,13 +2,13 @@
 import json
 
 # Input data files
-inFiles = ["go-tree-bp-infogain.json","go-tree-cc-infogain.json","go-tree-mf-infogain.json" ];
+inFiles = ["biological_process.info_gain.gene_term.json","cellular_component.size.json","molecular_function.size.json" ];
 outFiles = ["bp-info.json","cc-info.json","mf-info.json"]
 
 idx = 0
 for inFile in inFiles:
 	bpFile = open(inFile)
-	goFile = open("go-terms.txt", "r")
+	goFile = open("go-all.txt", "r")
 
 # Output files
 	out = open(outFiles[idx], "w")
@@ -20,12 +20,12 @@ for inFile in inFiles:
 # Load Term Names
 	termNames = {}
 	for line in goFile:
-		newLine = line.replace("\"", "")
+		newLine = line.rstrip()
 		entries = newLine.split("\t")
 		termID = entries[0]
 		termName = entries[1]
 		termNames[termID] = termName
-		print(termID + " = " + termName)
+		print(termID + "=" + termName)
 
 	goFile.close()
 
@@ -43,6 +43,8 @@ for inFile in inFiles:
 		y = node["position"]["y"]
 		suid = node["data"]["SUID"]
 		size = 4.0
+		print(termID + "==")
+		
 		if termID in termNames:
 			newNode = {'id':termID, 'label':termNames[termID], 'size':size, 'x':x, 'y':y, 'color':"rgb(58,50,43)"}
 		else:
