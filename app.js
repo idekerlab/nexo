@@ -33,6 +33,7 @@ if ('development' === app.get('env')) {
 // Search queries
 app.get('/search/:query', nexo.getByQuery);
 app.get('/search/genes/:query', nexo.getByGeneQuery);
+app.get('/search/names/:names', nexo.getByNames);
 
 // ID query
 app.get('/:namespace/:id', nexo.getByID);

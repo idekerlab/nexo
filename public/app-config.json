@@ -35,6 +35,12 @@
                 "mouseProperties": {
                     "minRatio": 0.7,
                     "maxRatio": 150
+                },
+                "nexoProperties": {
+                    "labelLength": 20,
+                    "unselectedColor": "rgba(200,200,200,0.9)",
+                    "selectedColor": "rgba(70,130,180,0.9)",
+                    "queryNodeColor": "rgb(255,94,25)"
                 }
             }
         },

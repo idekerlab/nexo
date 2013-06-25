@@ -16607,7 +16607,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0007047", 
-            "label": "GO:0007047", 
+            "label": "cell wall organization", 
             "size": 12.12514841921615, 
             "x": -228.67175889993086, 
             "y": 10674.767262728652
@@ -16679,7 +16679,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0070882", 
-            "label": "GO:0070882", 
+            "label": "cell wall organization or biogenesis", 
             "size": 13.94075363634189, 
             "x": -700.9749780909624, 
             "y": 10778.179067217512
@@ -18687,7 +18687,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0034623", 
-            "label": "GO:0034623", 
+            "label": "macromolecular complex disassembly", 
             "size": 1.0, 
             "x": 480.17383203771897, 
             "y": 10115.395100140944
@@ -20087,7 +20087,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0034621", 
-            "label": "GO:0034621", 
+            "label": "macromolecular complex subunit organization", 
             "size": 9.971391340425772, 
             "x": 350.6363042704761, 
             "y": 9771.514601829695
@@ -20111,7 +20111,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071844", 
-            "label": "GO:0071844", 
+            "label": "cellular component assembly", 
             "size": 10.69707517144841, 
             "x": 305.0284815742634, 
             "y": 11131.247390256496
@@ -20135,7 +20135,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071845", 
-            "label": "GO:0071845", 
+            "label": "cellular component disassembly", 
             "size": 8.623448705070155, 
             "x": 711.4540137965232, 
             "y": 10283.395218115766
@@ -21055,7 +21055,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071843", 
-            "label": "GO:0071843", 
+            "label": "cellular component biogenesis", 
             "size": 15.39761481426567, 
             "x": 984.6940378849395, 
             "y": 11683.832972081145
@@ -21063,7 +21063,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071842", 
-            "label": "GO:0071842", 
+            "label": "cellular component organization", 
             "size": 17.320523876518564, 
             "x": 1268.5762658938766, 
             "y": 11747.217697276501
@@ -22975,7 +22975,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071841", 
-            "label": "GO:0071841", 
+            "label": "cellular component organization or biogenesis", 
             "size": 18.24916111242165, 
             "x": 1230.356836104067, 
             "y": 11593.149955381406
@@ -24551,7 +24551,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0034500", 
-            "label": "GO:0034500", 
+            "label": "chromosome separation", 
             "size": 3.709511291351455, 
             "x": 1719.021048143506, 
             "y": 5837.542827911442
@@ -24599,7 +24599,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0051313", 
-            "label": "GO:0051313", 
+            "label": "attachment of spindle microtubules to kinetochore", 
             "size": 5.419022582702909, 
             "x": 1914.9673139068764, 
             "y": 5678.09558934439
@@ -25815,7 +25815,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0006916", 
-            "label": "GO:0006916", 
+            "label": "negative regulation of apoptotic process", 
             "size": 4.41902258270291, 
             "x": 1517.0740666927304, 
             "y": 9248.737826985307
@@ -28615,7 +28615,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0006674", 
-            "label": "GO:0006674", 
+            "label": "inositolphosphoceramide metabolic process", 
             "size": 5.419022582702909, 
             "x": 7670.364025217481, 
             "y": 6336.521367257927
@@ -30951,7 +30951,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0006467", 
-            "label": "GO:0006467", 
+            "label": "protein disulfide isomerase activity", 
             "size": 3.709511291351455, 
             "x": 11205.87930687936, 
             "y": 2209.0824206399266
@@ -36359,7 +36359,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:2000695", 
-            "label": "GO:2000695", 
+            "label": "cytokinetic cell separation", 
             "size": 3.709511291351455, 
             "x": 2559.829303172417, 
             "y": 4795.783508486347
@@ -36367,7 +36367,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071937", 
-            "label": "GO:0071937", 
+            "label": "barrier septum assembly", 
             "size": 4.41902258270291, 
             "x": 2811.402303751791, 
             "y": 4617.484637341928
@@ -36479,7 +36479,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0033205", 
-            "label": "GO:0033205", 
+            "label": "cytokinesis", 
             "size": 8.261880049074318, 
             "x": 2963.7035470816772, 
             "y": 4802.447006992996
@@ -38079,7 +38079,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0070683", 
-            "label": "GO:0070683", 
+            "label": "mitotic DNA integrity checkpoint", 
             "size": 5.7992049380885575, 
             "x": 11444.863581529586, 
             "y": 14601.8748176659
@@ -38263,7 +38263,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0071780", 
-            "label": "GO:0071780", 
+            "label": "mitotic cell cycle checkpoint", 
             "size": 5.7992049380885575, 
             "x": 11388.933179139625, 
             "y": 14541.501254505012
@@ -38287,7 +38287,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0031575", 
-            "label": "GO:0031575", 
+            "label": "mitotic cell cycle checkpoint", 
             "size": 4.969362295916118, 
             "x": 11256.239500518655, 
             "y": 14418.598912223475
@@ -38303,7 +38303,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0031576", 
-            "label": "GO:0031576", 
+            "label": "cell cycle checkpoint", 
             "size": 6.41902258270291, 
             "x": 11333.001984600676, 
             "y": 14481.126560041914

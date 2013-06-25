@@ -31,8 +31,8 @@ for line in oboFile:
 			name = parts[1]
 			name = name.lstrip()
 		elif parts[0] == "alt_id":
-			altIds.append(parts[1] + ":" + parts[2])
-	
+			altIds.append(parts[1].lstrip() + ":" + parts[2])
+
 	print(goId + "\t" + name)
 	for alt in altIds:
 		print(alt + "\t" + name)

@@ -16345,7 +16345,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0015300", 
-            "label": "GO:0015300", 
+            "label": "antiporter activity", 
             "size": 5.7992049380885575, 
             "x": 5566.292722736718, 
             "y": 7788.300613566651
@@ -17857,7 +17857,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0009021", 
-            "label": "GO:0009021", 
+            "label": "S-adenosylmethionine-dependent tRNA (m5U54) methyltransferase activity", 
             "size": 2.709511291351455, 
             "x": 11032.608408049447, 
             "y": 7433.357277610339
@@ -19033,7 +19033,7 @@
         {
             "color": "rgb(58,50,43)", 
             "id": "GO:0005529", 
-            "label": "GO:0005529", 
+            "label": "carbohydrate binding", 
             "size": 7.508716229440012, 
             "x": 2733.6423524069833, 
             "y": 3189.3382133474806

@@ -19,8 +19,8 @@ var GO_NAMESPACE = "go";
 var ROOTS = {
     nexo: "joining_root",
     bp: "biological_process",
-    cc: "",
-    mf: ""
+    cc: "cellular_component",
+    mf: "molecular_function"
 };
 
 var EMPTY_OBJ = {};
@@ -198,7 +198,7 @@ exports.getByID = function (req, res) {
 
 //    var fullUrl = BASE_URL + "vertices/?key=name&value=";
 
-    var fullUrl = BASE_URL +"indices/Vertex?key=name&value=";
+    var fullUrl = BASE_URL + "indices/Vertex?key=name&value=";
     if (nameSpace === NEXO_NAMESPACE) {
         fullUrl = fullUrl + id;
     } else {
@@ -243,6 +243,29 @@ exports.getByQuery = function (req, res) {
     });
 };
 
+exports.getByNames = function (req, res) {
+
+    "use strict";
+
+    var names = req.params.names;
+    console.log('names = ' + names);
+
+    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + names +"')" + "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
+
+    console.log('FULL URL = ' + fullUrl);
+    request.get(fullUrl, function (err, rest_res, body) {
+        if (!err) {
+            var results = JSON.parse(body);
+            var resultArray = results.results;
+            if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
+                res.json(resultArray);
+            } else {
+                res.json(EMPTY_ARRAY);
+            }
+        }
+    });
+};
+
 exports.getByGeneQuery = function (req, res) {
 
     "use strict";
@@ -258,7 +281,7 @@ exports.getByGeneQuery = function (req, res) {
         if (!err) {
             var results = JSON.parse(body);
             var resultArray = results.results;
-            if (resultArray.length != 0) {
+            if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
                 res.json(resultArray);
             } else {
                 res.json(EMPTY_ARRAY);
@@ -331,39 +354,65 @@ exports.getRawInteractions = function (req, res) {
 exports.getPath = function (req, res) {
     "use strict";
 
-    var nameSpace = req.params.namespace;
+    var ns = req.params.namespace;
     var id = req.params.id;
 
-    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
 
     var rootNode = ROOTS.nexo;
-    if (nameSpace === NEXO_NAMESPACE) {
-        getGraphUrl = getGraphUrl + "g.idx('Vertex')[[name: '" + id + "']]" +
+    if (ns === "nexo") {
+        var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
             ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
             "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
             "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
-    } else {
-        // TODO: provide map oof ROOTS
-        rootNode = ROOTS.bp;
-        getGraphUrl = getGraphUrl + "g.idx('Vertex')[[name: '" + nameSpace + ":" + id + "']]" +
-            ".as('x').outE.inV.loop('x'){it.loops < 20}" +
-            "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
-    }
-
-
-    console.log('URL = ' + getGraphUrl);
-
-    request.get(getGraphUrl, function (err, rest_res, body) {
-        if (!err) {
-            var results = JSON.parse(body);
-            var resultArray = results.results;
-            if (resultArray !== undefined && resultArray.length !== 0) {
-                res.json(resultArray);
-            } else {
-                res.json(EMPTY_ARRAY);
+        request.get(nexoUrl, function (err, rest_res, body) {
+            if (!err) {
+                var results = JSON.parse(body);
+                var resultArray = results.results;
+                if (resultArray !== undefined && resultArray.length !== 0) {
+                    res.json(resultArray);
+                } else {
+                    res.json(EMPTY_ARRAY);
+                }
             }
-        }
-    });
+        });
+    } else {
+        var getNamespaceUrl = BASE_URL + "indices/Vertex?key=name&value=" + ns.toUpperCase() + ":" + id + "&rexster.returnKeys=[namespace]";
+
+        request.get(getNamespaceUrl, function (err, rest_res, body) {
+            if (!err) {
+                var results = JSON.parse(body);
+                var resultObj = results.results;
+                if (resultObj !== undefined && resultObj.length === 1) {
+
+                    var nameSpace = resultObj[0].namespace;
+                    var startNodeId = resultObj[0]._id;
+
+                    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+                    rootNode = nameSpace;
+
+                    getGraphUrl = getGraphUrl + "g.v(" + startNodeId + ")" +
+                        ".as('x').outE.inV.loop('x'){it.loops < 20}" +
+                        "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
+
+                    console.log("Final URL: " + getGraphUrl);
+
+                    request.get(getGraphUrl, function (err_in, rest_res_in, body_in) {
+                        if (!err_in) {
+                            var results = JSON.parse(body_in);
+                            var resultArray = results.results;
+                            if (resultArray !== undefined && resultArray.length !== 0) {
+                                res.json(resultArray);
+                            } else {
+                                res.json(EMPTY_ARRAY);
+                            }
+                        }
+                    });
+                } else {
+                    res.json(EMPTY_ARRAY);
+                }
+            }
+        });
+    }
 };
 
 
@@ -409,6 +458,33 @@ exports.getPathCytoscape = function (req, res) {
             if (results != "" && results.length != 0) {
                 var graph = graphUtil.graphGenerator(results);
                 res.json(graph);
+            } else {
+                res.json(EMPTY_ARRAY);
+            }
+        }
+    });
+};
+
+
+exports.getGeneNames = function (req, res) {
+    "use strict";
+
+    var id = req.params.id;
+
+    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+
+    getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
+        ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}" +
+        ".inV&rexster.returnKeys=[name]";
+
+    console.log('URL = ' + getGraphUrl);
+
+    request.get(getGraphUrl, function (err, rest_res, body) {
+        if (!err) {
+            var results = JSON.parse(body);
+            var resultArray = results.results;
+            if (resultArray !== undefined && resultArray.length !== 0) {
+                res.json(resultArray);
             } else {
                 res.json(EMPTY_ARRAY);
             }

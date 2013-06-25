@@ -294,38 +294,38 @@
             };
 
             var numberOfNodes = nodes.length;
-            for (var idx = 0; idx < numberOfNodes; idx++) {
-                var id = nodes[idx].id;
-                var nodeLabel = nodes[idx].label;
+            _.each(nodes, function(node) {
+                var id = node.id;
+                var nodeLabel = node.label;
+                node.fullLabel = nodeLabel;
                 // Truncate if long
                 if (nodeLabel.length > LABEL_LENGTH_TH) {
                     nodeLabel = nodeLabel.substring(0, LABEL_LENGTH_TH) + "...";
-                    nodes[idx].label = nodeLabel;
+                    node.label = nodeLabel;
                 }
-                SIGMA_RENDERER.addNode(id, nodes[idx]);
-            }
+                SIGMA_RENDERER.addNode(id, node);
+            });
 
-            var numberOfEdges = edges.length;
-            for (idx = 0; idx < numberOfEdges; idx++) {
-                var originalEdge = edges[idx];
+            var idx = 0;
+            _.each(edges, function(edge) {
 
-                var source = originalEdge.source;
-                var target = originalEdge.target;
-                var label = originalEdge.relationship;
-                var weight = originalEdge.weight;
+                var source = edge.source;
+                var target = edge.target;
+                var label = edge.relationship;
+                var weight = edge.weight;
                 var edgeId = idx;
 
 
-                var edge = {
+                var newEdge = {
                     "source": source,
                     "target": target,
                     "weight": weight,
                     "label": label,
                     "id": edgeId.toString(),
-                    "attr": {}
                 };
-                SIGMA_RENDERER.addEdge(edgeId, source, target, edge);
-            }
+                SIGMA_RENDERER.addEdge(edgeId, source, target, newEdge);
+                idx++;
+            });
 
             // Save the data to model
             graph.nodes = nodes;
@@ -391,6 +391,7 @@
 
         initialize: function () {
             var self = this;
+
 
             SIGMA_RENDERER.bind("upnodes", function (nodes) {
 
@@ -567,34 +568,37 @@
         },
 
 
-        showPath: function (path) {
+        addHiddenEdges: function (pathEdges) {
 
-            if (path.elements === undefined) {
-                return;
-            }
-            var pathNodes = path.elements.nodes;
-            var pathEdges = path.elements.edges;
-
-
-            // Add Edge
+            // Add hidden edge
             var edgeNames = {};
             SIGMA_RENDERER
                 .iterEdges(function (edge) {
-                    var edgeName = edge.source + "-" + edge.target;
-                    edgeNames[edgeName] = true;
+                    if (edge.label === "extra") {
+                        SIGMA_RENDERER.dropEdge(edge.id);
+                    } else {
+                        var edgeName = edge.source + "-" + edge.target;
+                        edgeNames[edgeName] = true;
+                    }
                 });
+            this.model.set("edgeExists", edgeNames);
 
-            for (var i = 0; i < pathEdges.length; i++) {
+            var extraEdges = [];
+
+            var numberOfEdges = pathEdges.length;
+            for (var i = 0; i < numberOfEdges; i++) {
 
                 var source = pathEdges[i].data.source;
                 var target = pathEdges[i].data.target;
 
                 var edgeName = source + "-" + target;
                 if (edgeNames[edgeName]) {
-                    // exists.  Do nothing.
+                    // Skip
                 } else {
+                    // Edge does not exists.  Add to view
+                    console.log("FOUND----------> " + edgeName);
                     if (SIGMA_RENDERER._core.graph.nodesIndex[source] &&
-                        SIGMA_RENDERER._core.graph.nodesIndex[target] ) {
+                        SIGMA_RENDERER._core.graph.nodesIndex[target]) {
 
                         // Add edge
                         var newEdge = {
@@ -610,17 +614,27 @@
                             }
                         };
                         SIGMA_RENDERER.addEdge(edgeName, source, target, newEdge);
+                        extraEdges.push(newEdge);
                     }
                 }
             }
+            this.model.set("extraEdges", extraEdges);
+        },
 
-            edgeNames = null;
+        showPath: function (path) {
+
+            // Ignore if path data is not available.
+            if (path.elements === undefined || path.elements === null) {
+                return;
+            }
+
+            this.addHiddenEdges(path.elements.edges);
 
             // Boolean map for enable/disable nodes.
             var targetNodes = {};
-
+            var pathNodes = path.elements.nodes;
             var startNode = {};
-            for (i = 0; i < pathNodes.length; i++) {
+            for (var i = 0; i < pathNodes.length; i++) {
                 var cytoscapejsNode = pathNodes[i];
                 var id = cytoscapejsNode.data.id;
                 var nodeType = cytoscapejsNode.data.type;
@@ -637,9 +651,11 @@
 
 
         refresh: function () {
-
             SIGMA_RENDERER
                 .iterEdges(function (edge) {
+                    if (edge.label === "extra") {
+                        SIGMA_RENDERER.dropEdge(edge.id);
+                    }
                     edge.color = edge.attr.original_color;
                     edge.attr.grey = false;
                 })
@@ -668,7 +684,7 @@
                             edge.color = DIM_COLOR;
                             edge.attr.grey = true;
                         }
-                    } else if(edge.label === "extra") {
+                    } else if (edge.label === "extra") {
                         edge.color = "rgba(255,94,25,0.7)";
                         edge.attr.grey = false;
                     } else {
@@ -1047,18 +1063,63 @@
          * Render term details for GO
          */
         goRenderer: function (id) {
-
-            console.log("GO rendering: " + id);
-
             var label = this.model.get("term name");
             var description = this.model.get("def");
+            var synonym = this.model.get("synonym");
+            var comment = this.model.get("comment");
+
+            var genes = this.model.get("Assigned Genes");
+            console.log(genes);
+
+
+            if (genes !== undefined && genes.length !== 0) {
+
+
+                genes = _.uniq(genes);
+
+                var names = "";
+                _.each(genes, function(gene) {
+                   names += gene + " ";
+                });
+
+
+                $.getJSON("/search/names/" + names, null, function (list) {
+
+                    var rows = [];
+                    console.log(list);
+                    var genesTab = $("#genes");
+                    var table = "<table class=\"table table-striped\">" +
+                        "<tr><th>Gene Name</th><th>SGD ID</th><th>ORF</th></tr>";
+                    _.each(list, function (gene) {
+                        rows.push("<tr><td>" + gene["Assigned Genes"] + "</td><td><a href='" + SGD_API + gene.name +
+                            "' target=_blank>" + gene.name + "</a></td><td>" + gene["Assigned Orfs"] +"</td></tr>");
+                    });
+
+                    rows = rows.sort();
+                    _.each(rows, function(row) {
+                        table += row;
+                    });
+                    table += "</table>";
+                    genesTab.append(table);
+
+                });
+
+
+            }
 
             this.$("#subnetwork-view").hide();
             this.$(".headertext").empty().append(label);
 
-            var summary = "<h3>Term ID: " + id + "</h3>";
-            summary += "<h4>Description</h4><p>" + description + "</p>";
+            var summary = "<h4><a href='" + QUICK_GO_API + id + "' target=_blank >" + id + "</a></h4>";
+            summary += "<table class=\"table table-striped\"><tr><td>Description</td><td>" + description + "</td></tr>";
+            summary += "<tr><td>Synonym</td><td>" + synonym + "</td></tr>";
+            summary += "<tr><td>Comment</td><td>" + comment + "</td></tr>";
+            summary += "</table>";
+
+
             this.$(ID_NODE_DETAILS).append(summary);
+            this.$(ID_NODE_DETAILS).append("<div id='term-view'></div>");
+
         },
 
         nexoRenderer: function (id) {
