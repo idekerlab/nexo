@@ -294,7 +294,7 @@
             };
 
             var numberOfNodes = nodes.length;
-            _.each(nodes, function(node) {
+            _.each(nodes, function (node) {
                 var id = node.id;
                 var nodeLabel = node.label;
                 node.fullLabel = nodeLabel;
@@ -307,7 +307,7 @@
             });
 
             var idx = 0;
-            _.each(edges, function(edge) {
+            _.each(edges, function (edge) {
 
                 var source = edge.source;
                 var target = edge.target;
@@ -532,13 +532,8 @@
             var nodeId = selectedNode.id;
             var parts = nodeId.split(":");
 
-            var url = "";
 
-            if (parts.length == 1) {
-                url = "/nexo/" + nodeId + "/path.json";
-            } else {
-                url = "/" + parts[0] + "/" + parts[1] + "/path.json";
-            }
+            var url = "/" + nodeId + "/path";
             console.log("PATH query = " + url);
             $.getJSON(url, function (path) {
                 self.showPath(path);
@@ -1004,32 +999,15 @@
     var NodeDetails = Backbone.Model.extend({
 
         getDetails: function (selectedNodeId) {
-
-
             if (selectedNodeId === null || selectedNodeId === undefined) {
                 //  Do nothing.
                 return;
             }
 
-            var namespace = "nexo";
-            var checkNamespace = selectedNodeId.split(":");
-            console.log("len - " + checkNamespace.length);
-            var size = checkNamespace.length;
-
-            if (size === 1) {
-                this.url = "/" + namespace + "/" + selectedNodeId;
-                this.id = selectedNodeId;
-            } else if (size === 2) {
-                this.url = "/" + checkNamespace[0].toLowerCase() + "/" + checkNamespace[1];
-                this.id = checkNamespace[1];
-                namespace = checkNamespace[0];
-            } else {
-                console.log("ERROR!!!!!!!!");
-            }
-
+            this.url = "/" + selectedNodeId;
+            this.id = selectedNodeId;
 
             var self = this;
-            console.log(selectedNodeId + ": ******************DETAILS called: " + this.url);
             this.fetch({
                 success: function (data) {
                     var attr = data.attributes;
@@ -1078,8 +1056,8 @@
                 genes = _.uniq(genes);
 
                 var names = "";
-                _.each(genes, function(gene) {
-                   names += gene + " ";
+                _.each(genes, function (gene) {
+                    names += gene + " ";
                 });
 
 
@@ -1092,11 +1070,11 @@
                         "<tr><th>Gene Name</th><th>SGD ID</th><th>ORF</th></tr>";
                     _.each(list, function (gene) {
                         rows.push("<tr><td>" + gene["Assigned Genes"] + "</td><td><a href='" + SGD_API + gene.name +
-                            "' target=_blank>" + gene.name + "</a></td><td>" + gene["Assigned Orfs"] +"</td></tr>");
+                            "' target=_blank>" + gene.name + "</a></td><td>" + gene["Assigned Orfs"] + "</td></tr>");
                     });
 
                     rows = rows.sort();
-                    _.each(rows, function(row) {
+                    _.each(rows, function (row) {
                         table += row;
                     });
                     table += "</table>";

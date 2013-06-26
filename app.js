@@ -22,8 +22,8 @@ app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
-app.use(app.router);
 app.use(express.static(path.join(__dirname, '/public')));
+app.use(app.router);
 
 // development only
 if ('development' === app.get('env')) {
@@ -36,10 +36,9 @@ app.get('/search/genes/:query', nexo.getByGeneQuery);
 app.get('/search/names/:names', nexo.getByNames);
 
 // ID query
-app.get('/:namespace/:id', nexo.getByID);
+app.get('/:id', nexo.getByID);
 app.get('/:namespace/:id/interactions', nexo.getRawInteractions);
-app.get('/:namespace/:id/path', nexo.getPath);
-app.get('/:namespace/:id/path.json', nexo.getPathCytoscape);
+app.get('/:id/path', nexo.getPath);
 app.get('/:namespace/:id/parents', nexo.getAllParents);
 
 app.get('/nexoview/:id', nexoView.showSummary);

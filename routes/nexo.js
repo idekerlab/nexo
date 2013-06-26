@@ -13,11 +13,9 @@ var _ = require("underscore");
 
 var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
 
-var NEXO_NAMESPACE = "nexo";
-var GO_NAMESPACE = "go";
 
 var ROOTS = {
-    nexo: "joining_root",
+    nexo: "NEXO:joining_root",
     bp: "biological_process",
     cc: "cellular_component",
     mf: "molecular_function"
@@ -26,13 +24,12 @@ var ROOTS = {
 var EMPTY_OBJ = {};
 var EMPTY_ARRAY = [];
 var EMPTY_CYNETWORK = {
-    graph: {
-        elements: {
-            nodes: [],
-            edges: []
-        }
+    elements: {
+        nodes: [],
+        edges: []
     }
 };
+
 var GENE_COUNT_THRESHOLD = 100;
 
 var GraphUtil = function () {
@@ -132,20 +129,9 @@ GraphUtil.prototype = {
 
                 node.data = {};
                 node.data.id = graphObject.name;
-                if (graphObject.name === "joining_root") {
-                    node.data["size"] = 50;
-                    node.data["border"] = 5;
-                    node.data["border-color"] = "rgb(51,10,10)";
-                    node.data["type"] = "root";
-                } else if (i == 0) {
-                    node.data["size"] = 50;
-                    node.data["border"] = 5;
-                    node.data["border-color"] = "rgb(0,0,50)";
+                if (i === 0) {
                     node.data["type"] = "start";
                 } else {
-                    node.data["size"] = 20;
-                    node.data["border"] = 2;
-                    node.data["border-color"] = "rgb(10,10,10)";
                     node.data["type"] = "path";
                 }
                 if (_.contains(nodes, node.data.id) == false) {
@@ -186,6 +172,23 @@ GraphUtil.prototype = {
 
 var graphUtil = new GraphUtil();
 
+var Validator = function () {
+};
+
+Validator.prototype = {
+    validate: function (id) {
+        // Validation
+        if (id === undefined || id === null || id === "") {
+            return false;
+        }
+
+        var parts = id.split(":");
+        return parts.length === 2;
+    }
+};
+
+var validator = new Validator();
+
 //
 // Get a term by ID.
 //
@@ -194,16 +197,13 @@ exports.getByID = function (req, res) {
     "use strict";
 
     var id = req.params.id;
-    var nameSpace = req.params.namespace;
 
-//    var fullUrl = BASE_URL + "vertices/?key=name&value=";
-
-    var fullUrl = BASE_URL + "indices/Vertex?key=name&value=";
-    if (nameSpace === NEXO_NAMESPACE) {
-        fullUrl = fullUrl + id;
-    } else {
-        fullUrl = fullUrl + nameSpace.toUpperCase() + ":" + id;
+    if (!validator.validate(id)) {
+        res.json(EMPTY_OBJ);
+        return;
     }
+
+    var fullUrl = BASE_URL + "indices/Vertex?key=name&value=" + id.toUpperCase();
 
     console.log("URL = " + fullUrl);
 
@@ -211,7 +211,7 @@ exports.getByID = function (req, res) {
         if (!err) {
             var results = JSON.parse(body);
             var resultArray = results.results;
-            if (resultArray.length != 0) {
+            if (resultArray.length !== 0) {
                 res.json(resultArray[0]);
             } else {
                 res.json(EMPTY_OBJ);
@@ -250,7 +250,7 @@ exports.getByNames = function (req, res) {
     var names = req.params.names;
     console.log('names = ' + names);
 
-    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + names +"')" + "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
+    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + names + "')" + "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
 
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
@@ -354,29 +354,39 @@ exports.getRawInteractions = function (req, res) {
 exports.getPath = function (req, res) {
     "use strict";
 
-    var ns = req.params.namespace;
     var id = req.params.id;
 
+    if (!validator.validate(id)) {
+        res.json(EMPTY_ARRAY);
+        return;
+    }
+
+    var ns = id.split(":")[0];
 
     var rootNode = ROOTS.nexo;
-    if (ns === "nexo") {
+    if (ns === "NEXO") {
+
         var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
             ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
             "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
             "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
+
+        console.log("NEXO found: " + nexoUrl);
+
         request.get(nexoUrl, function (err, rest_res, body) {
             if (!err) {
                 var results = JSON.parse(body);
                 var resultArray = results.results;
                 if (resultArray !== undefined && resultArray.length !== 0) {
-                    res.json(resultArray);
+                    var graph = graphUtil.graphGenerator(resultArray);
+                    res.json(graph);
                 } else {
-                    res.json(EMPTY_ARRAY);
+                    res.json(EMPTY_CYNETWORK);
                 }
             }
         });
     } else {
-        var getNamespaceUrl = BASE_URL + "indices/Vertex?key=name&value=" + ns.toUpperCase() + ":" + id + "&rexster.returnKeys=[namespace]";
+        var getNamespaceUrl = BASE_URL + "indices/Vertex?key=name&value=" + id + "&rexster.returnKeys=[namespace]";
 
         request.get(getNamespaceUrl, function (err, rest_res, body) {
             if (!err) {
@@ -400,20 +410,45 @@ exports.getPath = function (req, res) {
                         if (!err_in) {
                             var results = JSON.parse(body_in);
                             var resultArray = results.results;
-                            if (resultArray !== undefined && resultArray.length !== 0) {
-                                res.json(resultArray);
+                            if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
+                                var graph = graphUtil.graphGenerator(resultArray);
+                                res.json(graph);
                             } else {
                                 res.json(EMPTY_ARRAY);
                             }
                         }
                     });
                 } else {
-                    res.json(EMPTY_ARRAY);
+                    res.json(EMPTY_CYNETWORK);
                 }
             }
         });
     }
 };
+
+
+//exports.getPathCytoscape = function (req, res) {
+//    "use strict";
+//
+//    var id = req.params.id;
+//
+//    var fullUrl = "http://localhost:3000/" + id + "/path";
+//
+//    console.log('Cy URL = ' + fullUrl);
+//
+//    request.get(fullUrl, function (err, rest_res, body) {
+//        if (!err) {
+//            // This is an array.
+//            var results = JSON.parse(body);
+//            if (results != "" && results.length != 0) {
+//                var graph = graphUtil.graphGenerator(results);
+//                res.json(graph);
+//            } else {
+//                res.json(EMPTY_CYNETWORK);
+//            }
+//        }
+//    });
+//};
 
 
 exports.getAllParents = function (req, res) {
@@ -441,30 +476,6 @@ exports.getAllParents = function (req, res) {
         }
     });
 };
-exports.getPathCytoscape = function (req, res) {
-    "use strict";
-
-    var nameSpace = req.params.namespace;
-    var id = req.params.id;
-
-    var fullUrl = "http://localhost:3000/" + nameSpace + "/" + id + "/path";
-
-    console.log('Cy URL = ' + fullUrl);
-
-    request.get(fullUrl, function (err, rest_res, body) {
-        if (!err) {
-            // This is an array.
-            var results = JSON.parse(body);
-            if (results != "" && results.length != 0) {
-                var graph = graphUtil.graphGenerator(results);
-                res.json(graph);
-            } else {
-                res.json(EMPTY_ARRAY);
-            }
-        }
-    });
-};
-
 
 exports.getGeneNames = function (req, res) {
     "use strict";
