@@ -1068,7 +1068,7 @@
             var synonym = this.model.get("synonym");
             var comment = this.model.get("comment");
 
-            var genes = this.model.get("Assigned Genes");
+            var genes = this.model.get("Assigned Gene Ids");
             console.log(genes);
 
 
