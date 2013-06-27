@@ -438,7 +438,7 @@
             for (var i = 0; i < selectedNodes.length; i++) {
                 var id = selectedNodes[i].id;
                 var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
-                if (sigmaNode !== null) {
+                if (sigmaNode !== undefined) {
                     targetNodes[sigmaNode.id] = true;
                 }
             }
@@ -460,7 +460,7 @@
             node.color = QUERY_NODE_COLOR;
 
             SIGMA_RENDERER.position(0, 0, 1).draw();
-            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 20);
+            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 30);
             SIGMA_RENDERER.draw(2, 2, 2);
             this.model.set("lastSelected", node);
         },
@@ -933,15 +933,17 @@
 
             this.collection.reset();
 
-            $.getJSON("/search/" + query, function (searchResult) {
-                if (searchResult !== null && searchResult.length !== 0) {
+            $.getJSON("/search/genes/" + query, function (searchResult) {
+                if (searchResult !== undefined && searchResult.length !== 0) {
+                    console.log("$$$Result = " + searchResult);
 
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
 
+                        console.log("ID = " + node.name);
                         var newNode = new NodeDetails();
                         newNode.set("id", node.name);
-                        newNode.set("label", node.Term);
+                        newNode.set("label", node.label);
                         self.collection.add(newNode);
                     }
 
@@ -958,7 +960,7 @@
             // Enter key
             if (charCode === 13) {
                 event.preventDefault();
-                var query = this.parseQuery($("#query").val());
+                var query = $("#query").val();
                 this.search(query);
             }
         },
@@ -972,24 +974,10 @@
             }
 
             // Validate input
-            this.search(this.parseQuery(originalQuery));
+            this.search(originalQuery);
 
-        },
-
-        parseQuery: function (query) {
-            // Check it contains multiple words or not
-            var entries = query.split(" ");
-
-            var newQuery = "";
-            for (var i = 0; i < entries.length; i++) {
-                if (i != entries.length - 1) {
-                    newQuery += "*" + entries[i] + "* OR ";
-                } else {
-                    newQuery += "*" + entries[i] + "*";
-                }
-            }
-            return newQuery;
         }
+
     });
 
 
@@ -1122,7 +1110,7 @@
             var interactionDensity = this.model.get("Interaction Density");
             var bootstrap = this.model.get("Bootstrap");
 
-            var summary = "<h3>Term ID: " + id + "</h3>";
+            var summary = "<h4>" + id + "</h4>";
 
             if (id.indexOf("S") === -1) {
                 summary += "<table class=\"table table-striped\">";
@@ -1225,18 +1213,15 @@
             });
         },
 
-        renderGeneList: function (geneList) {
+        renderGeneList: function (genes) {
             var genesTab = $("#genes");
-            geneList = geneList.replace("[", "");
-            geneList = geneList.replace("]", "");
-            var genes = geneList.split(",");
 
             var table = "<table class=\"table table-striped\">";
             for (var i = 0; i < genes.length; i++) {
-                table += "<tr><td>" + genes[i] + "</td></tr>"
+                table += "<tr><td>" + genes[i] + "</td></tr>";
             }
 
-            table += "</table>"
+            table += "</table>";
             genesTab.append(table);
         },
 

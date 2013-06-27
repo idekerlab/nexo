@@ -51,7 +51,7 @@ print(idx)
 print(g.size())
 
 # Pick GO terms
-results = idx.query("name:GO*")
+results = idx.query("name:NEXO*")
 
 keys = ["Assigned Genes", "Assigned Gene Ids", "Assigned Gene Names", "Assigned Orf", "Assigned Gene Synonyms"]
 
@@ -60,10 +60,12 @@ for node in results:
   for key in keys:
     stringValue = toString(node, key)
     print(key + " = " + stringValue)
-    if len(stringValue) > 2500:
+    if len(stringValue) > 2000:
       print("TOO LONG!")
       continue
-    idx.add(key, stringValue, node)
+    listVal = node[key]
+    if listVal is not None:
+      idx.add(key, listVal, node)
 
 
 print(len(results))

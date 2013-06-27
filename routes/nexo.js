@@ -183,15 +183,33 @@ Validator.prototype = {
         }
 
         var parts = id.split(":");
-        return parts.length === 2;
+        if(parts.length === 2) {
+            return true;
+        } else if(id.match(/S/)) {
+           return true;
+        }
+
+        return false;
+    },
+    validateGeneList: function(id) {
+        if (id === undefined || id === null || id === "") {
+            return false;
+        }
+
+        return true;
     }
+
 };
 
 var validator = new Validator();
 
-//
-// Get a term by ID.
-//
+/**
+ * Supported IDs are:
+ *  - Ontology terms (NAMESPACE:ID)
+ *  - SGD ID
+ * @param req
+ * @param res
+ */
 exports.getByID = function (req, res) {
 
     "use strict";
@@ -199,6 +217,7 @@ exports.getByID = function (req, res) {
     var id = req.params.id;
 
     if (!validator.validate(id)) {
+        console.log("INVALID: " +  id);
         res.json(EMPTY_OBJ);
         return;
     }
@@ -211,7 +230,7 @@ exports.getByID = function (req, res) {
         if (!err) {
             var results = JSON.parse(body);
             var resultArray = results.results;
-            if (resultArray.length !== 0) {
+            if (resultArray instanceof Array && resultArray.length !== 0) {
                 res.json(resultArray[0]);
             } else {
                 res.json(EMPTY_OBJ);
@@ -227,7 +246,7 @@ exports.getByQuery = function (req, res) {
     console.log('Query = ' + query);
 
     var fullUrl = BASE_URL + "tp/gremlin?params={query:'" + query + "'}&script=keywordSearch()&load=[bykeyword]"
-        + "&rexster.returnKeys=[name,Term]";
+        + "&rexster.returnKeys=[name,Term,'Term or Gene Label']";
 
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
@@ -270,12 +289,25 @@ exports.getByGeneQuery = function (req, res) {
 
     "use strict";
 
-    var query = req.params.query;
-    console.log('Query = ' + query);
+    var rawQuery = req.params.query;
+    console.log('Query = ' + rawQuery);
+
+    // Validate
+    if(validator.validateGeneList(rawQuery) === false ) {
+        res.json(EMPTY_ARRAY);
+        return;
+    }
+
+    var geneIds = rawQuery.split(/ +/g);
+    var query = "";
+
+    for(var i=0; i<geneIds.length; i++) {
+        query += "*" + geneIds[i] + "* ";
+    }
 
     var fullUrl = BASE_URL + "tp/gremlin?params={query='" + query + "'}&script=search()&load=[bygene]" +
-        "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
-
+        "&rexster.returnKeys=[name,label]";
+    console.log(geneIds);
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
@@ -307,11 +339,12 @@ exports.getRawInteractions = function (req, res) {
             var results = JSON.parse(body);
             var resultArray = results.results;
             if (resultArray.length !== 0) {
-                var genes = resultArray[0]["Assigned Genes"];
-                genes = genes.replace("[", "");
-                genes = genes.replace("]", "");
-                genes = genes.replace(/ /g, "");
-                genes = genes.replace(/,/g, " ");
+                var geneArray = resultArray[0]["Assigned Genes"];
+
+                var geneString = geneArray.toString();
+                console.log("STR: " + geneString);
+
+                var genes = geneString.replace(/,/g, " ");
 
                 // Too many results
                 var numGenes = genes.split(" ").length;
@@ -339,12 +372,12 @@ exports.getRawInteractions = function (req, res) {
                             };
                             res.json(returnValue);
                         } else {
-                            res.json(EMPTY_OBJ);
+                            res.json(EMPTY_CYNETWORK);
                         }
                     }
                 });
             } else {
-                res.json(EMPTY_OBJ);
+                res.json(EMPTY_CYNETWORK);
             }
         }
     });
@@ -357,11 +390,16 @@ exports.getPath = function (req, res) {
     var id = req.params.id;
 
     if (!validator.validate(id)) {
-        res.json(EMPTY_ARRAY);
+        res.json(EMPTY_CYNETWORK);
         return;
     }
 
-    var ns = id.split(":")[0];
+    var ns = "";
+    if(id.match(/S/)) {
+        ns = "NEXO";
+    } else {
+        ns = id.split(":")[0];
+    }
 
     var rootNode = ROOTS.nexo;
     if (ns === "NEXO") {
@@ -425,30 +463,6 @@ exports.getPath = function (req, res) {
         });
     }
 };
-
-
-//exports.getPathCytoscape = function (req, res) {
-//    "use strict";
-//
-//    var id = req.params.id;
-//
-//    var fullUrl = "http://localhost:3000/" + id + "/path";
-//
-//    console.log('Cy URL = ' + fullUrl);
-//
-//    request.get(fullUrl, function (err, rest_res, body) {
-//        if (!err) {
-//            // This is an array.
-//            var results = JSON.parse(body);
-//            if (results != "" && results.length != 0) {
-//                var graph = graphUtil.graphGenerator(results);
-//                res.json(graph);
-//            } else {
-//                res.json(EMPTY_CYNETWORK);
-//            }
-//        }
-//    });
-//};
 
 
 exports.getAllParents = function (req, res) {
