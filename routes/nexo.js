@@ -191,7 +191,8 @@ Validator.prototype = {
 
         return false;
     },
-    validateGeneList: function(id) {
+
+    validateQuery: function(id) {
         if (id === undefined || id === null || id === "") {
             return false;
         }
@@ -242,13 +243,46 @@ exports.getByID = function (req, res) {
 exports.getByQuery = function (req, res) {
     "use strict";
 
-    var query = req.params.query;
-    console.log('Query = ' + query);
+    var rawQuery = req.params.query;
+    console.log('Query = ' + rawQuery);
 
-    var fullUrl = BASE_URL + "tp/gremlin?params={query:'" + query + "'}&script=keywordSearch()&load=[bykeyword]"
-        + "&rexster.returnKeys=[name,Term,'Term or Gene Label']";
+    // Validate
+    if(validator.validateQuery(rawQuery) === false ) {
+        res.json(EMPTY_ARRAY);
+        return;
+    }
+
+    var phrase = rawQuery.match(/"[^"]*(?:""[^"]*)*"/g);
+    console.log(phrase);
+
+    var queryString = "";
+    var wordsString = rawQuery;
+    _.each(phrase, function(entry) {
+        console.log("PH =: " + entry);
+        var noQ = entry.replace(/\"/g, "");
+        noQ = noQ.replace(" ", "?");
+        console.log("PH2 =: " + noQ);
+        queryString = queryString + "*" + noQ + "* ";
+        wordsString = wordsString.replace(entry, "");
+        console.log("Cur string =: " + queryString);
+    });
+
+    console.log("Phrase string =: " + queryString);
+
+    var words = wordsString.split(/ +/);
+    _.each(words, function(word){
+        if(word !== "") {
+            queryString = queryString + "*" + word + "* ";
+        }
+    });
+
+    console.log("Final String = " + queryString);
+
+    var fullUrl = BASE_URL + "tp/gremlin?params={query:'" + queryString + "'}&script=keywordSearch()&load=[bykeyword]"
+        + "&rexster.returnKeys=[name,label]";
 
     console.log('FULL URL = ' + fullUrl);
+
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
             var results = JSON.parse(body);
@@ -293,7 +327,7 @@ exports.getByGeneQuery = function (req, res) {
     console.log('Query = ' + rawQuery);
 
     // Validate
-    if(validator.validateGeneList(rawQuery) === false ) {
+    if(validator.validateQuery(rawQuery) === false ) {
         res.json(EMPTY_ARRAY);
         return;
     }
@@ -327,7 +361,6 @@ exports.getRawInteractions = function (req, res) {
     "use strict";
 
     var id = req.params.id;
-    var namespace = req.params.namespace;
 
     // Query should be list of genes
     console.log('ID = ' + id);

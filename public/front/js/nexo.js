@@ -16,7 +16,7 @@
     var LABEL_LENGTH_TH = 15;
 
     // Color for nodes that are not selected
-    var DIM_COLOR = "rgba(200,200,200,0.9)";
+    var DIM_COLOR = "rgba(220,220,220,0.7)";
     var SELECTED_NODE_COLOR = "rgba(70,130,180,0.9)";
     var QUERY_NODE_COLOR = "rgb(255,94,25)";
 
@@ -109,7 +109,7 @@
         },
 
         updateURL: function () {
-            this.url = "/" + this.get("namespace") + "/" + this.get("termId") + "/interactions";
+            this.url = "/" + this.get("termId") + "/interactions";
         }
     });
 
@@ -591,7 +591,6 @@
                     // Skip
                 } else {
                     // Edge does not exists.  Add to view
-                    console.log("FOUND----------> " + edgeName);
                     if (SIGMA_RENDERER._core.graph.nodesIndex[source] &&
                         SIGMA_RENDERER._core.graph.nodesIndex[target]) {
 
@@ -599,8 +598,8 @@
                         var newEdge = {
                             source: source,
                             target: target,
-                            weight: 0.3,
-                            size: 0.3,
+                            weight: 0.8,
+                            size: 0.8,
                             label: "extra",
                             id: edgeName,
                             type: "curve",
@@ -912,6 +911,10 @@
             this.collection = new SearchResults();
             var tableObject = $("#result-table");
             tableObject.find("tr").live("click", function () {
+                tableObject.find("tr").each(function() {
+                    $(this).removeClass("selected");
+                });
+                $(this).addClass("selected");
                 var id = $(this).children("td")[0].firstChild.nodeValue;
                 self.collection.trigger(SEARCH_RESULT_SELECTED, id);
             });
@@ -942,19 +945,23 @@
             $("#result-table").append(rendered.$el.html()).fadeIn(1000);
         },
 
-        search: function (query) {
+        search: function (query, searchByGenes) {
             var self = this;
 
             this.collection.reset();
 
-            $.getJSON("/search/genes/" + query, function (searchResult) {
-                if (searchResult !== undefined && searchResult.length !== 0) {
-                    console.log("$$$Result = " + searchResult);
+            var searchUrl = "";
+            if(searchByGenes) {
+                searchUrl = "/search/genes/" + query;
+            } else {
+                searchUrl = "/search/" + query;
+            }
 
+            $.getJSON(searchUrl, function (searchResult) {
+                if (searchResult !== undefined && searchResult.length !== 0) {
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
 
-                        console.log("ID = " + node.name);
                         var newNode = new SearchResultModel();
                         newNode.set("id", node.name);
                         newNode.set("label", node.label);
@@ -973,20 +980,23 @@
 
             // Enter key
             if (charCode === 13) {
+                var byGenes = $("#byGenes")[0].checked;
                 event.preventDefault();
                 var query = $("#query").val();
-                this.search(query);
+                this.search(query, byGenes);
             }
         },
 
         searchButtonPressed: function () {
             var originalQuery = $("#query").val();
+            var byGenes = $("#byGenes")[0].checked;
+
             // Ignore empty
             if (!originalQuery || originalQuery === "") {
                 return;
             }
             // Validate input
-            this.search(originalQuery);
+            this.search(originalQuery,byGenes);
         }
     });
 
@@ -1034,6 +1044,20 @@
             this.listenTo(this.model, "change", this.render);
         },
 
+        render: function () {
+
+            this.$(ID_NODE_DETAILS).empty();
+            this.$("#genes").empty();
+
+            var entryId = this.model.get("name");
+            if (entryId.indexOf("GO") === -1) {
+                this.nexoRenderer(entryId);
+            } else {
+                this.goRenderer(entryId);
+            }
+
+            return this;
+        },
 
         /*
          * Render term details for GO
@@ -1100,13 +1124,20 @@
 
         nexoRenderer: function (id) {
 
+            // Use CC Annotation as label, if not available, use ID.
             var label = this.model.get("CC Annotation");
             if (label === undefined || label === null || label === "") {
-                label = "NeXO:" + id;
+                label = id;
             }
 
+            // Main title
             this.$(".headertext").empty().append(label);
+
+            // Render raw interaction network view
             this.$("#subnetwork-view").show();
+
+            // Setup summary table
+            this.$(ID_NODE_DETAILS).append("<div id='term-summary'></div>");
 
             var bestAlignedGoCategory = this.model.get("Best Alignment Ontology");
             var alignedCategory = "-";
@@ -1120,17 +1151,18 @@
             var interactionDensity = this.model.get("Interaction Density");
             var bootstrap = this.model.get("Bootstrap");
 
-            var summary = "<h4>" + id + "</h4>";
+            // Render Summary Table
+
+            var summary = "<h4>" + id + "</h4><div id='robustness'></div>";
 
             if (id.indexOf("S") === -1) {
-                summary += "<table class=\"table table-striped\">";
+                summary += "<table class='table table-striped'>";
                 summary += "<tr><td>Robustness</td><td>" + robustness + "</td></tr>";
                 summary += "<tr><td>Interaction Density</td><td>" + interactionDensity + "</td></tr>";
                 summary += "<tr><td>Bootstrap</td><td>" + bootstrap + "</td></tr>";
-                summary += "<tr><td>Best Aligned GO</td><td>" + alignedCategory + "</td></tr>";
+                summary += "<tr><td>Best Aligned GO</td><td>" + alignedCategory + "</td></tr></table>";
                 summary = this.processEntry(summary);
 
-                this.renderScores();
 
                 this.renderGeneList(this.model.get("Assigned Genes"));
             } else {
@@ -1138,23 +1170,76 @@
             }
             summary += "</table>";
 
-            this.$(ID_NODE_DETAILS).append(summary);
 
+
+            this.$("#term-summary").append(summary).append("<div id='go-chart'></div>");
+
+            if (id.indexOf("S") === -1) {
+                this.renderSingleValueChart([robustness], "Robustness", ["Robustness"], $("#robustness"));
+                this.renderScores();
+            }
         },
 
-        render: function () {
+        renderSingleValueChart: function (valueArray, title, categoryArray, domElement) {
 
-            this.$(ID_NODE_DETAILS).empty();
-            this.$("#genes").empty();
+            domElement.highcharts({
+                chart: {
+                    type: 'bar',
+                    height: 180,
+                    spacingBottom: 5,
+                    spacingTop: 5,
+                    backgroundColor: "rgba(255,255,255,0)"
+                },
 
-            var entryId = this.model.get("name");
-            if (entryId.indexOf("GO") === -1) {
-                this.nexoRenderer(entryId);
-            } else {
-                this.goRenderer(entryId);
-            }
-
-            return this;
+                title: {
+                    text: title
+                },
+                xAxis: {
+                    categories: categoryArray,
+                    labels: {
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'Lato'
+                        }
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Score'
+                    }
+                },
+                series: [
+                    {
+                        data: valueArray,
+                        dataLabels: {
+                            enabled: true,
+                            color: '#FFFFFF',
+                            align: 'right',
+                            x: 0,
+                            y: 0,
+                            style: {
+                                fontSize: '12px',
+                                fontFamily: 'Lato'
+                            }
+                        }
+                    }
+                ],
+                plotOptions: {
+                    series: {
+                        pointPadding: 0,
+                        groupPadding: 0,
+                        borderWidth: 0,
+                        pointWidth: 22
+                    }
+                },
+                credits: {
+                    enabled: false
+                },
+                legend: {
+                    enabled: false
+                }
+            });
         },
 
         renderScores: function () {
@@ -1162,7 +1247,7 @@
             var cc = this.model.get("CC Score");
             var mf = this.model.get("MF Score");
 
-            $(ID_NODE_DETAILS).highcharts({
+            $("#go-chart").highcharts({
                 chart: {
                     type: 'bar',
                     height: 180,
@@ -1178,7 +1263,7 @@
                     categories: ['Biological Process', 'Cellular Component', 'Molecular Function'],
                     labels: {
                         style: {
-                            fontSize: '14px',
+                            fontSize: '12px',
                             fontFamily: 'Lato'
                         }
                     }
@@ -1384,14 +1469,6 @@
 
         hide: function () {
             this.$el.fadeOut(400);
-        }
-    });
-
-    var NodeDetailsList = Backbone.Collection.extend({
-        model: NodeDetails,
-
-        comparator: function (node) {
-            return node.get("name");
         }
     });
 

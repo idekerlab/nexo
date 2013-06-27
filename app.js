@@ -37,9 +37,8 @@ app.get('/search/names/:names', nexo.getByNames);
 
 // ID query
 app.get('/:id', nexo.getByID);
-app.get('/:namespace/:id/interactions', nexo.getRawInteractions);
+app.get('/:id/interactions', nexo.getRawInteractions);
 app.get('/:id/path', nexo.getPath);
-app.get('/:namespace/:id/parents', nexo.getAllParents);
 
 app.get('/nexoview/:id', nexoView.showSummary);
 
