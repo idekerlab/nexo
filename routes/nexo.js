@@ -405,8 +405,8 @@ exports.getPath = function (req, res) {
     if (ns === "NEXO") {
 
         var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
-            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
-            "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
+            ".as('x').outE.filter{it.label != 'raw_interaction'}." +
+            "inV.loop('x'){it.loops < 20}" +
             "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
 
         console.log("NEXO found: " + nexoUrl);

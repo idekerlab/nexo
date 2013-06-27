@@ -321,7 +321,7 @@
                     "target": target,
                     "weight": weight,
                     "label": label,
-                    "id": edgeId.toString(),
+                    "id": edgeId.toString()
                 };
                 SIGMA_RENDERER.addEdge(edgeId, source, target, newEdge);
                 idx++;
@@ -871,11 +871,20 @@
     });
 
 
+
+    var SearchResultModel = Backbone.Model.extend({
+
+    });
+    var SearchResults = Backbone.Collection.extend({
+
+        comparator: function(model) {
+            return model.get("id");
+        }
+    });
     /*
      A row in the search result table.
      */
     var SearchView = Backbone.View.extend({
-        model: NodeDetails,
 
         render: function () {
             this.$el.append("<tr><td>" + this.model.get("id") + "</td><td>" + this.model.get("label") + "</td></tr>");
@@ -891,28 +900,33 @@
 
         el: ID_SEARCH_RESULTS,
 
-        collection: NodeDetailsList,
-
         events: {
             "click #search-button": "searchButtonPressed",
-            "keypress #query": "searchDatabase"
+            "keypress #query": "searchDatabase",
+            "click .radio": "searchModeChanged"
         },
 
         initialize: function () {
             var self = this;
-            this.collection = new NodeDetailsList();
-            $("#result-table tr").live("click", function () {
+
+            this.collection = new SearchResults();
+            var tableObject = $("#result-table");
+            tableObject.find("tr").live("click", function () {
                 var id = $(this).children("td")[0].firstChild.nodeValue;
-                console.log("############## FIRE!!!!!!!!! ");
                 self.collection.trigger(SEARCH_RESULT_SELECTED, id);
             });
-            $("#result-table").hide();
+
+            tableObject.hide();
         },
+
+        searchModeChanged: function (mode) {
+           console.log(mode);
+        },
+
 
         render: function () {
             var resultTableElement = $("#result-table");
             resultTableElement.empty();
-            console.log("Removing DONE!!");
 
             this.collection.each(function (result) {
                 this.renderResult(result);
@@ -941,7 +955,7 @@
                         var node = searchResult[i];
 
                         console.log("ID = " + node.name);
-                        var newNode = new NodeDetails();
+                        var newNode = new SearchResultModel();
                         newNode.set("id", node.name);
                         newNode.set("label", node.label);
                         self.collection.add(newNode);
@@ -967,17 +981,13 @@
 
         searchButtonPressed: function () {
             var originalQuery = $("#query").val();
-
             // Ignore empty
             if (!originalQuery || originalQuery === "") {
                 return;
             }
-
             // Validate input
             this.search(originalQuery);
-
         }
-
     });
 
 
