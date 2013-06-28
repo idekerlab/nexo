@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>NeXO Web: Next Generation Ontology Browser</title>
+    <title>NeXO Viz: The Next Generation Ontology Visualizer</title>
     <meta charset="utf-8">
 
     <!-- Download Web Fonts -->
@@ -43,32 +43,11 @@
 
 <!-- Navigation UI -->
 <div id="commands">
-    <div class="z" rel="in">
-    </div>
-    <div class="z" rel="out"></div>
-    <div class="z" rel="center"></div>
+    <div class="z" rel="in" title="Zoom-in"></div>
+    <div class="z" rel="out" title="Zoom-out"></div>
+    <div class="z" rel="center" title="Fit to screen size"></div>
 
-    <a href="#networkSelector" data-toggle="modal">
-        <div class="s" rel="swap" title="Current Ontology"></div>
-    </a>
-
-    <div class="s" rel="settings"></div>
-</div>
-
-
-<!-- Ontology Selector Popup -->
-<div id="networkSelector" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-     aria-hidden="true">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="myModalLabel">Select Ontology</h3>
-    </div>
-    <div class="modal-body">
-        <ul id="trees" class="nav nav-list"></ul>
-    </div>
-    <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-    </div>
+    <div id="trees" class="s" rel="swap" title="Select Ontology"></div>
 </div>
 
 <!--Details for clicked node -->
@@ -121,30 +100,8 @@
     $('#result-tab a:last').tab('show');
     $('#result-tab a[href="#details"]').tab('show');
 
-    $('#networkSelector').modal({backdrop: false, show: false});
-
-
-    var treeItems = $('#trees li');
-    var selected = null;
-    treeItems.click(function (e) {
-        selected = $(this);
-        if (!selected.hasClass('active')) {
-            selected.addClass('active');
-            console.log("Activating: " + selected.first().text());
-        }
-        e.preventDefault();
-
-        var selectedName = selected.first().text();
-        treeItems.each(function () {
-
-            //console.log("Selected === " + selected.first().text());
-            if (selectedName !== $(this).first().text() && $(this).hasClass("active")) {
-
-                console.log("Disable: " + $(this).first().text());
-                $(this).removeClass("active");
-            }
-        });
-    });
+    // Modal Window
+//    $('#networkSelector').modal({backdrop: false, show: false, keyboard: true});
 </script>
 </body>
 </html>

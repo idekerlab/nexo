@@ -104,11 +104,11 @@ html, body {
 }
 
 #commands {
-    opacity: 0.7;
+    opacity: 0.9;
     z-index: 100;
     position: fixed;
-    left: 20px;
-    bottom: 25px;
+    left: 10px;
+    bottom: 10px;
     margin: 0 auto;
     padding: 0;
     -webkit-touch-callout: none;
@@ -126,7 +126,6 @@ html, body {
     margin: 5px;
     cursor: pointer;
     float: left;
-    margin-right: 4px;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -219,8 +218,39 @@ html, body {
     color: #efefef;
 }
 
-#networkSelector {
-    z-index: 200;
+#trees {
+    cursor: pointer;
+    width: 200px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+#commands .popover-content {
+
+    font-family: Lato;
+    font-weight: 400;
+    font-size: 14px;
+}
+#commands .popover-content li{
+
+    padding-left: 5px;
+    padding-right: 5px;
+    cursor: pointer;
+    line-height: 2em;
+}
+
+#commands .popover-content li.selectedNetwork{
+    color: rgb(255,94,25);
+    font-weight: 700;
+}
+#commands .popover-content li:hover {
+    background-color: rgb(70, 130, 180);
+    color: #ffffff;
 }
 
 #draggable {

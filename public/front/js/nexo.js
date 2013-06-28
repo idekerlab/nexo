@@ -13,7 +13,7 @@
     // Configuration file for this application
     var CONFIG_FILE = "../app-config.json";
 
-    var LABEL_LENGTH_TH = 15;
+    var LABEL_LENGTH_TH = 40;
 
     // Color for nodes that are not selected
     var DIM_COLOR = "rgba(220,220,220,0.7)";
@@ -336,15 +336,14 @@
 
 
     var Networks = Backbone.Collection.extend({
-        model: Network
-
     });
 
     var NetworkManagerView = Backbone.View.extend({
-        el: "#networkSelector",
+
+        el: "#commands",
 
         events: {
-            "click .networkName": "networkSelected"
+            "click .popover-content .networkName": "networkSelected"
         },
 
         collection: Networks,
@@ -357,9 +356,8 @@
             var trees = $("#trees");
             trees.empty();
 
-            var listString = "";
+            var listString = "<ul class='nav nav-pills nav-stacked'>";
             var treeCount = this.collection.length;
-            console.log("rendering modal window================== " + treeCount);
             for (var i = 0; i < treeCount; i++) {
                 var network = this.collection.at(i);
                 var networkName = network.get("config").name;
@@ -367,21 +365,26 @@
                 listString += "<li class='networkName'>" + networkName + "</li>";
             }
 
-            trees.append(listString);
+            listString += "</ul>";
+            trees.attr("data-content",listString);
         },
 
         networkSelected: function (e) {
+            console.log(e.currentTarget.className);
+            // Refresh
+            $(".popover-content li").each(function(){
+                $(this).removeClass("selectedNetwork");
+            });
+
+            e.currentTarget.className = e.currentTarget.className + " selectedNetwork";
+
             var selectedNetworkName = e.currentTarget.textContent;
-            console.log("@@@@@@@@Network Selected ===> " + selectedNetworkName);
             var selectedNetwork = this.collection.where({name: selectedNetworkName});
             this.collection.trigger(NETWORK_SELECTED, selectedNetwork);
         }
     });
 
-
     var NetworkView = Backbone.View.extend({
-
-        model: Network,
 
         el: "#sigma-canvas",
 
@@ -392,9 +395,9 @@
         initialize: function () {
             var self = this;
 
+            console.log("View Created!!!!!!!!!!!!!!!!!!!!!!");
 
             SIGMA_RENDERER.bind("upnodes", function (nodes) {
-
                 var selectedNodeId = nodes.content[0];
                 var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
 
@@ -409,7 +412,7 @@
         },
 
         render: function () {
-            console.log("Refreshing2");
+            console.log("Rendering sigma view:");
 
             var networkConfig = this.model.get("config");
             var drawingProps = networkConfig.sigma.drawingProperties;
@@ -476,6 +479,8 @@
                 var zoomButton = $(this);
                 var zoomCommand = zoomButton.attr("rel");
 
+                zoomButton.tooltip({delay: { show: 200, hide: 100 }});
+
                 zoomButton.click(function () {
 
                     if (zoomCommand === "center") {
@@ -487,9 +492,9 @@
                         var ratio = 1;
 
                         if (zoomCommand === "in") {
-                            ratio = 1.5;
+                            ratio = 1.2;
                         } else if (zoomCommand === "out") {
-                            ratio = 0.5;
+                            ratio = 0.8;
                         }
 
                         sigmaView.zoomTo(
@@ -507,16 +512,13 @@
                 var button = $(this);
                 var command = button.attr("rel");
 
-                button.popover({ placement: 'top', trigger: 'hover'});
+                //button.popover({ placement: 'top', trigger: 'hover'});
+                button.popover({
+                    html: true,
+                    placement: "top"
+                });
 
-                if (command === "swap") {
-                    button.hover(function () {
-                        button.attr("data-content", "NeXO Tree");
-                    });
-                    button.click(function () {
-                        console.log("Update called");
-                    });
-                } else if (command === "refresh") {
+                if (command === "refresh") {
                     button.click(function () {
                         console.log("Refresh called");
                         self.refresh();
@@ -525,7 +527,6 @@
 
             });
         },
-
 
         findPath: function (selectedNode) {
             var self = this;
@@ -780,9 +781,9 @@
 
             network.loadNetworkData();
             if (networkView === undefined || networkView === null) {
-
                 console.log("Need to create view ===> " + networkName);
                 networkView = new NetworkView({model: network});
+                VIEW_MANAGER.addNetworkView(networkName, networkView);
             }
 
             networkView.render();
@@ -838,8 +839,6 @@
                 self.listenTo(self.model, "change:currentNetworkView", self.networkViewSwitched);
                 console.log(self);
             });
-
-
         },
 
         networkViewSwitched: function () {
@@ -869,8 +868,6 @@
 
     });
 
-
-
     var SearchResultModel = Backbone.Model.extend({
 
     });
@@ -884,7 +881,6 @@
      A row in the search result table.
      */
     var SearchView = Backbone.View.extend({
-
         render: function () {
             this.$el.append("<tr><td>" + this.model.get("id") + "</td><td>" + this.model.get("label") + "</td></tr>");
             return this;

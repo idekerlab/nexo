@@ -30,13 +30,13 @@ var EMPTY_CYNETWORK = {
     }
 };
 
+// TODO: change to interaction TH.
 var GENE_COUNT_THRESHOLD = 100;
 
 var GraphUtil = function () {
 };
 
 GraphUtil.prototype = {
-
     generateInteractions: function (paths) {
         var pathLength = paths.length;
         console.log("# of path = " + pathLength);
@@ -86,10 +86,8 @@ GraphUtil.prototype = {
                         target: targetId
                     }
                 };
-
                 graph.elements.edges.push(newEdge);
             }
-
         }
         return graph;
     },
