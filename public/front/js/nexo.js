@@ -78,6 +78,7 @@
     var NETWORK_SELECTED = "networkSelected";
 
     var SIGMA_RENDERER = sigma.init(document.getElementById("sigma-canvas"));
+    var sigmaInitialized = false;
 
 
     /**
@@ -366,13 +367,13 @@
             }
 
             listString += "</ul>";
-            trees.attr("data-content",listString);
+            trees.attr("data-content", listString);
         },
 
         networkSelected: function (e) {
             console.log(e.currentTarget.className);
             // Refresh
-            $(".popover-content li").each(function(){
+            $(".popover-content li").each(function () {
                 $(this).removeClass("selectedNetwork");
             });
 
@@ -397,18 +398,21 @@
 
             console.log("View Created!!!!!!!!!!!!!!!!!!!!!!");
 
-            SIGMA_RENDERER.bind("upnodes", function (nodes) {
-                var selectedNodeId = nodes.content[0];
-                var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
+            if (!sigmaInitialized) {
+                // Bind only once.
+                sigmaInitialized = false;
+                SIGMA_RENDERER.bind("upnodes", function (nodes) {
+                    var selectedNodeId = nodes.content[0];
+                    var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
 
-                self.findPath(selectedNode);
-                self.trigger(NODE_SELECTED, selectedNodeId);
-            });
-
+                    self.findPath(selectedNode);
+                    self.trigger(NODE_SELECTED, selectedNodeId);
+                });
+            }
             self.bindCommands();
 
             // Render the network once its model is ready.
-            eventHelper.listenTo(this.model, NETWORK_LOADED, _.bind(this.rebuildView, this));
+            eventHelper.listenToOnce(this.model, NETWORK_LOADED, _.bind(this.render, this));
         },
 
         render: function () {
@@ -426,12 +430,6 @@
 
             SIGMA_RENDERER.refresh();
             SIGMA_RENDERER.draw();
-        },
-
-        rebuildView: function () {
-
-            console.log("Refreshing==========");
-            this.render();
         },
 
 
@@ -873,7 +871,7 @@
     });
     var SearchResults = Backbone.Collection.extend({
 
-        comparator: function(model) {
+        comparator: function (model) {
             return model.get("id");
         }
     });
@@ -907,7 +905,7 @@
             this.collection = new SearchResults();
             var tableObject = $("#result-table");
             tableObject.find("tr").live("click", function () {
-                tableObject.find("tr").each(function() {
+                tableObject.find("tr").each(function () {
                     $(this).removeClass("selected");
                 });
                 $(this).addClass("selected");
@@ -919,7 +917,7 @@
         },
 
         searchModeChanged: function (mode) {
-           console.log(mode);
+            console.log(mode);
         },
 
 
@@ -947,7 +945,7 @@
             this.collection.reset();
 
             var searchUrl = "";
-            if(searchByGenes) {
+            if (searchByGenes) {
                 searchUrl = "/search/genes/" + query;
             } else {
                 searchUrl = "/search/" + query;
@@ -992,7 +990,7 @@
                 return;
             }
             // Validate input
-            this.search(originalQuery,byGenes);
+            this.search(originalQuery, byGenes);
         }
     });
 
@@ -1165,7 +1163,6 @@
                 summary = this.processGeneEntry(summary);
             }
             summary += "</table>";
-
 
 
             this.$("#term-summary").append(summary).append("<div id='go-chart'></div>");
