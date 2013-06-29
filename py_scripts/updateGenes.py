@@ -1,5 +1,5 @@
 from py2neo import neo4j
-from py2neo import node, rel, gremlin
+from py2neo import node, rel
 
 def loadGeneAssociations(gaFile, goMap):
 	for line in gaFile:

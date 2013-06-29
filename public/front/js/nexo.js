@@ -13,7 +13,7 @@
     // Configuration file for this application
     var CONFIG_FILE = "../app-config.json";
 
-    var LABEL_LENGTH_TH = 40;
+    var LABEL_LENGTH_TH = 30;
 
     // Color for nodes that are not selected
     var DIM_COLOR = "rgba(220,220,220,0.7)";
@@ -76,6 +76,8 @@
     var SEARCH_RESULT_SELECTED = "searchResultSelected";
 
     var NETWORK_SELECTED = "networkSelected";
+
+    var CLEAR = "clear";
 
     var SIGMA_RENDERER = sigma.init(document.getElementById("sigma-canvas"));
     var sigmaInitialized = false;
@@ -656,7 +658,12 @@
                     node.color = node.attr.original_color;
                     node.attr.grey = false;
                     node.forceLabel = false;
-                }).draw(2, 2, 2);
+                });
+            this.fit();
+        },
+
+        fit: function() {
+            SIGMA_RENDERER.position(0, 0, 1).draw();
         },
 
         highlight: function (targetNodes, nodesOnly, queryNode) {
@@ -828,6 +835,10 @@
                 // Update subnetwork view when a term is selected.
                 viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
 
+                viewEventHelper.listenTo(searchView, CLEAR, _.bind(currentNetworkView.refresh, currentNetworkView));
+
+                eventHelper.listenTo(searchView, CLEAR, _.bind(summaryView.hide, summaryView));
+
                 // Network collection manager
                 var networkCollection = self.model.get("networkManager");
                 var networkManagerView = new NetworkManagerView({collection: networkCollection});
@@ -840,7 +851,6 @@
         },
 
         networkViewSwitched: function () {
-
             var currentNetworkView = this.model.get("currentNetworkView");
             console.log(currentNetworkView);
 
@@ -862,6 +872,7 @@
 
             // Update subnetwork view when a term is selected.
             viewEventHelper.listenTo(currentNetworkView, NODE_SELECTED, _.bind(subNetworkView.update, subNetworkView));
+            viewEventHelper.listenTo(searchView, CLEAR, _.bind(currentNetworkView.refresh, currentNetworkView));
         }
 
     });
@@ -895,6 +906,8 @@
 
         events: {
             "click #search-button": "searchButtonPressed",
+            "click #clear-button": "clearButtonPressed",
+            "click #help-button": "helpButtonPressed",
             "keypress #query": "searchDatabase",
             "click .radio": "searchModeChanged"
         },
@@ -924,7 +937,10 @@
         render: function () {
             var resultTableElement = $("#result-table");
             resultTableElement.empty();
-
+//
+//            if(this.collection.isEmpty()) {
+//                concole.log("NONE!!!!!!!!!!!")
+//            }
             this.collection.each(function (result) {
                 this.renderResult(result);
             }, this);
@@ -991,6 +1007,13 @@
             }
             // Validate input
             this.search(originalQuery, byGenes);
+        },
+
+        clearButtonPressed: function() {
+            var resultTableElement = $("#result-table");
+            resultTableElement.slideUp(500).empty();
+            $("#query").val("");
+            this.trigger(CLEAR);
         }
     });
 
@@ -1077,16 +1100,17 @@
                 });
 
 
+                // TODO set upper limit.
                 $.getJSON("/search/names/" + names, null, function (list) {
 
                     var rows = [];
                     console.log(list);
                     var genesTab = $("#genes");
                     var table = "<table class=\"table table-striped\">" +
-                        "<tr><th>Gene Name</th><th>SGD ID</th><th>ORF</th></tr>";
+                        "<tr><th>SGD ID</th><th>Gene Symbol</th><th>ORF</th></tr>";
                     _.each(list, function (gene) {
-                        rows.push("<tr><td>" + gene["Assigned Genes"] + "</td><td><a href='" + SGD_API + gene.name +
-                            "' target=_blank>" + gene.name + "</a></td><td>" + gene["Assigned Orfs"] + "</td></tr>");
+                        rows.push("<tr><td>" + gene.name + "</td><td><a href='" + SGD_API + gene.name +
+                            "' target=_blank>" + gene["Assigned Genes"] + "</a></td><td>" + gene["Assigned Orfs"] + "</td></tr>");
                     });
 
                     rows = rows.sort();
@@ -1313,100 +1337,6 @@
             genesTab.append(table);
         },
 
-        renderChart: function () {
-            var data = [];
-            var bp = this.model.get("BP Score");
-            var cc = this.model.get("CC Score");
-            var mf = this.model.get("MF Score");
-            data.push({name: "Biological Process", score: bp});
-            data.push({name: "Cellular Component", score: cc});
-            data.push({name: "Molecular Function", score: mf});
-
-            var valueLabelWidth = 170;
-            var barHeight = 25; // height of one bar
-            var barLabelWidth = 140; // space reserved for bar labels
-            var barLabelPadding = 15; // padding between bar and bar labels (left)
-            var gridLabelHeight = 18; // space reserved for gridline labels
-            var gridChartOffset = 10; // space between start of grid and first bar
-            var maxBarWidth = 420; // width of the bar with the max value
-
-            var barLabel = function (d) {
-                return d.name;
-            };
-            var barValue = function (d) {
-                return parseFloat(d.score);
-            };
-
-            var yScale = d3.scale.ordinal().domain(d3.range(0, data.length)).rangeBands([0, data.length * barHeight]);
-            var y = function (d, i) {
-                return yScale(i);
-            };
-            var yText = function (d, i) {
-                return y(d, i) + yScale.rangeBand() / 2;
-            };
-            var x = d3.scale.linear().domain([0, 1.0]).range([0, maxBarWidth]);
-            var chart = d3.select(ID_NODE_DETAILS).append("svg")
-                .attr('width', maxBarWidth + barLabelWidth + valueLabelWidth)
-                .attr('height', gridLabelHeight + gridChartOffset + data.length * barHeight);
-
-            var gridContainer = chart.append('g')
-                .attr('transform', 'translate(' + barLabelWidth + ',' + gridLabelHeight + ')');
-            gridContainer.selectAll("text").data(x.ticks(10)).enter().append("text")
-                .attr("x", x)
-                .attr("dy", -3)
-                .attr("text-anchor", "middle")
-                .text(String);
-
-            gridContainer.selectAll("line").data(x.ticks(10)).enter().append("line")
-                .attr("x1", x)
-                .attr("x2", x)
-                .attr("y1", 0)
-                .attr("y2", yScale.rangeExtent()[1] + gridChartOffset)
-                .style("stroke", "#ccc");
-
-            var labelsContainer = chart.append('g')
-                .attr('transform', 'translate(' + (barLabelWidth - barLabelPadding) + ',' + (gridLabelHeight + gridChartOffset) + ')');
-
-            labelsContainer.selectAll('text').data(data).enter().append('text')
-                .attr('y', yText)
-                .attr('stroke', 'none')
-                .attr('fill', 'black')
-                .attr("dy", ".35em") // vertical-align: middle
-                .attr('text-anchor', 'end')
-                .text(barLabel);
-
-            var barsContainer = chart.append('g')
-                .attr('transform', 'translate(' + barLabelWidth + ',' + (gridLabelHeight + gridChartOffset) + ')');
-
-            barsContainer.selectAll("rect").data(data).enter().append("rect")
-                .attr('y', y)
-                .attr('height', yScale.rangeBand())
-                .attr('width', function (d) {
-                    return x(barValue(d));
-                })
-                .attr('stroke', 'white')
-                .attr('fill', 'steelblue');
-
-            barsContainer.selectAll("text").data(data).enter().append("text")
-                .attr("x", function (d) {
-                    return x(barValue(d));
-                })
-                .attr("y", yText)
-                .attr("dx", 3) // padding-left
-                .attr("dy", ".35em") // vertical-align: middle
-                .attr("text-anchor", "start") // text-align: right
-                .attr("fill", "black")
-                .attr("stroke", "none")
-                .text(function (d) {
-                    return d3.round(barValue(d), 5);
-                });
-
-            barsContainer.append("line")
-                .attr("y1", -gridChartOffset)
-                .attr("y2", yScale.rangeExtent()[1] + gridChartOffset)
-                .style("stroke", "#000");
-        },
-
 
         processEntry: function (allValues) {
 
@@ -1457,11 +1387,11 @@
         },
 
         show: function () {
-            this.$el.fadeIn(400);
+            this.$el.show(400, "swing");
         },
 
         hide: function () {
-            this.$el.fadeOut(400);
+            this.$el.hide(400, "swing");
         }
     });
 

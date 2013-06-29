@@ -8,6 +8,7 @@
     <link href='http://fonts.googleapis.com/css?family=Exo:100,400,700' rel='stylesheet'>
     <link href='http://fonts.googleapis.com/css?family=Lato:100,400,700' rel='stylesheet'>
 
+    <link rel="stylesheet" href="css/font-style.css"/>
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/style.css"/>
     <script src="js/jquery/jquery.min.js"></script>
@@ -22,19 +23,29 @@
 <div id="mainpanel">
     <div id="network-title"></div>
 
-    <form class="form-search">
-        <input id="query" type="text" class="input-medium flat">
-        <button id="search-button" type="button" class="flat-btn">Search</button>
-        <button id="help-button" type="button" class="flat-btn">?</button>
-    </form>
-    <label class="radio">
-        <input type="radio" name="optionsRadios" id="byKeyword" value="option1" checked>
-        by Keywords
-    </label>
-    <label class="radio">
-        <input type="radio" name="optionsRadios" id="byGenes" value="option2">
-        by Genes
-    </label>
+
+        <div class="row-fluid">
+            <input id="query" type="text" class="flat span9">
+            <div id="search-button" class="span1 font-button" data-icon="s"></div>
+            <div id="clear-button" class="span1 font-button" data-icon="R"></div>
+            <div id="help-button" class="span1 font-button" data-icon="?"></div>
+        </div>
+
+    <div class="row-fluid">
+        <div class="span4">
+            <label class="radio">
+                <input type="radio" name="optionsRadios" id="byKeyword" value="option1" checked>
+                by Keywords
+            </label>
+        </div>
+
+        <div class="span4">
+            <label class="radio">
+                <input type="radio" name="optionsRadios" id="byGenes" value="option2">
+                by Genes
+            </label>
+        </div>
+    </div>
 
     <div id="results">
         <table id="result-table" class="table"></table>
@@ -101,7 +112,7 @@
     $('#result-tab a[href="#details"]').tab('show');
 
     // Modal Window
-//    $('#networkSelector').modal({backdrop: false, show: false, keyboard: true});
+    //    $('#networkSelector').modal({backdrop: false, show: false, keyboard: true});
 </script>
 </body>
 </html>

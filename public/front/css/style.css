@@ -13,12 +13,11 @@ html, body {
 }
 
 .flat-btn {
-    font-family: Lato;
-    font-weight: 700;
-    font-size: 14px;
-    background-color: #009ccc;
-    color: #ffffff;
-    padding: 5px 20px;
+    font-family: nexo;
+    font-size: 16px;
+    background-color: #ffffff;
+    color: red;
+    padding: 0px;
     border: 0;
     margin-right: 5px;
     margin-left: 5px;
@@ -26,6 +25,17 @@ html, body {
 
 .flat {
     border-radius: 0 !important;
+}
+
+#query {
+    float: left;
+}
+
+.font-button {
+    font-size: 20px;
+    padding: 5px;
+    cursor: pointer;
+    color: #343434;
 }
 
 /* Main network view*/
@@ -44,15 +54,16 @@ html, body {
     user-select: none;
 }
 
+/* Search Panel */
 #mainpanel {
-    margin-top: 10px;
-    margin-left: 10px;
-    width: 330px;
+    margin-top: 5px;
+    margin-left: 5px;
+    width: 320px;
     padding-top: 1em;
     padding-right: 1em;
     padding-left: 1em;
     padding-bottom: 1em;
-    background-color: rgba(255, 255, 255, 0.98);
+    background-color: rgba(255, 255, 255, 0.95);
     z-index: 20;
     position: fixed;
     top: 0;
@@ -61,7 +72,7 @@ html, body {
 #network-title {
     color: #556666;
     font-size: 24px;
-    font-weight: 300;
+    font-weight: 700;
     padding-bottom: 18px;
     padding-top: 5px;
 }
@@ -192,7 +203,10 @@ html, body {
 
 #results {
     font-size: 12px;
-    max-height: 600px;
+    max-height: 350px;
+    margin-top: 4px;
+    background-color: rgba(222,222,222, 0.1);
+    opacity: 1.0;
     overflow-y: scroll;
     overflow-x: hidden;
     -webkit-touch-callout: none;
