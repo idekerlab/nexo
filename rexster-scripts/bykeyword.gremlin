@@ -1,0 +1,23 @@
+def keywordSearch() {
+	def allResults = [];
+  def itrList = [];
+
+	itrList.add(g.idx('Vertex').query('CC Definition',query).iterator());
+	itrList.add(g.idx('Vertex').query('BP Definition',query).iterator());
+	itrList.add(g.idx('Vertex').query('MF Definition',query).iterator());
+	itrList.add(g.idx('Vertex').query('CC Annotation',query).iterator());
+	itrList.add(g.idx('Vertex').query('BP Annotation',query).iterator());
+	itrList.add(g.idx('Vertex').query('MF Annotation',query).iterator());
+	itrList.add(g.idx('Vertex').query('label',query).iterator());
+	itrList.add(g.idx('Vertex').query('def',query).iterator());
+	itrList.add(g.idx('Vertex').query('SGD Gene Description',query).iterator());
+	
+  for(i=0; i<itrList.size(); i++) {
+    def resultItr = itrList[i];
+	  while(resultItr.hasNext()) {
+		  allResults.add(resultItr.next());
+	  }
+  }
+	
+	return allResults;
+}

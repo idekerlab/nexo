@@ -1,0 +1,12 @@
+def getRawInteractions() {
+	def allResults = [];
+  def itrList = [];
+
+	def geneItr = g.idx('Vertex').query('Assigned Genes',query).iterator();
+
+	while(geneItr.hasNext()) {
+		allResults.add(geneItr.next().both('raw_interaction').path);
+	}
+
+	return allResults;
+}

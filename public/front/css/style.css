@@ -44,7 +44,7 @@ html, body {
     height: 100%;
     top: 0;
     left: 0;
-    background: radial-gradient(circle farthest-corner at center center, #ffffff 50%, #b7b8b2 100%);
+    background: radial-gradient(circle farthest-corner at center center, #ffffff 40%, #e7e8e2 100%);
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -58,22 +58,25 @@ html, body {
 #mainpanel {
     margin-top: 5px;
     margin-left: 5px;
-    width: 320px;
-    padding-top: 1em;
-    padding-right: 1em;
-    padding-left: 1em;
-    padding-bottom: 1em;
-    background-color: rgba(255, 255, 255, 0.95);
+    width: 290px;
+    padding-top: 0.2em;
+    padding-right: 0.7em;
+    padding-left: 0.7em;
+    padding-bottom: 0;
+    background-color: rgba(255, 255, 255, 0.6);
     z-index: 20;
     position: fixed;
     top: 0;
+    border: 1px solid #a6a6a6;
+
+
 }
 
 #network-title {
-    color: #556666;
-    font-size: 24px;
-    font-weight: 700;
-    padding-bottom: 18px;
+    color: #343434;
+    font-size: 22px;
+    font-weight: 400;
+    padding-bottom: 5px;
     padding-top: 5px;
 }
 
@@ -84,7 +87,7 @@ html, body {
     bottom: 0;
     top: 0;
     right: 0;
-    width: 700px;
+    width: 550px;
     word-wrap: normal;
     overflow-x: hidden;
     overflow-y: auto;

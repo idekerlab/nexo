@@ -1,0 +1,16 @@
+def search() {
+	def allResults = [];
+	def itrList = [];
+	
+	itrList.add(g.idx('Vertex').query('Assigned Genes',query).iterator());
+	itrList.add(g.idx('Vertex').query('Assigned Orfs',query).iterator());
+	itrList.add(g.idx('Vertex').query('Assigned Gene Synonyms',query).iterator());
+	
+	for(i=0; i<itrList.size(); i++) {
+		def resultItr = itrList[i];
+		while(resultItr.hasNext()) {
+			allResults.add(resultItr.next());
+		}
+	}
+	return allResults;
+}

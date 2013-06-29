@@ -30,7 +30,6 @@ for line in sgdFile:
 	orf = ""
 	if alts is not None and len(alts) != 0:
 		orf = alts[0]
-
 	synonyms = []
 	for entry in alts:
 		if entry != orf:
@@ -51,7 +50,7 @@ print(idx)
 print(g.size())
 
 # Pick GO terms
-results = idx.query("name:NEXO*")
+results = idx.query("name:GO*")
 
 keys = ["Assigned Genes", "Assigned Gene Ids", "Assigned Gene Names", "Assigned Orf", "Assigned Gene Synonyms"]
 
@@ -60,12 +59,10 @@ for node in results:
   for key in keys:
     stringValue = toString(node, key)
     print(key + " = " + stringValue)
-    if len(stringValue) > 2000:
+    if len(stringValue) > 2500:
       print("TOO LONG!")
       continue
-    listVal = node[key]
-    if listVal is not None:
-      idx.add(key, listVal, node)
+    idx.add(key,stringValue, node)
 
 
 print(len(results))

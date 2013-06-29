@@ -463,7 +463,7 @@
             node.color = QUERY_NODE_COLOR;
 
             SIGMA_RENDERER.position(0, 0, 1).draw();
-            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 30);
+            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 70);
             SIGMA_RENDERER.draw(2, 2, 2);
             this.model.set("lastSelected", node);
         },
@@ -662,7 +662,7 @@
             this.fit();
         },
 
-        fit: function() {
+        fit: function () {
             SIGMA_RENDERER.position(0, 0, 1).draw();
         },
 
@@ -890,8 +890,61 @@
      A row in the search result table.
      */
     var SearchView = Backbone.View.extend({
-        render: function () {
-            this.$el.append("<tr><td>" + this.model.get("id") + "</td><td>" + this.model.get("label") + "</td></tr>");
+
+        render: function (query) {
+            var self = this;
+
+            var name = this.model.get("name");
+            var label = this.model.get("label");
+            var hits = {};
+            _.each(this.model.keys(), function (key) {
+                var value = self.model.get(key);
+                console.log(value);
+                if(value !== undefined && value !== "" && key !== "label") {
+                    _.each(query, function(qVal) {
+                        var original  = value.toString();
+                        var newValue = original.toLocaleLowerCase();
+                        var location = newValue.indexOf(qVal.toLowerCase());
+                        if(location !== -1) {
+                            var len = original.length;
+                            var start = 0;
+                            var last = len;
+
+                            if(location > 20) {
+                               start = location -20;
+                            }
+
+                            if(len - location >20) {
+                                last = location + 20;
+                            }
+
+                            var finalText = "";
+                            if(start !== 0) {
+                                finalText += "... ";
+                            }
+
+                            finalText += original.substring(start,last);
+
+                            if(last != len) {
+                                finalText += "..."
+                            }
+
+                            hits[key] = finalText;
+                        }
+                    });
+                    console.log(hits);
+                    console.log(query);
+                }
+            });
+
+
+            var newRow = "<tr><td>" + name + "</td><td>" + label + "</td><td style='width: 190px'><ul>";
+            _.each(_.keys(hits), function(key) {
+                newRow += "<li>" + hits[key] + "</li>";
+            });
+
+            newRow += "</ul></td></tr>";
+            this.$el.append(newRow);
             return this;
         }
     });
@@ -903,6 +956,8 @@
     var SearchResultTableView = Backbone.View.extend({
 
         el: ID_SEARCH_RESULTS,
+
+        isDisplay: false,
 
         events: {
             "click #search-button": "searchButtonPressed",
@@ -937,22 +992,50 @@
         render: function () {
             var resultTableElement = $("#result-table");
             resultTableElement.empty();
-//
-//            if(this.collection.isEmpty()) {
-//                concole.log("NONE!!!!!!!!!!!")
-//            }
+
+            console.log("Rendering table: " + this.collection.size());
+            if (this.collection.size() === 0) {
+                this.$("#result-table").append(
+                    "<tr><td>" + "No Match!" + "</td></tr>").slideDown(1000, "swing");
+                return;
+            }
+
+
+            var queryObject = this.collection.at(0);
+
+            // This should not happen!
+            if (queryObject === undefined) {
+                return;
+            }
+
+            var queryArray = queryObject.get("queryArray");
+
+            console.log("---------------- Q");
+            console.log(queryObject);
+            console.log(queryArray);
+
+            this.$("#result-table").append("<tr><th>ID</th><th>Term Name</th><th>Matches</th></tr>");
             this.collection.each(function (result) {
-                this.renderResult(result);
+                if(result !== queryObject) {
+                    this.renderResult(result, queryArray);
+                }
             }, this);
+
+            this.$("#result-table").show(600);
+
+            if (this.isDisplay === false) {
+                this.$el.animate({width: '+=150px'}, 'slow', 'swing');
+                this.isDisplay = true;
+            }
         },
 
-        renderResult: function (result) {
+        renderResult: function (result, query) {
             var resultView = new SearchView({
                 model: result
             });
 
-            var rendered = resultView.render();
-            $("#result-table").append(rendered.$el.html()).fadeIn(1000);
+            var rendered = resultView.render(query);
+            $("#result-table").append(rendered.$el.html());
         },
 
         search: function (query, searchByGenes) {
@@ -972,16 +1055,20 @@
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
 
-                        var newNode = new SearchResultModel();
-                        newNode.set("id", node.name);
-                        newNode.set("label", node.label);
-                        self.collection.add(newNode);
+//                        var newNode = new SearchResultModel();
+//                        _.each(_.keys(node), function(key) {
+//
+//                            newNode[key] = node[val]
+//                        });
+//                        newNode.set("id", node.name);
+//                        newNode.set("label", node.label);
+                        self.collection.add(node);
                     }
 
                     self.collection.trigger(NODES_SELECTED, self.collection.models);
-
-                    self.render();
                 }
+
+                self.render();
             });
         },
 
@@ -1009,8 +1096,13 @@
             this.search(originalQuery, byGenes);
         },
 
-        clearButtonPressed: function() {
+        clearButtonPressed: function () {
             var resultTableElement = $("#result-table");
+
+            if (this.isDisplay) {
+                this.$el.animate({width: '-=150px'}, 'slow', 'swing');
+                this.isDisplay = false;
+            }
             resultTableElement.slideUp(500).empty();
             $("#query").val("");
             this.trigger(CLEAR);
@@ -1103,19 +1195,25 @@
                 // TODO set upper limit.
                 $.getJSON("/search/names/" + names, null, function (list) {
 
-                    var rows = [];
+                    var rows = {};
+                    var geneNames = [];
+
                     console.log(list);
                     var genesTab = $("#genes");
                     var table = "<table class=\"table table-striped\">" +
                         "<tr><th>SGD ID</th><th>Gene Symbol</th><th>ORF</th></tr>";
+
                     _.each(list, function (gene) {
-                        rows.push("<tr><td>" + gene.name + "</td><td><a href='" + SGD_API + gene.name +
-                            "' target=_blank>" + gene["Assigned Genes"] + "</a></td><td>" + gene["Assigned Orfs"] + "</td></tr>");
+                        var symbol = gene["Assigned Genes"];
+                        geneNames.push(symbol);
+                        rows[symbol] = "<tr><td>" + gene.name + "</td><td><a href='" + SGD_API + gene.name +
+                            "' target=_blank>" + symbol + "</a></td><td>"
+                            + gene["Assigned Orfs"] + "</td></tr>";
                     });
 
-                    rows = rows.sort();
-                    _.each(rows, function (row) {
-                        table += row;
+                    geneNames = geneNames.sort();
+                    _.each(geneNames, function (geneName) {
+                        table += rows[geneName];
                     });
                     table += "</table>";
                     genesTab.append(table);

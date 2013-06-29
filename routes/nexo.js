@@ -253,11 +253,14 @@ exports.getByQuery = function (req, res) {
     var phrase = rawQuery.match(/"[^"]*(?:""[^"]*)*"/g);
     console.log(phrase);
 
+    var queryArray = [];
+
     var queryString = "";
     var wordsString = rawQuery;
     _.each(phrase, function(entry) {
         console.log("PH =: " + entry);
         var noQ = entry.replace(/\"/g, "");
+        queryArray.push(noQ);
         noQ = noQ.replace(" ", "?");
         console.log("PH2 =: " + noQ);
         queryString = queryString + "*" + noQ + "* ";
@@ -268,16 +271,24 @@ exports.getByQuery = function (req, res) {
     console.log("Phrase string =: " + queryString);
 
     var words = wordsString.split(/ +/);
+    var wordsCount = words.length;
+    var idx = 0;
     _.each(words, function(word){
         if(word !== "") {
-            queryString = queryString + "*" + word + "* ";
+            queryArray.push(word);
+            if(idx === 0 && queryString === "") {
+                queryString = queryString + "*" + word + "* ";
+            } else {
+                queryString = queryString + "AND *" + word + "* ";
+            }
         }
     });
 
     console.log("Final String = " + queryString);
 
     var fullUrl = BASE_URL + "tp/gremlin?params={query:'" + queryString + "'}&script=keywordSearch()&load=[bykeyword]"
-        + "&rexster.returnKeys=[name,label]";
+        + "&rexster.returnKeys=[name,label,BP Definition,CC Definition,MF Definition," +
+        "BP Annotation,CC Annotation,MF Annotation,SGD Gene Description,def]";
 
     console.log('FULL URL = ' + fullUrl);
 
@@ -286,12 +297,17 @@ exports.getByQuery = function (req, res) {
             var results = JSON.parse(body);
             var resultArray = results.results;
             if (resultArray !== null && resultArray !== undefined && resultArray.length !== 0) {
+                resultArray.unshift({queryArray:queryArray});
                 res.json(resultArray);
             } else {
                 res.json(EMPTY_ARRAY);
             }
         }
     });
+
+    function processResult() {
+
+    }
 };
 
 exports.getByNames = function (req, res) {
@@ -336,11 +352,15 @@ exports.getByGeneQuery = function (req, res) {
     var query = "";
 
     for(var i=0; i<geneIds.length; i++) {
-        query += "*" + geneIds[i] + "* ";
+        if(i === geneIds.length -1) {
+            query += "*" + geneIds[i] + "*";
+        } else {
+            query += "*" + geneIds[i] + "* AND ";
+        }
     }
 
     var fullUrl = BASE_URL + "tp/gremlin?params={query='" + query + "'}&script=search()&load=[bygene]" +
-        "&rexster.returnKeys=[name,label]";
+        "&rexster.returnKeys=[name,label,Assigned Genes,Assigned Orfs,Assigned Gene Synonyms]";
     console.log(geneIds);
     console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
