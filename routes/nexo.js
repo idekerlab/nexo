@@ -315,14 +315,19 @@ exports.getByNames = function (req, res) {
     "use strict";
 
     var names = req.params.names;
-
     var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + names + "')" + "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
 
-//    console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
-            console.log(JSON.stringify(body));
-            var results = JSON.parse(body);
+            var results = {};
+            try {
+                results = JSON.parse(body);
+            } catch(ex) {
+                console.error("Parse error: " + ex);
+                res.json(EMPTY_ARRAY);
+                return;
+            }
+
             var resultArray = results.results;
             if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
                 res.json(resultArray);
@@ -330,7 +335,7 @@ exports.getByNames = function (req, res) {
                 res.json(EMPTY_ARRAY);
             }
         } else {
-            console.log("ERROR! " + err.toString());
+            console.error("ERROR! " + err.toString());
         }
     });
 };
