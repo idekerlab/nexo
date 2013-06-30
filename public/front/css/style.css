@@ -1,5 +1,5 @@
 @font-face {
-    font-family: Lato, sans-serif;
+    font-family: Roboto, sans-serif;
 }
 
 html, body {
@@ -7,9 +7,9 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: Lato;
+    font-family: Roboto;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .flat-btn {
@@ -74,7 +74,7 @@ html, body {
 #network-title {
     color: #343434;
     font-size: 22px;
-    font-weight: 400;
+    font-weight: 700;
     padding-bottom: 5px;
     padding-top: 5px;
 }
@@ -99,7 +99,7 @@ html, body {
 .headertext {
     color: #333333;
     font-size: 32px;
-    font-weight: 400;
+    font-weight: 300;
     line-height: 1.2em;
     padding-bottom: 10px;
     padding-top: 10px;
@@ -178,16 +178,16 @@ html, body {
 }
 
 #details {
-    font-size: 12px;
     line-height: 1.5em;
     padding-left: 10px;
     padding-right: 10px;
 }
 
 #subnetwork-view {
-    background: radial-gradient(circle farthest-corner at center center, #8a8a8a 0%, #222222 100%);
+    /*background: radial-gradient(circle farthest-corner at center center, #8a8a8a 0%, #222222 100%);*/
+    background-color: rgba(34,34,34,0.8);
     width: 100%;
-    height: 450px;
+    height: 400px;
 }
 
 #term-view {
@@ -209,7 +209,6 @@ html, body {
 }
 
 #results {
-    font-size: 12px;
     max-height: 350px;
     margin-top: 4px;
     background-color: rgba(222, 222, 222, 0.1);
@@ -252,20 +251,20 @@ html, body {
 }
 
 #commands .popover {
-    opacity: 1.0 !important;
 }
 
 #commands .popover-content {
 
-    font-family: Lato;
-    font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
+    font-family: Roboto;
+    font-weight: 300;
     color: rgba(120, 120, 120, 0.95);
 }
 
 #commands .popover-content li {
 
-    padding: 0;
+    padding-left: 3px;
+    padding-right: 3px;
     cursor: pointer;
     line-height: 2em;
 }
@@ -301,3 +300,6 @@ html, body {
     color: rgba(250, 250, 250, 0.99);
 }
 
+#robustness, #go-chart {
+    width: 500px;
+}

@@ -4,7 +4,6 @@
     "networks": [
         {
             "name": "NeXO",
-
             "networkData": "nexo4.json",
 
             "sigma": {
@@ -13,11 +12,10 @@
                     "defaultHoverLabelBGColor": "#fff",
                     "defaultLabelHoverColor": "#555",
                     "labelThreshold": 5,
-                    "font": "Lato",
+                    "font": "Roboto",
                     "fontStyle": "normal ",
-                    "defaultLabelSize": 12,
-                    "defaultLabelColor": "#42466F",
-
+                    "defaultLabelSize": 32,
+                    "defaultLabelColor": "rgba(59,66,77,1.0)",
                     "labelSize": "proportional",
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
@@ -28,9 +26,9 @@
                 },
                 "graphProperties": {
                     "minNodeSize": 0.5,
-                    "maxNodeSize": 20,
+                    "maxNodeSize": 19,
                     "minEdgeSize": 0.2,
-                    "maxEdgeSize": 4
+                    "maxEdgeSize": 3
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,
@@ -47,31 +45,30 @@
 
         {
             "name": "GO Biological Process",
-
             "networkData": "new-bp-info.json",
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelBGColor": "#ddd",
-                    "defaultHoverLabelBGColor": "#cccccc",
+                    "defaultLabelBGColor": "#eee",
+                    "defaultHoverLabelBGColor": "#ececec",
                     "defaultLabelHoverColor": "#555",
-                    "labelThreshold": 7,
+                    "labelThreshold": 6,
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
-                    "font": "Lato",
+                    "font": "Roboto",
                     "labelSize": "proportional",
                     "fontStyle": "normal ",
-                    "defaultLabelSize": 12,
-                    "defaultLabelColor": "rgba(69,76,87,0.9)",
+                    "defaultLabelSize": 32,
+                    "defaultLabelColor": "rgba(59,66,77,1.0)",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(100,100,100,0.5)"
+                    "defaultEdgeColor": "rgba(33,30,45,0.4)"
                 },
                 "graphProperties": {
-                    "minNodeSize": 0.5,
+                    "minNodeSize": 0.1,
                     "maxNodeSize": 8,
-                    "minEdgeSize": 0.1,
-                    "maxEdgeSize": 10
+                    "minEdgeSize": 1,
+                    "maxEdgeSize": 3
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,
@@ -82,31 +79,30 @@
 
         {
             "name": "GO Cellular Component",
-
             "networkData": "new-cc-info.json",
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelBGColor": "#ddd",
-                    "defaultHoverLabelBGColor": "#cccccc",
+                    "defaultLabelBGColor": "#eee",
+                    "defaultHoverLabelBGColor": "#ececec",
                     "defaultLabelHoverColor": "#555",
-                    "labelThreshold": 7,
+                    "labelThreshold": 5.5,
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
-                    "font": "Lato",
+                    "font": "Roboto",
                     "labelSize": "proportional",
                     "fontStyle": "normal ",
-                    "defaultLabelSize": 12,
-                    "defaultLabelColor": "rgba(69,76,87,0.9)",
+                    "defaultLabelSize": 32,
+                    "defaultLabelColor": "rgba(69,76,87,1.0)",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(100,100,100,0.5)"
+                    "defaultEdgeColor": "rgba(33,30,45,0.4)"
                 },
                 "graphProperties": {
-                    "minNodeSize": 0.5,
-                    "maxNodeSize": 8,
-                    "minEdgeSize": 0.1,
-                    "maxEdgeSize": 10
+                    "minNodeSize": 0.2,
+                    "maxNodeSize": 9,
+                    "minEdgeSize": 1,
+                    "maxEdgeSize": 3
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,
@@ -114,34 +110,32 @@
                 }
             }
         },
-
         {
             "name": "GO Molecular Function",
-
             "networkData": "new-mf-info.json",
 
             "sigma": {
                 "drawingProperties": {
-                    "defaultLabelBGColor": "#ddd",
-                    "defaultHoverLabelBGColor": "#cccccc",
+                    "defaultLabelBGColor": "#eee",
+                    "defaultHoverLabelBGColor": "#ececec",
                     "defaultLabelHoverColor": "#555",
-                    "labelThreshold": 7,
+                    "labelThreshold": 5.5,
                     "defaultEdgeType": "line",
                     "hoverFontStyle": "normal",
-                    "font": "Lato",
+                    "font": "Roboto",
                     "labelSize": "proportional",
                     "fontStyle": "normal ",
-                    "defaultLabelSize": 12,
-                    "defaultLabelColor": "rgba(69,76,87,0.9)",
+                    "defaultLabelSize": 32,
+                    "defaultLabelColor": "rgba(69,76,87,1.0)",
                     "activeFontStyle": "normal",
                     "edgeColor": "default",
-                    "defaultEdgeColor": "rgba(100,100,100,0.5)"
+                    "defaultEdgeColor": "rgba(33,30,45,0.4)"
                 },
                 "graphProperties": {
-                    "minNodeSize": 0.5,
+                    "minNodeSize": 0.1,
                     "maxNodeSize": 8,
-                    "minEdgeSize": 0.1,
-                    "maxEdgeSize": 10
+                    "minEdgeSize": 1,
+                    "maxEdgeSize": 3
                 },
                 "mouseProperties": {
                     "minRatio": 0.7,

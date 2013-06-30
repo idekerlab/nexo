@@ -13,7 +13,7 @@
     // Configuration file for this application
     var CONFIG_FILE = "../app-config.json";
 
-    var LABEL_LENGTH_TH = 30;
+    var LABEL_LENGTH_TH = 25;
 
     // Color for nodes that are not selected
     var DIM_COLOR = "rgba(220,220,220,0.7)";
@@ -204,28 +204,29 @@
                 style: cytoscape.stylesheet()
                     .selector('node')
                     .css({
-                        'font-family': 'Exo',
-                        'font-size': 4,
-                        'font-weight': 400,
+                        'font-family': 'Roboto',
+                        'font-size': 8,
+                        'font-weight': 300,
                         'content': 'data(id)',
                         'text-valign': 'center',
-                        'color': 'rgb(25, 25, 25)',
-                        'width': 40,
-                        'height': 15,
+                        'color': 'rgb(235,235,235)',
+                        'width': 50,
+                        'height': 25,
                         'border-color': 'white',
-                        "background-color": "rgb(240,240,240)",
+                        "background-color": "rgba(67,135,233,0.9)",
                         "shape": "ellipse"
                     })
                     .selector(':selected')
                     .css({
-                        'background-color': '#400000',
-                        'line-color': '#000'
+                        'background-color': 'rgba(255,94,25,0.7)',
+                        'line-color': '#000',
+                        'font-weight': 700
                     })
                     .selector('edge')
                     .css({
-                        'width': 1.2,
+                        'width': 1.8,
                         "line-color": "#cccccc",
-                        "opacity": 0.8
+                        "opacity": 0.7
                     }),
 
                 elements: {
@@ -306,6 +307,10 @@
                     nodeLabel = nodeLabel.substring(0, LABEL_LENGTH_TH) + "...";
                     node.label = nodeLabel;
                 }
+                if (node.color === undefined) {
+                    node.color = "rgba(33,30,45,0.4)";
+                }
+
                 SIGMA_RENDERER.addNode(id, node);
             });
 
@@ -402,8 +407,6 @@
         initialize: function () {
             var self = this;
 
-            console.log("View Created!!!!!!!!!!!!!!!!!!!!!!");
-
             if (!sigmaInitialized) {
                 // Bind only once.
                 sigmaInitialized = false;
@@ -442,13 +445,13 @@
         selectNodes: function (selectedNodes) {
             console.log(selectedNodes);
 
-            if(selectedNodes === undefined || selectedNodes instanceof Array === false) {
+            if (selectedNodes === undefined || selectedNodes instanceof Array === false) {
                 // Invalid parameter.
                 return;
             }
 
             var targetNodes = [];
-            _.each(selectedNodes, function(node) {
+            _.each(selectedNodes, function (node) {
                 var id = node.get("name");
                 var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
                 if (sigmaNode !== undefined) {
@@ -1157,7 +1160,7 @@
             clearTimeout(t);
             this.$el.find(".float-ui").fadeIn(500);
 
-            var t = setTimeout(function(){
+            var t = setTimeout(function () {
                 self.$el.find(".float-ui").fadeOut(500);
             }, 2000);
         },
@@ -1187,13 +1190,29 @@
             var synonym = this.model.get("synonym");
             var comment = this.model.get("comment");
 
-            var genes = this.model.get("Assigned Gene Ids");
-            console.log(genes);
+            this.renderGenes();
 
+            this.$("#subnetwork-view").hide();
+            this.$(".headertext").empty().append(label);
+
+            var summary = "<h4><a href='" + QUICK_GO_API + id + "' target=_blank >" + id + "</a></h4>";
+            summary += "<table class=\"table table-striped\"><tr><td>Description</td><td>" + description + "</td></tr>";
+            summary += "<tr><td>Synonym</td><td>" + synonym + "</td></tr>";
+            summary += "<tr><td>Comment</td><td>" + comment + "</td></tr>";
+            summary += "</table>";
+
+            this.$(ID_NODE_DETAILS).append(summary);
+            this.$(ID_NODE_DETAILS).append("<div id='term-view'></div>");
+        },
+
+        renderGenes: function () {
+            var genes = this.model.get("Assigned Gene Ids");
+            if (genes === undefined || genes.length > 100) {
+                // Too many genes.
+                return;
+            }
 
             if (genes !== undefined && genes.length !== 0) {
-
-
                 genes = _.uniq(genes);
 
                 var names = "";
@@ -1201,10 +1220,8 @@
                     names += gene + " ";
                 });
 
-
                 // TODO set upper limit.
                 $.getJSON("/search/names/" + names, null, function (list) {
-
                     var rows = {};
                     var geneNames = [];
 
@@ -1229,23 +1246,7 @@
                     genesTab.append(table);
 
                 });
-
-
             }
-
-            this.$("#subnetwork-view").hide();
-            this.$(".headertext").empty().append(label);
-
-            var summary = "<h4><a href='" + QUICK_GO_API + id + "' target=_blank >" + id + "</a></h4>";
-            summary += "<table class=\"table table-striped\"><tr><td>Description</td><td>" + description + "</td></tr>";
-            summary += "<tr><td>Synonym</td><td>" + synonym + "</td></tr>";
-            summary += "<tr><td>Comment</td><td>" + comment + "</td></tr>";
-            summary += "</table>";
-
-
-            this.$(ID_NODE_DETAILS).append(summary);
-            this.$(ID_NODE_DETAILS).append("<div id='term-view'></div>");
-
         },
 
         nexoRenderer: function (id) {
@@ -1290,7 +1291,7 @@
                 summary = this.processEntry(summary);
 
 
-                this.renderGeneList(this.model.get("Assigned Genes"));
+                this.renderGenes();
             } else {
                 summary = this.processGeneEntry(summary);
             }
@@ -1432,19 +1433,6 @@
                 }
             });
         },
-
-        renderGeneList: function (genes) {
-            var genesTab = $("#genes");
-
-            var table = "<table class=\"table table-striped\">";
-            for (var i = 0; i < genes.length; i++) {
-                table += "<tr><td>" + genes[i] + "</td></tr>";
-            }
-
-            table += "</table>";
-            genesTab.append(table);
-        },
-
 
         processEntry: function (allValues) {
 
