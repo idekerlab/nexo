@@ -384,6 +384,10 @@
             var selectedNetworkName = e.currentTarget.textContent;
             var selectedNetwork = this.collection.where({name: selectedNetworkName});
             this.collection.trigger(NETWORK_SELECTED, selectedNetwork);
+
+            // Hide popover
+            console.log("*********** Hiding POP");
+            this.$el.find("#trees").popover("hide");
         }
     });
 
@@ -436,15 +440,21 @@
 
 
         selectNodes: function (selectedNodes) {
+            console.log(selectedNodes);
+
+            if(selectedNodes === undefined || selectedNodes instanceof Array === false) {
+                // Invalid parameter.
+                return;
+            }
 
             var targetNodes = [];
-            for (var i = 0; i < selectedNodes.length; i++) {
-                var id = selectedNodes[i].id;
+            _.each(selectedNodes, function(node) {
+                var id = node.get("name");
                 var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
                 if (sigmaNode !== undefined) {
                     targetNodes[sigmaNode.id] = true;
                 }
-            }
+            });
 
             this.highlight(targetNodes, true);
         },
@@ -512,7 +522,6 @@
                 var button = $(this);
                 var command = button.attr("rel");
 
-                //button.popover({ placement: 'top', trigger: 'hover'});
                 button.popover({
                     html: true,
                     placement: "top"
@@ -667,8 +676,6 @@
         },
 
         highlight: function (targetNodes, nodesOnly, queryNode) {
-
-            console.log(queryNode);
 
             if (nodesOnly === false) {
                 SIGMA_RENDERER.iterEdges(function (edge) {
@@ -899,47 +906,46 @@
             var hits = {};
             _.each(this.model.keys(), function (key) {
                 var value = self.model.get(key);
-                console.log(value);
-                if(value !== undefined && value !== "" && key !== "label") {
-                    _.each(query, function(qVal) {
-                        var original  = value.toString();
+                if (value !== undefined && value !== "" && key !== "label") {
+                    _.each(query, function (qVal) {
+                        var original = value.toString();
                         var newValue = original.toLocaleLowerCase();
                         var location = newValue.indexOf(qVal.toLowerCase());
-                        if(location !== -1) {
+                        if (location !== -1) {
                             var len = original.length;
                             var start = 0;
                             var last = len;
 
-                            if(location > 20) {
-                               start = location -20;
+                            if (location > 20) {
+                                start = location - 20;
                             }
 
-                            if(len - location >20) {
+                            if (len - location > 20) {
                                 last = location + 20;
                             }
 
                             var finalText = "";
-                            if(start !== 0) {
+                            if (start !== 0) {
                                 finalText += "... ";
                             }
 
-                            finalText += original.substring(start,last);
+                            finalText += original.substring(start, last);
 
-                            if(last != len) {
+                            if (last != len) {
                                 finalText += "..."
                             }
 
                             hits[key] = finalText;
                         }
                     });
-                    console.log(hits);
-                    console.log(query);
+//                    console.log(hits);
+//                    console.log(query);
                 }
             });
 
 
             var newRow = "<tr><td>" + name + "</td><td>" + label + "</td><td style='width: 190px'><ul>";
-            _.each(_.keys(hits), function(key) {
+            _.each(_.keys(hits), function (key) {
                 newRow += "<li>" + hits[key] + "</li>";
             });
 
@@ -1000,7 +1006,6 @@
                 return;
             }
 
-
             var queryObject = this.collection.at(0);
 
             // This should not happen!
@@ -1010,13 +1015,9 @@
 
             var queryArray = queryObject.get("queryArray");
 
-            console.log("---------------- Q");
-            console.log(queryObject);
-            console.log(queryArray);
-
             this.$("#result-table").append("<tr><th>ID</th><th>Term Name</th><th>Matches</th></tr>");
             this.collection.each(function (result) {
-                if(result !== queryObject) {
+                if (result !== queryObject) {
                     this.renderResult(result, queryArray);
                 }
             }, this);
@@ -1054,14 +1055,6 @@
                 if (searchResult !== undefined && searchResult.length !== 0) {
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
-
-//                        var newNode = new SearchResultModel();
-//                        _.each(_.keys(node), function(key) {
-//
-//                            newNode[key] = node[val]
-//                        });
-//                        newNode.set("id", node.name);
-//                        newNode.set("label", node.label);
                         self.collection.add(node);
                     }
 
@@ -1145,12 +1138,28 @@
         el: ID_SUMMARY_PANEL,
 
         events: {
-            "click #close-button": "hide"
+            "click #close-button": "hide",
+            "hover #term-summary": "showHover",
+            "hover #genes": "showHover",
+            "hover #interactions": "showHover"
         },
 
         initialize: function () {
             this.model = new NodeDetails();
             this.listenTo(this.model, "change", this.render);
+
+            this.$el.find(".float-ui").hide();
+        },
+
+
+        showHover: function () {
+            var self = this;
+            clearTimeout(t);
+            this.$el.find(".float-ui").fadeIn(500);
+
+            var t = setTimeout(function(){
+                self.$el.find(".float-ui").fadeOut(500);
+            }, 2000);
         },
 
         render: function () {
@@ -1164,6 +1173,7 @@
             } else {
                 this.goRenderer(entryId);
             }
+
 
             return this;
         },
@@ -1365,7 +1375,7 @@
             $("#go-chart").highcharts({
                 chart: {
                     type: 'bar',
-                    height: 180,
+                    height: 150,
                     spacingBottom: 5,
                     spacingTop: 5,
                     backgroundColor: "rgba(255,255,255,0)"

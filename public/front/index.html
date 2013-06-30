@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>NeXO Viz: The Next Generation Ontology Visualizer</title>
+    <title>NeXO: The Network Extracted Ontology</title>
     <meta charset="utf-8">
 
     <!-- Download Web Fonts -->
@@ -27,7 +27,7 @@
         <div class="row-fluid">
             <input id="query" type="text" class="flat span9">
             <div id="search-button" class="span1 font-button" data-icon="s"></div>
-            <div id="clear-button" class="span1 font-button" data-icon="R"></div>
+            <div id="clear-button" class="span1 font-button" data-icon="r"></div>
             <div id="help-button" class="span1 font-button" data-icon="?"></div>
         </div>
 
@@ -56,11 +56,11 @@
 
 <!-- Navigation UI -->
 <div id="commands">
-    <div class="z" rel="in" title="Zoom-in"></div>
-    <div class="z" rel="out" title="Zoom-out"></div>
-    <div class="z" rel="center" title="Fit to screen size"></div>
+    <div class="z" rel="in" title="Zoom-in" data-icon="+"></div>
+    <div class="z" rel="out" title="Zoom-out" data-icon="-"></div>
+    <div class="z" rel="center" title="Fit to screen size" data-icon="f"></div>
 
-    <div id="trees" class="s" rel="swap" title="Select Ontology"></div>
+    <div id="trees" class="s" rel="swap" title="Select Ontology" data-icon="o"></div>
 </div>
 
 <!--Details for clicked node -->
@@ -69,12 +69,12 @@
         <div id="cyjs"></div>
     </div>
 
-    <div class="row">
+    <div class="row-fluid">
 
         <div class="span1">
-            <div id="close-button"></div>
+            <div id="close-button" class="font-button" data-icon="c"></div>
         </div>
-        <div class="span8">
+        <div class="span11">
             <div class="headertext"></div>
         </div>
     </div>
@@ -83,13 +83,17 @@
         <ul id="result-tab" class="nav nav-tabs">
             <li class="active"><a href="#details" data-toggle="tab">Summary</a></li>
             <li><a href="#genes" data-toggle="tab">Genes</a></li>
-            <li><a href="#children" data-toggle="tab">Children</a></li>
+            <li><a href="#interactions" data-toggle="tab">Interactions</a></li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane fade in active" id="details"></div>
             <div class="tab-pane fade in active" id="genes"></div>
-            <div class="tab-pane fade in active" id="children"></div>
+            <div class="tab-pane fade in active" id="interactions"></div>
         </div>
+    </div>
+    <div class="float-ui font-button">
+        <p class="font-button" data-icon="U"></p>
+        <p class="font-button" data-icon="D"></p>
     </div>
 </div>
 

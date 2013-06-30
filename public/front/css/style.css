@@ -69,7 +69,6 @@ html, body {
     top: 0;
     border: 1px solid #a6a6a6;
 
-
 }
 
 #network-title {
@@ -90,10 +89,11 @@ html, body {
     width: 550px;
     word-wrap: normal;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
     background-color: rgba(250, 250, 250, 0.98);
     padding: 0;
     z-index: 10;
+
 }
 
 .headertext {
@@ -109,64 +109,68 @@ html, body {
     z-index: 999;
     width: 32px;
     height: 32px;
-    margin-top: 14px;
-    margin-right: 0;
-    margin-left: 7px;
+    color: rgb(110, 110, 110);
+    font-size: 32px;
+    margin-top: 8px;
+    margin-right: 10px;
+    margin-left: 3px;
     margin-bottom: 0;
     cursor: pointer;
-    background-image: url('../images/close32.png');
+    /*background-image: url('../images/close32.png');*/
 }
 
 #commands {
+    color: rgb(110, 110, 110);
     opacity: 0.9;
+    font-size: 48px;
     z-index: 100;
     position: fixed;
-    left: 10px;
-    bottom: 10px;
-    margin: 0 auto;
-    padding: 0;
+    left: 0;
+    bottom: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    text-align: left;
+    text-align: center;
+    /*border: 1px solid #a6a6a6;*/
 }
 
 #commands .z, .s {
-    width: 70px;
-    height: 70px;
-    margin: 5px;
+    width: 48px;
+    height: 48px;
+    margin-right: 20px;
     cursor: pointer;
     float: left;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
-#commands .z[rel=center] {
-    background-image: url('../images/fit.png');
-}
+/*#commands .z[rel=center] {*/
+/*background-image: url('../images/fit.png');*/
+/*}*/
 
-#commands .z[rel=in] {
-    background-image: url('../images/zoomin.png');
-}
+/*#commands .z[rel=in] {*/
+/*background-image: url('../images/zoomin.png');*/
+/*}*/
 
-#commands .z[rel=out] {
-    background-image: url('../images/zoomout.png');
-}
+/*#commands .z[rel=out] {*/
+/*background-image: url('../images/zoomout.png');*/
+/*}*/
 
-#commands .s[rel=swap] {
-    background-image: url('../images/swap.png');
-}
+/*#commands .s[rel=swap] {*/
+/*background-image: url('../images/swap.png');*/
+/*}*/
 
-#commands .s[rel=refresh] {
-    background-image: url('../images/switch.png');
-}
+/*#commands .s[rel=refresh] {*/
+/*background-image: url('../images/switch.png');*/
+/*}*/
 
-#commands .s[rel=settings] {
-    background-image: url('../images/settings.png');
-}
+/*#commands .s[rel=settings] {*/
+/*background-image: url('../images/settings.png');*/
+/*}*/
 
 .tabbable {
     padding-right: 10px;
@@ -208,7 +212,7 @@ html, body {
     font-size: 12px;
     max-height: 350px;
     margin-top: 4px;
-    background-color: rgba(222,222,222, 0.1);
+    background-color: rgba(222, 222, 222, 0.1);
     opacity: 1.0;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -237,7 +241,7 @@ html, body {
 
 #trees {
     cursor: pointer;
-    width: 200px;
+    width: 160px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -247,55 +251,53 @@ html, body {
 
 }
 
+#commands .popover {
+    opacity: 1.0 !important;
+}
+
 #commands .popover-content {
 
     font-family: Lato;
-    font-weight: 400;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 12px;
+    color: rgba(120, 120, 120, 0.95);
 }
-#commands .popover-content li{
 
-    padding-left: 5px;
-    padding-right: 5px;
+#commands .popover-content li {
+
+    padding: 0;
     cursor: pointer;
     line-height: 2em;
 }
 
-#commands .popover-content li.selectedNetwork{
-    color: rgb(255,94,25);
+#commands .popover-content li.selectedNetwork {
+    color: rgb(255, 94, 25);
     font-weight: 700;
 }
+
 #commands .popover-content li:hover {
     background-color: rgb(70, 130, 180);
     color: #ffffff;
-}
-
-#draggable {
-    width: 600px;
-    height: 400px;
-    padding-top: 0.5em;
-    background-color: #434343;
-    opacity: 0.95;
-    z-index: 99;
-
-    position: fixed;
-    top: 0;
-
-}
-
-#draggable h2 {
-    font-family: Raleway;
-    color: white;
-    margin-left: 0.3em;
-    margin-right: 0.3em;
-    padding-left: 10px;
-    font-weight: 300;
-    border-bottom: 1px solid #ffffff;
-    border-left: 15px solid #ffffff;
-    opacity: 1.0;
 }
 
 #cyjs {
     width: 100%;
     height: 100%;
 }
+
+.float-ui {
+    background-color: rgba(34, 34, 34, 0.3);
+    width: 38px;
+    height: 100px;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 990;
+}
+
+.float-ui p {
+    text-align: center;
+    font-size: 32px;
+    color: rgba(250, 250, 250, 0.99);
+}
+
