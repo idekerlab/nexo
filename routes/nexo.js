@@ -13,7 +13,6 @@ var _ = require("underscore");
 
 var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
 
-
 var ROOTS = {
     nexo: "NEXO:joining_root",
     bp: "biological_process",
@@ -29,6 +28,10 @@ var EMPTY_CYNETWORK = {
         edges: []
     }
 };
+
+var ITR_TYPES = [
+  "physical", "genetic", "co-expression", "yeastNet"
+];
 
 // TODO: change to interaction TH.
 var GENE_COUNT_THRESHOLD = 1500;
@@ -52,6 +55,7 @@ GraphUtil.prototype = {
 
         for (var i = 0; i < pathLength; i++) {
             var path = paths[i];
+            var interactionType = ITR_TYPES[i%4];
             for (var j = 0; j < path.length; j++) {
                 var edge = path[j];
                 var source = edge[0];
@@ -81,9 +85,10 @@ GraphUtil.prototype = {
 
                 var newEdge = {
                     data: {
-                        id: sourceId + "(raw_interaction) " + targetId,
+                        id: sourceId + "(" + interactionType +") " + targetId,
                         source: sourceId,
-                        target: targetId
+                        target: targetId,
+                        interaction: interactionType
                     }
                 };
                 graph.elements.edges.push(newEdge);
@@ -419,9 +424,15 @@ exports.getRawInteractions = function (req, res) {
 
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
-            var results = JSON.parse(body);
+
+            var results = [];
+            try {
+                results = JSON.parse(body);
+            } catch(ex) {
+                res.json(EMPTY_CYNETWORK);
+            }
             var resultArray = results.results;
-            if (resultArray.length !== 0) {
+            if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
                 var geneArray = resultArray[0]["Assigned Genes"];
 
                 var geneString = geneArray.toString();

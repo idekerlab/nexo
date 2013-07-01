@@ -90,7 +90,9 @@
      */
     var NetworkViewManager = function () {
         this.views = {};
+        this.subnetwork = {};
     };
+
     NetworkViewManager.prototype = {
         getNetworkView: function (viewId) {
             return this.views[viewId];
@@ -98,7 +100,16 @@
 
         addNetworkView: function (viewId, view) {
             this.views[viewId] = view;
+        },
+
+        setSubnetwork: function(cyNetwork) {
+            this.subnetwork = cyNetwork;
+        },
+
+        getSubnetwork: function() {
+            return this.subnetwork;
         }
+
     };
 
     var VIEW_MANAGER = new NetworkViewManager();
@@ -158,7 +169,10 @@
                     var graph = data.attributes.graph;
                     var cy = self.model.get("cy");
 
+                    eventHelper.trigger("subnetworkRendered", graph);
+
                     cy.load(graph.elements,
+
                         cy.layout((function () {
                             if (graph.elements.edges.length > 600) {
                                 return {
@@ -175,7 +189,9 @@
                             }
                         })()
                         ), function () {
-                            console.log("DONE!!!!!!!!!");
+                            console.log("Layout finished.");
+                            VIEW_MANAGER.setSubnetwork(cy.elements);
+
                         });
                 }
             });
@@ -459,7 +475,7 @@
             node.color = QUERY_NODE_COLOR;
 
             SIGMA_RENDERER.position(0, 0, 1).draw();
-            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 70);
+            SIGMA_RENDERER.zoomTo(node.displayX, node.displayY, 40);
             SIGMA_RENDERER.draw(2, 2, 2);
             this.model.set("lastSelected", node);
         },
@@ -559,7 +575,7 @@
 
             var source = "";
             var targets = [];
-            _.each(pathArray, function(path) {
+            _.each(pathArray, function (path) {
                 source = path[0];
                 targets.push(path[1]);
             });
@@ -575,7 +591,6 @@
                         var edgeName = edge.source + "-" + edge.target;
 
 
-
                         edgeNames[edgeName] = true;
                     }
                 });
@@ -584,7 +599,7 @@
             var extraEdges = [];
 
             var numberOfEdges = targets.length;
-            for (var i=0; i < numberOfEdges; i++) {
+            for (var i = 0; i < numberOfEdges; i++) {
 
                 var target = targets[i];
 
@@ -611,7 +626,7 @@
                         };
 
 
-                        if(!SIGMA_RENDERER._core.graph.edgesIndex[edgeName]) {
+                        if (!SIGMA_RENDERER._core.graph.edgesIndex[edgeName]) {
                             SIGMA_RENDERER.addEdge(edgeName, source, target, newEdge);
                             extraEdges.push(newEdge);
                         }
@@ -634,33 +649,33 @@
             var edgeExists = this.model.get("edgeExists");
 
             var targetNodes = {};
-            var shortest  = [];
+            var shortest = [];
             var len = 1000;
-            _.each(pathArray, function(path) {
+            _.each(pathArray, function (path) {
 
                 // Always add first parent
                 targetNodes[path[1]] = true;
-                if(path.length < len) {
+                if (path.length < len) {
                     shortest = path;
                     len = path.length;
                 }
 
-                if(SIGMA_RENDERER._core.graph.edgesIndex[path[0] + "-" + path[1]]) {
+                if (SIGMA_RENDERER._core.graph.edgesIndex[path[0] + "-" + path[1]]) {
                     // Can be added to the list.
                     var last = path[0];
                     var isValidPath = true;
-                    _.each(path, function(targetNode){
+                    _.each(path, function (targetNode) {
 
-                        if(edgeExists[last + "-" + targetNode]) {
+                        if (edgeExists[last + "-" + targetNode]) {
                             //targetNodes[targetNode] = true;
                         } else {
-                           isValidPath = false;
+                            isValidPath = false;
                         }
                         last = targetNode;
                     });
 
-                    if(isValidPath) {
-                        _.each(path, function(targetNode){
+                    if (isValidPath) {
+                        _.each(path, function (targetNode) {
                             targetNodes[targetNode] = true;
                         });
                     }
@@ -669,12 +684,11 @@
                 }
 
 
-
             });
 
 
             // Boolean map for enable/disable nodes.
-            _.each(shortest, function(pathNode) {
+            _.each(shortest, function (pathNode) {
                 targetNodes[pathNode] = true;
             });
 //            var pathNodes = path.elements.nodes;
@@ -894,13 +908,16 @@
 
                 // Listening to the current network view change event.
                 self.listenTo(self.model, "change:currentNetworkView", self.networkViewSwitched);
+
+                // For interactions
+                eventHelper.listenTo(eventHelper, "subnetworkRendered", _.bind(summaryView.interactionRenderer, summaryView));
+
                 console.log(self);
             });
         },
 
         networkViewSwitched: function () {
             var currentNetworkView = this.model.get("currentNetworkView");
-
             currentNetworkView.fit();
             this.updateListeners(currentNetworkView);
         },
@@ -1056,9 +1073,18 @@
 
             var queryArray = queryObject.get("queryArray");
 
+            // Check existing nodes
+            var nodeMap = {};
+            SIGMA_RENDERER
+                .iterNodes(function (node) {
+                    nodeMap[node.id] = true;
+                });
+
+
             this.$("#result-table").append("<tr><th>ID</th><th>Term Name</th><th>Matches</th></tr>");
             this.collection.each(function (result) {
-                if (result !== queryObject) {
+                var name = result.get("name");
+                if (result !== queryObject && nodeMap[name]) {
                     this.renderResult(result, queryArray);
                 }
             }, this);
@@ -1072,12 +1098,14 @@
         },
 
         renderResult: function (result, query) {
+
             var resultView = new SearchView({
                 model: result
             });
 
             var rendered = resultView.render(query);
             $("#result-table").append(rendered.$el.html());
+
         },
 
         search: function (query, searchByGenes) {
@@ -1212,11 +1240,30 @@
             if (entryId.indexOf("GO") === -1) {
                 this.nexoRenderer(entryId);
             } else {
+                // Interaction is not available for GO
+                $("#interactions").empty();
                 this.goRenderer(entryId);
             }
 
-
             return this;
+        },
+
+        interactionRenderer: function(graph) {
+            var edges = graph.elements.edges;
+
+            var itrPanel = this.$("#interactions");
+            itrPanel.empty();
+
+            var summary = "<table class='table table-striped'>";
+            _.each(edges, function(edge) {
+                var source = edge.data.source;
+                var target = edge.data.target;
+                var itr = edge.data.interaction;
+                summary += "<tr><td>" + source + "</td><td>" + itr + "</td><td>" + target + "</td></tr>";
+            });
+            summary += "</table>";
+
+            itrPanel.append(summary);
         },
 
         /*
@@ -1240,7 +1287,7 @@
             summary += "</table>";
 
             this.$(ID_NODE_DETAILS).append(summary);
-            this.$(ID_NODE_DETAILS).append("<div id='term-view'></div>");
+//            this.$(ID_NODE_DETAILS).append("<div id='term-view'></div>");
         },
 
         renderGenes: function () {
