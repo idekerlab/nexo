@@ -5,7 +5,11 @@ def getRawInteractions() {
 	def geneItr = g.idx('Vertex').query('Assigned Genes',query).iterator();
 
 	while(geneItr.hasNext()) {
-		allResults.add(geneItr.next().both('raw_interaction').path);
+		def gene = geneItr.next();
+		allResults.add(gene.both('raw_interaction_physical').path);
+		allResults.add(gene.both('raw_interaction_genetic').path);
+		allResults.add(gene.both('raw_interaction_co_expression').path);
+		allResults.add(gene.both('raw_interaction_yeastNet').path);
 	}
 
 	return allResults;

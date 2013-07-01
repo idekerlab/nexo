@@ -116,6 +116,31 @@ GraphUtil.prototype = {
         return graph;
     },
 
+    edgeListGenerator: function (graphJson) {
+
+        var pathList = [];
+
+        for (var key in graphJson) {
+            var path = graphJson[key];
+            pathList.push(this.parseEdge(path));
+        }
+
+        return pathList;
+    },
+
+    parseEdge: function (path) {
+        var nodeList = [];
+
+        _.each(path, function(graphObject) {
+            if (graphObject['_type'] === "vertex") {
+                nodeList.push(graphObject.name);
+            }
+        });
+
+        return nodeList;
+
+    },
+
     parsePathEntry: function (nodes, edges, graph, path) {
         var pathLength = path.length;
 
@@ -448,7 +473,7 @@ exports.getPath = function (req, res) {
     var id = req.params.id;
 
     if (!validator.validate(id)) {
-        res.json(EMPTY_CYNETWORK);
+        res.json(EMPTY_ARRAY);
         return;
     }
 
@@ -468,7 +493,7 @@ exports.getPath = function (req, res) {
 //            "{it.object.name.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
 
         var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
-            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}.filter{it.label != 'additional_parent_of'}" +
+            ".as('x').outE.filter{it.label != 'raw_interaction'}" +
             ".filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
             ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
             ".inV.loop('x'){it.loops < 20}" +
@@ -481,10 +506,11 @@ exports.getPath = function (req, res) {
                 var results = JSON.parse(body);
                 var resultArray = results.results;
                 if (resultArray !== undefined && resultArray.length !== 0) {
-                    var graph = graphUtil.graphGenerator(resultArray);
-                    res.json(graph);
+//                    var graph = graphUtil.graphGenerator(resultArray);
+                    var pathList = graphUtil.edgeListGenerator(resultArray);
+                    res.json(pathList);
                 } else {
-                    res.json(EMPTY_CYNETWORK);
+                    res.json(EMPTY_ARRAY);
                 }
             }
         });
@@ -499,7 +525,7 @@ exports.getPath = function (req, res) {
                     results = JSON.parse(body);
                 } catch(ex) {
                     console.log(ex);
-                    res.json(EMPTY_CYNETWORK);
+                    res.json(EMPTY_ARRAY);
                     return;
                 }
 
@@ -513,7 +539,7 @@ exports.getPath = function (req, res) {
                     rootNode = nameSpace;
 
                     getGraphUrl = getGraphUrl + "g.v(" + startNodeId + ")" +
-                        ".as('x').outE.inV.loop('x'){it.loops < 10}" +
+                        ".as('x').outE.inV.loop('x'){it.loops < 20}" +
                         "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
 
                     console.log("Final URL: " + getGraphUrl);
@@ -523,15 +549,15 @@ exports.getPath = function (req, res) {
                             var results = JSON.parse(body_in);
                             var resultArray = results.results;
                             if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
-                                var graph = graphUtil.graphGenerator(resultArray);
-                                res.json(graph);
+                                var pathList = graphUtil.edgeListGenerator(resultArray);
+                                res.json(pathList);
                             } else {
                                 res.json(EMPTY_ARRAY);
                             }
                         }
                     });
                 } else {
-                    res.json(EMPTY_CYNETWORK);
+                    res.json(EMPTY_ARRAY);
                 }
             }
         });

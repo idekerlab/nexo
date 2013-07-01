@@ -526,16 +526,12 @@
         findPath: function (selectedNode) {
             var self = this;
             var nodeId = selectedNode.id;
-            var parts = nodeId.split(":");
-
 
             var url = "/" + nodeId + "/path";
-            console.log("PATH query = " + url);
             $.getJSON(url, function (path) {
                 self.showPath(path);
             });
         },
-
 
         showAdditionalParents: function (sigmaView, targetNodes, node) {
 
@@ -559,7 +555,15 @@
         },
 
 
-        addHiddenEdges: function (pathEdges) {
+        addHiddenEdges: function (pathArray) {
+
+            var source = "";
+            var targets = [];
+            _.each(pathArray, function(path) {
+                source = path[0];
+                targets.push(path[1]);
+            });
+
 
             // Add hidden edge
             var edgeNames = {};
@@ -569,6 +573,9 @@
                         SIGMA_RENDERER.dropEdge(edge.id);
                     } else {
                         var edgeName = edge.source + "-" + edge.target;
+
+
+
                         edgeNames[edgeName] = true;
                     }
                 });
@@ -576,11 +583,10 @@
 
             var extraEdges = [];
 
-            var numberOfEdges = pathEdges.length;
-            for (var i = 0; i < numberOfEdges; i++) {
+            var numberOfEdges = targets.length;
+            for (var i=0; i < numberOfEdges; i++) {
 
-                var source = pathEdges[i].data.source;
-                var target = pathEdges[i].data.target;
+                var target = targets[i];
 
                 var edgeName = source + "-" + target;
                 if (edgeNames[edgeName]) {
@@ -603,40 +609,89 @@
                                 type: "extra"
                             }
                         };
-                        SIGMA_RENDERER.addEdge(edgeName, source, target, newEdge);
-                        extraEdges.push(newEdge);
+
+
+                        if(!SIGMA_RENDERER._core.graph.edgesIndex[edgeName]) {
+                            SIGMA_RENDERER.addEdge(edgeName, source, target, newEdge);
+                            extraEdges.push(newEdge);
+                        }
                     }
                 }
             }
             this.model.set("extraEdges", extraEdges);
         },
 
-        showPath: function (path) {
+        showPath: function (pathArray) {
 
             // Ignore if path data is not available.
-            if (path.elements === undefined || path.elements === null) {
+            if (pathArray === undefined) {
                 return;
             }
 
-            this.addHiddenEdges(path.elements.edges);
+            this.addHiddenEdges(pathArray);
+
+
+            var edgeExists = this.model.get("edgeExists");
+
+            var targetNodes = {};
+            var shortest  = [];
+            var len = 1000;
+            _.each(pathArray, function(path) {
+
+                // Always add first parent
+                targetNodes[path[1]] = true;
+                if(path.length < len) {
+                    shortest = path;
+                    len = path.length;
+                }
+
+                if(SIGMA_RENDERER._core.graph.edgesIndex[path[0] + "-" + path[1]]) {
+                    // Can be added to the list.
+                    var last = path[0];
+                    var isValidPath = true;
+                    _.each(path, function(targetNode){
+
+                        if(edgeExists[last + "-" + targetNode]) {
+                            //targetNodes[targetNode] = true;
+                        } else {
+                           isValidPath = false;
+                        }
+                        last = targetNode;
+                    });
+
+                    if(isValidPath) {
+                        _.each(path, function(targetNode){
+                            targetNodes[targetNode] = true;
+                        });
+                    }
+
+
+                }
+
+
+
+            });
+
 
             // Boolean map for enable/disable nodes.
-            var targetNodes = {};
-            var pathNodes = path.elements.nodes;
-            var startNode = {};
-            for (var i = 0; i < pathNodes.length; i++) {
-                var cytoscapejsNode = pathNodes[i];
-                var id = cytoscapejsNode.data.id;
-                var nodeType = cytoscapejsNode.data.type;
-                var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
-                if (sigmaNode !== null && sigmaNode !== undefined) {
-                    targetNodes[sigmaNode.id] = true;
-                    if (nodeType === "start") {
-                        startNode = sigmaNode;
-                    }
-                }
-            }
-            this.highlight(targetNodes, false, startNode);
+            _.each(shortest, function(pathNode) {
+                targetNodes[pathNode] = true;
+            });
+//            var pathNodes = path.elements.nodes;
+//            var startNode = {};
+//            for (var i = 0; i < pathNodes.length; i++) {
+//                var cytoscapejsNode = pathNodes[i];
+//                var id = cytoscapejsNode.data.id;
+//                var nodeType = cytoscapejsNode.data.type;
+//                var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
+//                if (sigmaNode !== null && sigmaNode !== undefined) {
+//                    targetNodes[sigmaNode.id] = true;
+//                    if (nodeType === "start") {
+//                        startNode = sigmaNode;
+//                    }
+//                }
+//            }
+            this.highlight(targetNodes, false, shortest[0]);
         },
 
 
@@ -703,7 +758,7 @@
                     node.attr.original_color = node.color;
                 }
 
-                if (queryNode !== undefined && node.id === queryNode.id) {
+                if (queryNode !== undefined && node.id === queryNode) {
                     node.color = QUERY_NODE_COLOR;
                     node.attr.grey = false;
                     node.forceLabel = true;
