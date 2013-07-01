@@ -12,6 +12,14 @@ html, body {
     font-size: 12px;
 }
 
+h1,h2,h3,h4,h5 {
+    font-family: Roboto;
+}
+
+h4 {
+    font-weight: 300;
+}
+
 .flat-btn {
     font-family: nexo;
     font-size: 16px;
@@ -302,4 +310,5 @@ html, body {
 
 #robustness, #go-chart {
     width: 500px;
+    margin-bottom: 10px;
 }

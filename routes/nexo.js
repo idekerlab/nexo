@@ -31,7 +31,7 @@ var EMPTY_CYNETWORK = {
 };
 
 // TODO: change to interaction TH.
-var GENE_COUNT_THRESHOLD = 100;
+var GENE_COUNT_THRESHOLD = 1500;
 
 var GraphUtil = function () {
 };
@@ -462,9 +462,16 @@ exports.getPath = function (req, res) {
     var rootNode = ROOTS.nexo;
     if (ns === "NEXO") {
 
+//        getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
+//            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
+//            "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
+//            "{it.object.name.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
+
         var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
-            ".as('x').outE.filter{it.label != 'raw_interaction'}." +
-            "inV.loop('x'){it.loops < 20}" +
+            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}.filter{it.label != 'additional_parent_of'}" +
+            ".filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
+            ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
+            ".inV.loop('x'){it.loops < 20}" +
             "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
 
         console.log("NEXO found: " + nexoUrl);
@@ -486,7 +493,16 @@ exports.getPath = function (req, res) {
 
         request.get(getNamespaceUrl, function (err, rest_res, body) {
             if (!err) {
-                var results = JSON.parse(body);
+
+                var results = {};
+                try {
+                    results = JSON.parse(body);
+                } catch(ex) {
+                    console.log(ex);
+                    res.json(EMPTY_CYNETWORK);
+                    return;
+                }
+
                 var resultObj = results.results;
                 if (resultObj !== undefined && resultObj.length === 1) {
 
@@ -497,7 +513,7 @@ exports.getPath = function (req, res) {
                     rootNode = nameSpace;
 
                     getGraphUrl = getGraphUrl + "g.v(" + startNodeId + ")" +
-                        ".as('x').outE.inV.loop('x'){it.loops < 20}" +
+                        ".as('x').outE.inV.loop('x'){it.loops < 10}" +
                         "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
 
                     console.log("Final URL: " + getGraphUrl);

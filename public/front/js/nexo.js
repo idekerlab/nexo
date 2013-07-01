@@ -159,32 +159,22 @@
                     var cy = self.model.get("cy");
 
                     cy.load(graph.elements,
-                        cy.layout({
-                            name: 'arbor',
-                            liveUpdate: true, // whether to show the layout as it's running
-                            maxSimulationTime: 3000, // max length in ms to run the layout
-                            fit: true, // fit to viewport
-                            padding: [ 30, 30, 30, 30 ], // top, right, bottom, left
-                            ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
-
-                            // forces used by arbor (use arbor default on undefined)
-                            repulsion: 19800,
-                            stiffness: 11500,
-                            friction: 0.8,
-                            gravity: true,
-                            fps: undefined,
-                            precision: undefined,
-
-                            // static numbers or functions that dynamically return what these
-                            // values should be for each element
-                            nodeMass: 9000,
-                            edgeLength: 1.5,
-                            stepSize: 1, // size of timestep in simulation
-                            stableEnergy: function (energy) {
-                                var e = energy;
-                                return (e.max <= 0.5) || (e.mean <= 0.3);
+                        cy.layout((function () {
+                            if (graph.elements.edges.length > 600) {
+                                return {
+                                    name: 'circle'
+                                }
+                            } else {
+                                return {
+                                    name: 'arbor',
+                                    friction: 0.1,
+                                    nodeMass: 2
+//                                        repulsion: 19800,
+//                                        edgeLength: 5.5
+                                }
                             }
-                        }), function () {
+                        })()
+                        ), function () {
                             console.log("DONE!!!!!!!!!");
                         });
                 }
@@ -199,21 +189,22 @@
                 showOverlay: false,
                 boxSelectionEnabled: false,
                 minZoom: 0.1,
-                maxZoom: 3,
+                maxZoom: 5,
 
                 style: cytoscape.stylesheet()
                     .selector('node')
                     .css({
                         'font-family': 'Roboto',
-                        'font-size': 8,
-                        'font-weight': 300,
+                        'font-size': 4,
+                        'font-weight': 100,
                         'content': 'data(id)',
-                        'text-valign': 'center',
+                        'text-halign': 'right',
+                        'text-valign': 'bottom',
                         'color': 'rgb(235,235,235)',
-                        'width': 50,
-                        'height': 25,
+                        'width': 5,
+                        'height': 5,
                         'border-color': 'white',
-                        "background-color": "rgba(67,135,233,0.9)",
+                        "background-color": "rgba(222,222,222,0.9)",
                         "shape": "ellipse"
                     })
                     .selector(':selected')
@@ -224,9 +215,9 @@
                     })
                     .selector('edge')
                     .css({
-                        'width': 1.8,
-                        "line-color": "#cccccc",
-                        "opacity": 0.7
+                        'width': 0.5,
+                        "line-color": "#00ee11",
+                        "opacity": 0.8
                     }),
 
                 elements: {
@@ -378,21 +369,13 @@
         },
 
         networkSelected: function (e) {
-            console.log(e.currentTarget.className);
-            // Refresh
-            $(".popover-content li").each(function () {
-                $(this).removeClass("selectedNetwork");
-            });
-
-            e.currentTarget.className = e.currentTarget.className + " selectedNetwork";
-
             var selectedNetworkName = e.currentTarget.textContent;
             var selectedNetwork = this.collection.where({name: selectedNetworkName});
             this.collection.trigger(NETWORK_SELECTED, selectedNetwork);
 
             // Hide popover
-            console.log("*********** Hiding POP");
             this.$el.find("#trees").popover("hide");
+
         }
     });
 
@@ -862,8 +845,8 @@
 
         networkViewSwitched: function () {
             var currentNetworkView = this.model.get("currentNetworkView");
-            console.log(currentNetworkView);
 
+            currentNetworkView.fit();
             this.updateListeners(currentNetworkView);
         },
 
@@ -1274,20 +1257,21 @@
                 category = bestAlignedGoCategory.toUpperCase();
             }
             var alignedGo = this.model.get("Best Alignment GO Term ID");
+            var alignedGoTermName = this.model.get("Term");
             var robustness = this.model.get("Robustness");
             var interactionDensity = this.model.get("Interaction Density");
             var bootstrap = this.model.get("Bootstrap");
 
             // Render Summary Table
 
-            var summary = "<h4>" + id + "</h4><div id='robustness'></div>";
+            var summary = "<h4>Unique Term ID: " + id + "</h4><div id='robustness'></div>";
 
             if (id.indexOf("S") === -1) {
-                summary += "<table class='table table-striped'>";
-                summary += "<tr><td>Robustness</td><td>" + robustness + "</td></tr>";
-                summary += "<tr><td>Interaction Density</td><td>" + interactionDensity + "</td></tr>";
-                summary += "<tr><td>Bootstrap</td><td>" + bootstrap + "</td></tr>";
-                summary += "<tr><td>Best Aligned GO</td><td>" + alignedCategory + "</td></tr></table>";
+                summary += "<h4>Gene Ontology Alignment</h4><table class='table table-striped'>";
+                summary += "<tr><td>Best Aligned GO Term ID</td><td>" + alignedGo + "</td></tr>";
+                summary += "<tr><td>Best Aligned GO Term Name</td><td>" + alignedGoTermName + "</td></tr>";
+                summary += "<tr><td>Best Aligned GO Gategory</td><td>";
+                summary += alignedCategory + "</td></tr></table></div><div id='go-chart'></div>";
                 summary = this.processEntry(summary);
 
 
@@ -1298,99 +1282,200 @@
             summary += "</table>";
 
 
-            this.$("#term-summary").append(summary).append("<div id='go-chart'></div>");
+            this.$("#term-summary").append(summary);
 
             if (id.indexOf("S") === -1) {
-                this.renderSingleValueChart([robustness], "Robustness", ["Robustness"], $("#robustness"));
+                this.renderSingleValueChart(0, 25,
+                    [Math.round(robustness * 100) / 100,
+                        Math.round(bootstrap * 100) / 100,
+                        Math.round(interactionDensity * 100) / 100],
+                    "Term Scores", ["Robustness", "Bootstrap", "Interaction Density"], $("#robustness"));
                 this.renderScores();
             }
         },
 
-        renderSingleValueChart: function (valueArray, title, categoryArray, domElement) {
+        renderSingleValueChart: function (min, max, valueArray, title, categoryArray, domElement) {
 
             domElement.highcharts({
+                colors: [
+                    '#52A2C5',
+                    '#2B7A9B',
+                    '#FF5E19',
+                    '#80699B',
+                    '#3D96AE',
+                    '#DB843D',
+                    '#92A8CD',
+                    '#A47D7C',
+                    '#B5CA92'
+                ],
                 chart: {
                     type: 'bar',
-                    height: 180,
-                    spacingBottom: 5,
-                    spacingTop: 5,
+                    height: 220,
+                    spacingBottom: 15,
+                    spacingTop: 0,
                     backgroundColor: "rgba(255,255,255,0)"
                 },
 
+
                 title: {
-                    text: title
+                    text: null
                 },
                 xAxis: {
-                    categories: categoryArray,
+                    categories: [""],
                     labels: {
                         style: {
                             fontSize: '12px',
-                            fontFamily: 'Lato'
+                            fontWeight: 700,
+                            fontFamily: 'Roboto'
                         }
                     }
                 },
-                yAxis: {
-                    min: 0,
-                    title: {
-                        text: 'Score'
-                    }
-                },
-                series: [
+                yAxis: [
                     {
-                        data: valueArray,
-                        dataLabels: {
-                            enabled: true,
-                            color: '#FFFFFF',
-                            align: 'right',
-                            x: 0,
-                            y: 0,
+                        min: min,
+                        max: max,
+                        title: {
+                            text: "Term Robustness",
+                            style: {
+                                fontSize: '18px',
+                                fontFamily: 'Roboto',
+                                color: '#343434',
+                                fontWeight: 300
+                            }
+                        },
+                        labels: {
                             style: {
                                 fontSize: '12px',
+                                fontFamily: 'Roboto',
+                                color: '#FF5E19',
+                                fontWeight: 300
+                            }
+                        },
+                        opposite: true
+                    },
+                    {
+                        min: 0,
+                        max: 1,
+                        title: {
+                            text: "Interaction Density & Bootstrap"
+                        }
+                    }
+                ],
+                series: [
+                    {
+
+                        yAxis: 1,
+                        data: [valueArray[1]],
+                        name: categoryArray[1],
+                        dataLabels: {
+                            enabled: true,
+                            color: '#343434',
+                            align: 'left',
+                            x: 3,
+                            y: 0,
+                            style: {
+                                fontWeight: 400,
+                                fontSize: '12px',
+                                fontFamily: 'Roboto'
+                            }
+                        }
+                    },
+                    {
+
+                        yAxis: 1,
+                        data: [valueArray[2]],
+                        name: categoryArray[2],
+                        dataLabels: {
+                            enabled: true,
+                            color: '#343434',
+                            align: 'left',
+                            x: 3,
+                            y: 0,
+                            style: {
+                                fontWeight: 400,
+                                fontSize: '12px',
                                 fontFamily: 'Lato'
+                            }
+                        }
+                    },
+                    {
+
+                        yAxis: 0,
+                        data: [valueArray[0]],
+                        name: categoryArray[0],
+                        dataLabels: {
+                            enabled: true,
+                            color: '#FF5E19',
+                            align: 'left',
+                            x: 3,
+                            y: 0,
+                            style: {
+                                fontWeight: 700,
+                                fontSize: '14px',
+                                fontFamily: 'Roboto'
                             }
                         }
                     }
                 ],
                 plotOptions: {
+
                     series: {
+                        animation: false,
                         pointPadding: 0,
                         groupPadding: 0,
                         borderWidth: 0,
-                        pointWidth: 22
+                        pointWidth: 27
                     }
                 },
                 credits: {
                     enabled: false
                 },
                 legend: {
-                    enabled: false
+                    enabled: true
+                },
+                tooltip: {
+                    shared: true,
+                    useHTML: true,
+                    followPointer: true,
+                    hideDelay: 0,
+                    headerFormat: '<small>{point.key}</small><table>',
+                    pointFormat: '<tr><td style="color: {series.color}">{series.name}: </td>' +
+                        '<td style="text-align: right"><b>{point.y}</b></td></tr>',
+                    footerFormat: '</table>'
                 }
             });
         },
+
 
         renderScores: function () {
             var bp = this.model.get("BP Score");
             var cc = this.model.get("CC Score");
             var mf = this.model.get("MF Score");
 
+            bp = Math.round(bp * 100) / 100;
+            cc = Math.round(cc * 100) / 100;
+            mf = Math.round(mf * 100) / 100;
+
             $("#go-chart").highcharts({
                 chart: {
                     type: 'bar',
+                    animation: false,
                     height: 150,
-                    spacingBottom: 5,
-                    spacingTop: 5,
+                    spacingBottom: 15,
+                    spacingTop: 0,
                     backgroundColor: "rgba(255,255,255,0)"
                 },
 
                 title: {
-                    text: 'GO Alignment'
+                    text: null
                 },
                 xAxis: {
                     categories: ['Biological Process', 'Cellular Component', 'Molecular Function'],
                     labels: {
                         style: {
                             fontSize: '12px',
-                            fontFamily: 'Lato'
+                            fontWeight: 300,
+                            fontFamily: 'Roboto'
                         }
                     }
                 },
@@ -1398,7 +1483,7 @@
                     min: 0,
                     max: 1.0,
                     title: {
-                        text: 'Score'
+                        text: null
                     }
                 },
                 series: [
@@ -1406,23 +1491,25 @@
                         data: [bp, cc, mf],
                         dataLabels: {
                             enabled: true,
-                            color: '#FFFFFF',
+                            color: '#343434',
                             align: 'right',
-                            x: 0,
+                            x: 40,
                             y: 0,
                             style: {
                                 fontSize: '12px',
-                                fontFamily: 'Lato'
+                                fontWeight: 700,
+                                fontFamily: 'Roboto'
                             }
                         }
                     }
                 ],
                 plotOptions: {
                     series: {
+                        animation: false,
                         pointPadding: 0,
                         groupPadding: 0,
                         borderWidth: 0,
-                        pointWidth: 22
+                        pointWidth: 27
                     }
                 },
                 credits: {
