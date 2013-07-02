@@ -1,110 +1,50 @@
-<!doctype html>
-<!--[if lt IE 7]>
-<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>
-<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>
-<html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!-->
-<html class="no-js"> <!--<![endif]-->
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <title>NeXO: The Network Extracted Ontology</title>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title></title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width">
-    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-    <link rel="stylesheet" href="styles/main.css">
-    <script src="scripts/vendor/modernizr.js"></script>
 
+    <!-- Download Web Fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700' rel='stylesheet'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,400,700' rel='stylesheet'>
 
+    <link rel="stylesheet" href="front/css/font-style.css"/>
+    <link rel="stylesheet" href="front/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="front/css/style.css"/>
 </head>
 <body>
 
-<div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="#" name="top">NeXO</a>
-
-            <ul class="nav">
-                <li><a href="#">About</a></li>
-                <li><a href="#">Download</a></li>
-                <li><a href="#">Web Service API</a></li>
-                <li><a href="result.html">Links</a></li>
-            </ul>
-        </div>
-    </div>
-</div>
 
 <div class="container">
+    <div class="top">
+        <div class="row-fluid">
+            <div class="span8">
+                <h1>NeXO</h1>
+                <p>
+                    a gene ontology inferred from molecular networks
+                </p>
+            </div>
+            <div class="span4">
 
-    <div class="hero-unit">
-        <h1>NeXO</h1>
-
-        <p>
-            <small>A gene ontology inferred from molecular networks</small>
-        </p>
-
-        <form method="search" action="#" class="form-inline">
-            <input id="search-term" name="query" class="span9" type="text" placeholder="Type Keyword or NeXO Term ID...">
-            <button id="search" type="button" class="btn btn-primary">Search</button>
-        </form>
+                <div id="about" class="flat-button"><a href="about.html">What is NeXO?</a></div>
+                <div id="doc" class="flat-button"><a href="documentation.html">How to Use NeXO</a></div>
+                <div id="start" class="flat-button"><a href="front">Start Using NeXO</a></div>
+            </div>
+        </div>
     </div>
-
-    <table id="result" class="table table-striped"></table>
 </div>
 
 <footer class="footer">
     <div class="container">
         <p>
             <small>
-                Code licensed under <a href="http://opensource.org/licenses/MIT" target="_blank">MIT License</a>,
-                documentation under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
+                Documentation under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
+                By University of California, San Diego School of Medicine <a href="http://idekerlab.ucsd.edu/Pages/default.aspx">Trey Ideker Lab</a>.
             </small>
         </p>
     </div>
 </footer>
 
-
-<script id="termTemplate" type="text/template">
-    <ul>
-        <li><%= id %></li>
-        <li><%= description %></li>
-        <li><%= robustness %></li>
-    </ul>
-
-    <button class="delete">Go</button>
-</script>
-
-
-<!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-<script>
-    var _gaq = [
-        ['_setAccount', 'UA-XXXXX-X'],
-        ['_trackPageview']
-    ];
-    (function (d, t) {
-        var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-        g.src = ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js';
-        s.parentNode.insertBefore(g, s)
-    }(document, 'script'));
-</script>
-
-<script src="scripts/vendor.js"></script>
-
-<script src="scripts/plugins.js"></script>
-
-<script src="scripts/main.js"></script>
-
-<script>
-    $(function () {
-        $("#tabs").tabs();
-    });
-</script>
+<script src="front/js/jquery/jquery.min.js"></script>
 </body>
 </html>

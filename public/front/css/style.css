@@ -20,6 +20,10 @@ h4 {
     font-weight: 300;
 }
 
+.row-fluid {
+    margin-bottom: 10px;
+}
+
 .flat-btn {
     font-family: nexo;
     font-size: 16px;
@@ -52,7 +56,8 @@ h4 {
     height: 100%;
     top: 0;
     left: 0;
-    background: radial-gradient(circle farthest-corner at center center, #ffffff 40%, #e7e8e2 100%);
+    background-color: white;
+    /*background: radial-gradient(circle farthest-corner at center center, #ffffff 40%, #e7e8e2 100%);*/
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -311,4 +316,77 @@ h4 {
 #robustness, #go-chart {
     width: 500px;
     margin-bottom: 10px;
+}
+
+
+/*
+****************************************************
+*/
+.container {
+    background-size: 100%;
+    font-family: Roboto;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.8em;
+}
+
+.top {
+    background-image: url('../images/top2.png');
+    height: 600px;
+}
+
+.top h1 {
+    margin-top: 80px;
+    font-weight: 100;
+    font-size: 160px;
+    color: rgba(44,44,44,0.9);
+
+}
+
+.top p {
+    margin-top: 70px;
+    margin-left: 30px;
+
+    font-size: 24px;
+    font-weight: 300;
+}
+
+.top .flat-button {
+    border-radius: 0;
+    background-color: rgb(255,94,25);
+    color: #f1f1f1;
+    width: 150px;
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+    font-weight: 300;
+}
+
+#about {
+   margin-top: 380px;
+    background-color: #4387E9;
+}
+
+#doc,#start {
+   margin-top:10px;
+}
+
+#doc {
+    background-color: #4387E9;
+}
+
+
+.top .flat-button a, a:hover {
+    color: #f1f1f1;
+}
+
+.section {
+    margin-top: 60px;
+}
+
+footer {
+    margin-top: 20px;
+    z-index: 200;
+    color: #343434;
+    backgroung-color: white !important;
 }

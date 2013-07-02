@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>NeXO: Documentation</title>
+    <meta charset="utf-8">
+
+    <!-- Download Web Fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700' rel='stylesheet'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,400,700' rel='stylesheet'>
+
+    <link rel="stylesheet" href="front/css/font-style.css"/>
+    <link rel="stylesheet" href="front/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="front/css/style.css"/>
+</head>
+<body>
+
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="/" name="top">NeXO</a>
+
+            <ul class="nav">
+                <li><a href="about.html">About</a></li>
+                <li><a href="#">Documentation</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="section">
+        <h3>User Guide for NeXO Web Application</h3>
+
+        <div class="row-fluid">
+            <div class="span12">
+                The NeXO website provides a novel and intuitive visualization system for exploring gene
+                ontologies, with access to both NeXO and GO. In this system, the entire gene ontology
+                is factored hierarchically and explored with semantic zooming in the style of Google Maps.
+
+                This system includes:<br/>
+                <ul>
+                    <li>
+                        Hierarchical layout of the complete ontology according to its most informative
+                        parent-child term relations, enabling the entire ontology to be explored as a
+                        multi-scale geographic map.
+                    </li>
+                    <li>
+                        Semantic zooming, providing <i>details on demand</i> so the user sees different
+                        amounts of detail in a view by zooming in and out.
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="span12">
+
+                <h3>Navigation</h3>
+
+                <p>
+                    <strong>Terms are nodes.</strong> Each node in the ontology (NeXO or GO) represents a functional
+                    group
+                    of genes or a “term”. In GO, terms are labeled with the cellular component, process,
+                    or function they represent. In NeXO, terms are labeled based on the best alignment
+                    of the data-driven ontology to the GO Cellular Component ontology.
+                </p>
+
+                <p>
+                    <strong>Term relations are edges.</strong> Each edge in the ontology (NeXO or GO) represents
+                    a parent-child relation between terms. Such relations can have either of two meanings:
+                <ul>
+                    <li>
+                        The child term is a part of the parent term (<i>part_of</i> relation).
+                    </li>
+                    <li>
+                        The child term is a type of the parent term (<i>is_a</i> relation).
+                    </li>
+                </ul>
+                For example the “Cytosolic small ribosomal subunit” is part of the
+                “Cytosolic ribosome” which, in turn is a type of “Ribosomal subunit”
+                which is a type of “Ribonucleoprotein complex”. The web view currently
+                does not distinguish between the two types of relations; both types are shown.
+                </p>
+
+                <p>
+                    <strong>Browsing.</strong> Browse the NeXO or GO ontology using the mouse.
+                    Click-and-drag to pan. Use the mouse wheel (two-finger scroll) to zoom in
+                    or out of selected regions of the ontology. Click on an ontology term to
+                    select it. When a term is selected, the relations to ancestral terms are
+                    highlighted and a term summary view is presented with information about the
+                    selected term (see below). Double-click on the page background to reset
+                    the current selection and re-zoom the ontology to fit the page.
+                </p>
+            </div>
+            <div class="span8">
+                <img src="front/images/ss1.png"/>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="span5">
+                <h4>Basic navigation buttons</h4>
+                Use the navigation buttons (lower left) to zoom-in and out of the ontology,
+                fit the ontology layout to screen and select the ontology to be visualized (NeXO or GO).
+            </div>
+            <div class="span7">
+                <ul>
+                    <li><img src="front/images/zoominSS.png">Zoom-in</img></li>
+                    <li><img src="front/images/zoomoutSS.png">Zoom-out</img></li>
+                    <li><img src="front/images/fitSS.png">Fit to Screen</img></li>
+                    <li><img src="front/images/switchSS.png">Ontology selector: choose which ontology to visualize</img>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Search</h3>
+
+        <div class="row-fluid">
+            <div class="span5">
+                <img src="front/images/searchSS.png"/>
+            </div>
+            <div class="span7">
+                <p>
+                    Searching for terms or genes. Search the NeXO and GO ontologies either by keyword or by gene.
+                    Results are displayed below the search box. Click on a search result to select and highlight
+                    a gene or term in the displayed ontology. Use the refresh button to clear search results
+                    and the search box.
+                </p>
+
+                <p>
+                    When performing searches please keep in mind the following:
+                <ul>
+                    <li>
+                        Each search result must contain all words in the query.
+                    </li>
+                    <li>
+                        Multiple words encased in double quotes are treated as a single phrase.
+                    </li>
+                    <li>
+                        Queries are case insensitive
+                    </li>
+                </ul>
+                </p>
+
+            </div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="span5">
+                <h5>Displaying term summary information</h5>
+
+                Clicking on a term in the ontology opens a summary information panel for the selected term.
+                This information panel includes the term name, description and associated genes.
+
+                For NeXO terms, the information panel also includes statistics about the support for the
+                term in network data (bootstrap score, term robustness and interaction density),
+                the alignment of the term to each of the branches of the Gene Ontology and a list of
+                interactions among the genes annotated to the term.
+            </div>
+
+            <div class="span7">
+                <img src="front/images/summarySS.png"/>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="span6">
+                <img src="front/images/summary1.png"/>
+            </div>
+            <div class="span6">
+                <img src="front/images/summary2.png"/>
+            </div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="span7">
+                <img src="front/images/networkSS.png"/>
+            </div>
+            <div class="span5">
+                The genes annotated to the NeXO term and the interactions between them are also displayed
+                in the form of a dynamic network which allows zooming and interactive inspection of gene
+                names and interactions.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="front/js/jquery/jquery.min.js"></script>
+
+</body>
+</html>
