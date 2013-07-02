@@ -269,6 +269,7 @@ h4 {
 }
 
 #commands .popover-content {
+    margin-bottom: 0px;
 
     font-size: 11px;
     font-family: Roboto;
@@ -332,12 +333,12 @@ h4 {
     line-height: 1.8em;
 }
 
-.top {
+.topPage {
     background-image: url('../images/top2.png');
     height: 600px;
 }
 
-.top h1 {
+.topPage h1 {
     margin-top: 80px;
     font-weight: 100;
     font-size: 160px;
@@ -345,7 +346,7 @@ h4 {
 
 }
 
-.top p {
+.topPage p {
     margin-top: 70px;
     margin-left: 30px;
 
@@ -353,7 +354,7 @@ h4 {
     font-weight: 300;
 }
 
-.top .flat-button {
+.topPage .flat-button {
     border-radius: 0;
     background-color: rgb(255,94,25);
     color: #f1f1f1;
@@ -378,7 +379,7 @@ h4 {
 }
 
 
-.top .flat-button a, a:hover {
+.topPage .flat-button a, a:hover {
     color: #f1f1f1;
 }
 
