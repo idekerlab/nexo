@@ -46,9 +46,11 @@ h4 {
 .font-button {
     font-size: 20px;
     padding: 5px;
+    margin-left: 5px;
     cursor: pointer;
     color: #343434;
 }
+
 
 /* Main network view*/
 .overview {
@@ -57,7 +59,7 @@ h4 {
     top: 0;
     left: 0;
     background-color: white;
-    /*background: radial-gradient(circle farthest-corner at center center, #ffffff 40%, #e7e8e2 100%);*/
+    background: radial-gradient(circle farthest-corner at center center, #ffffff 40%, #e7e8e2 100%);
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -71,7 +73,7 @@ h4 {
 #mainpanel {
     margin-top: 5px;
     margin-left: 5px;
-    width: 290px;
+    width: 300px;
     padding-top: 0.2em;
     padding-right: 0.7em;
     padding-left: 0.7em;
