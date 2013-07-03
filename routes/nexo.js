@@ -314,8 +314,11 @@ exports.getByQuery = function (req, res) {
         }
     });
 
-    console.log("Final String = " + queryString);
 
+    queryString = queryString.replace(/:/, "?");
+    queryString = queryString.substring(0, queryString.length - 1);
+
+    console.log("Final String = " + queryString);
     var fullUrl = BASE_URL + "tp/gremlin?params={query:'" + queryString + "'}&script=keywordSearch()&load=[bykeyword]"
         + "&rexster.returnKeys=[name,label,BP Definition,CC Definition,MF Definition," +
         "BP Annotation,CC Annotation,MF Annotation,SGD Gene Description,def]";

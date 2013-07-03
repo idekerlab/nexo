@@ -102,11 +102,11 @@
             this.views[viewId] = view;
         },
 
-        setSubnetwork: function(cyNetwork) {
+        setSubnetwork: function (cyNetwork) {
             this.subnetwork = cyNetwork;
         },
 
-        getSubnetwork: function() {
+        getSubnetwork: function () {
             return this.subnetwork;
         }
 
@@ -406,17 +406,17 @@
         initialize: function () {
             var self = this;
 
-            if (!sigmaInitialized) {
-                // Bind only once.
-                sigmaInitialized = false;
-                SIGMA_RENDERER.bind("upnodes", function (nodes) {
-                    var selectedNodeId = nodes.content[0];
-                    var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
-
+            SIGMA_RENDERER.bind("upnodes", function (nodes) {
+                var selectedNodeId = nodes.content[0];
+                var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
+                var networkName = self.model.get("name");
+                // TODO: use current network name
+                if (networkName === $("#network-title").text()) {
+                    console.log(networkName + " Firing Event &&&&&&&&&&&&&&");
                     self.findPath(selectedNode);
                     self.trigger(NODE_SELECTED, selectedNodeId);
-                });
-            }
+                }
+            });
             self.bindCommands();
 
             // Render the network once its model is ready.
@@ -549,39 +549,23 @@
             });
         },
 
-        showAdditionalParents: function (sigmaView, targetNodes, node) {
 
-            var parentIds = [];
-
-            var queryUrl = "/nexo/" + node.id + "/parents";
-            console.log("Parent query = " + queryUrl);
-
-            $.getJSON(queryUrl, function (parents) {
-                if (parents !== null && parents.length !== 0) {
-
-                    console.log("Result = " + JSON.stringify(parents));
-                    for (var i = 0; i < parents.length; i++) {
-                        var parent = parents[i];
-
-                        targetNodes[parent.name] = true;
-                    }
-                    this.highlight(sigmaView, targetNodes);
-                }
-            });
-        },
-
-
+        /**
+         * Add edges to the first neighbour of query node (if does not exist in the tree.)
+         *
+         * @param pathArray
+         */
         addHiddenEdges: function (pathArray) {
 
-            var source = "";
+            // Query node is ALWAYS idx 0 of list.
+            var source = pathArray[0][0];
             var targets = [];
+
             _.each(pathArray, function (path) {
-                source = path[0];
                 targets.push(path[1]);
             });
 
-
-            // Add hidden edge
+            // Reset current state
             var edgeNames = {};
             SIGMA_RENDERER
                 .iterEdges(function (edge) {
@@ -589,24 +573,15 @@
                         SIGMA_RENDERER.dropEdge(edge.id);
                     } else {
                         var edgeName = edge.source + "-" + edge.target;
-
-
                         edgeNames[edgeName] = true;
                     }
                 });
-            this.model.set("edgeExists", edgeNames);
 
             var extraEdges = [];
 
-            var numberOfEdges = targets.length;
-            for (var i = 0; i < numberOfEdges; i++) {
-
-                var target = targets[i];
-
+            _.each(targets, function (target) {
                 var edgeName = source + "-" + target;
-                if (edgeNames[edgeName]) {
-                    // Skip
-                } else {
+                if (!edgeNames[edgeName]) {
                     // Edge does not exists.  Add to view
                     if (SIGMA_RENDERER._core.graph.nodesIndex[source] &&
                         SIGMA_RENDERER._core.graph.nodesIndex[target]) {
@@ -624,90 +599,64 @@
                                 type: "extra"
                             }
                         };
-
-
                         if (!SIGMA_RENDERER._core.graph.edgesIndex[edgeName]) {
                             SIGMA_RENDERER.addEdge(edgeName, source, target, newEdge);
                             extraEdges.push(newEdge);
                         }
                     }
                 }
-            }
+            });
             this.model.set("extraEdges", extraEdges);
+            return edgeNames;
         },
 
+
+        /**
+         *
+         * @param pathArray - Array of lists.  Each list contains sequence of Term IDs.
+         */
         showPath: function (pathArray) {
 
             // Ignore if path data is not available.
-            if (pathArray === undefined) {
+            if (pathArray === undefined || pathArray.length === 0) {
                 return;
             }
 
-            this.addHiddenEdges(pathArray);
+            console.log("@showpath called: number of path = " + pathArray.length);
+            // Add edges from DAG (1st neighbours only)
+            var edgeExists = this.addHiddenEdges(pathArray);
 
-
-            var edgeExists = this.model.get("edgeExists");
-
+            // Valid path - all nodes exists on the current view.
+            var validPaths = [];
             var targetNodes = {};
-            var shortest = [];
-            var len = 1000;
             _.each(pathArray, function (path) {
-
-                // Always add first parent
+                console.log(path);
                 targetNodes[path[1]] = true;
-                if (path.length < len) {
-                    shortest = path;
-                    len = path.length;
-                }
-
-                if (SIGMA_RENDERER._core.graph.edgesIndex[path[0] + "-" + path[1]]) {
-                    // Can be added to the list.
-                    var last = path[0];
-                    var isValidPath = true;
-                    _.each(path, function (targetNode) {
-
-                        if (edgeExists[last + "-" + targetNode]) {
-                            //targetNodes[targetNode] = true;
-                        } else {
-                            isValidPath = false;
-                        }
-                        last = targetNode;
-                    });
-
-                    if (isValidPath) {
-                        _.each(path, function (targetNode) {
-                            targetNodes[targetNode] = true;
-                        });
+                // neighbours are always valid.
+                var isValidPath = true;
+                var pathLength = path.length;
+                for (var i = 0; i < pathLength - 1; i++) {
+                    var edge = edgeExists[[path[i] + "-" + path[i + 1]]];
+                    if (edge === undefined) {
+                        isValidPath = false;
+                        break;
                     }
-
-
                 }
-
-
+                if (isValidPath) {
+                    validPaths.push(path);
+                }
             });
 
 
-            // Boolean map for enable/disable nodes.
-            _.each(shortest, function (pathNode) {
-                targetNodes[pathNode] = true;
+            _.each(validPaths, function (path) {
+                _.each(path, function (pathNode) {
+                    targetNodes[pathNode] = true;
+                });
             });
-//            var pathNodes = path.elements.nodes;
-//            var startNode = {};
-//            for (var i = 0; i < pathNodes.length; i++) {
-//                var cytoscapejsNode = pathNodes[i];
-//                var id = cytoscapejsNode.data.id;
-//                var nodeType = cytoscapejsNode.data.type;
-//                var sigmaNode = SIGMA_RENDERER._core.graph.nodesIndex[id];
-//                if (sigmaNode !== null && sigmaNode !== undefined) {
-//                    targetNodes[sigmaNode.id] = true;
-//                    if (nodeType === "start") {
-//                        startNode = sigmaNode;
-//                    }
-//                }
-//            }
-            this.highlight(targetNodes, false, shortest[0]);
+
+            console.log(targetNodes);
+            this.highlight(targetNodes, false, pathArray[0][0]);
         },
-
 
         refresh: function () {
             SIGMA_RENDERER
@@ -1122,9 +1071,14 @@
 
             $.getJSON(searchUrl, function (searchResult) {
                 if (searchResult !== undefined && searchResult.length !== 0) {
+                    var keySet = [];
                     for (var i = 0; i < searchResult.length; i++) {
                         var node = searchResult[i];
-                        self.collection.add(node);
+                        var name = node.name;
+                        if(!_.contains(keySet, name)) {
+                            self.collection.add(node);
+                        }
+                        keySet.push(name);
                     }
 
                     self.collection.trigger(NODES_SELECTED, self.collection.models);
@@ -1248,21 +1202,20 @@
             return this;
         },
 
-        interactionRenderer: function(graph) {
+        interactionRenderer: function (graph) {
             var edges = graph.elements.edges;
 
             var itrPanel = this.$("#interactions");
             itrPanel.empty();
 
             var summary = "<table class='table table-striped'>";
-            _.each(edges, function(edge) {
+            _.each(edges, function (edge) {
                 var source = edge.data.source;
                 var target = edge.data.target;
                 var itr = edge.data.interaction;
                 summary += "<tr><td>" + source + "</td><td>" + itr + "</td><td>" + target + "</td></tr>";
             });
             summary += "</table>";
-
             itrPanel.append(summary);
         },
 
@@ -1310,7 +1263,6 @@
                     var rows = {};
                     var geneNames = [];
 
-                    console.log(list);
                     var genesTab = $("#genes");
                     var table = "<table class=\"table table-striped\">" +
                         "<tr><th>SGD ID</th><th>Gene Symbol</th><th>ORF</th></tr>";
