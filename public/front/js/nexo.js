@@ -128,6 +128,15 @@
     });
 
 
+    var waiting = '<div id="fadingBarsG"><div id="fadingBarsG_1" class="fadingBarsG"></div><div id="fadingBarsG_2" class="fadingBarsG">'+
+            '</div><div id="fadingBarsG_3" class="fadingBarsG"></div>' +
+            '<div id="fadingBarsG_4" class="fadingBarsG"></div>' +
+            '<div id="fadingBarsG_5" class="fadingBarsG"></div>' +
+            '<div id="fadingBarsG_6" class="fadingBarsG"></div>' +
+            '<div id="fadingBarsG_7" class="fadingBarsG"></div>' +
+            '<div id="fadingBarsG_8" class="fadingBarsG"></div></div>';
+
+//    var waiting = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
     /*
      Sub-network view by cytoscape.js
      */
@@ -142,6 +151,8 @@
         },
 
         update: function (nodeId) {
+            $("#cyjs").empty();
+
             // TODO: remove dependency!
             // check current network model:
             var currentNetwork = app.model.get("currentNetwork");
@@ -163,6 +174,7 @@
 
         loadData: function () {
             var self = this;
+            $("#cyjs").append(waiting);
             this.model.fetch({
                 success: function (data) {
 
@@ -190,6 +202,7 @@
                         })()
                         ), function () {
                             console.log("Layout finished.");
+                            $("#fadingBarsG").remove();
                             VIEW_MANAGER.setSubnetwork(cy.elements);
 
                         });
@@ -414,8 +427,8 @@
                 var networkName = self.model.get("name");
                 // TODO: use current network name
                 if (networkName === $("#network-title").text()) {
-                    console.log(networkName + " Firing Event &&&&&&&&&&&&&&");
-                    self.findPath(selectedNode);
+                    console.log(networkName + " Firing Event &&&&&&&&&&&&&& " + selectedNodeId);
+                    self.findPath(selectedNodeId);
                     self.trigger(NODE_SELECTED, selectedNodeId);
                 }
             });
@@ -541,9 +554,8 @@
             });
         },
 
-        findPath: function (selectedNode) {
+        findPath: function (nodeId) {
             var self = this;
-            var nodeId = selectedNode.id;
 
             var url = "/" + nodeId + "/path";
             $.getJSON(url, function (path) {

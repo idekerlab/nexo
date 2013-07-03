@@ -9,6 +9,8 @@
 /* global exports */
 
 var request = require("request");
+var async = require('async');
+
 var _ = require("underscore");
 
 var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
@@ -503,6 +505,7 @@ exports.getPath = function (req, res) {
 
     var id = req.params.id;
 
+    console.log("2############### ID = " + id);
     if (!validator.validate(id)) {
         res.json(EMPTY_ARRAY);
         return;
@@ -515,83 +518,129 @@ exports.getPath = function (req, res) {
         ns = id.split(":")[0];
     }
 
-    var rootNode = ROOTS.nexo;
-    if (ns === "NEXO") {
+
+    var self = this;
+    async.parallel([
+        function (callback) {
+            findPath(callback);
+        },
+        function (callback) {
+            getNeighbor(callback)
+        }
+    ], function (err, results) {
+        if (err) {
+            console.log(err);
+            res.json(EMPTY_ARRAY);
+        } else {
+            var mainPath = results[0];
+            _.each(results[1], function(neighbor) {
+                mainPath.push([id, neighbor]);
+            });
+            res.json(mainPath);
+        }
+    });
+
+    function getNeighbor(callback) {
+
+        var url = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
+            ".outE.filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
+            ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
+            ".inV&rexster.returnKeys=[name]";
+
+        request.get(url, function (err, rest_res, body) {
+            if (!err) {
+                var results = JSON.parse(body);
+                var resultArray = results.results;
+                if (resultArray !== undefined && resultArray.length !== 0) {
+                    // Simply extract node IDs.  Those are 1st neighbor.
+                    var neighborList = [];
+                    _.each(resultArray, function(neighbor) {
+                        neighborList.push(neighbor.name);
+                    });
+                    callback(null, neighborList);
+                } else {
+                    callback(null,EMPTY_ARRAY);
+                }
+            }
+        });
+    }
+
+    function findPath(callback) {
+
+        var rootNode = ROOTS.nexo;
+        if (ns === "NEXO") {
 
 //        getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
 //            ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}." +
 //            "filter{it.label != 'additional_parent_of'}.inV.loop('x'){it.loops < 20}" +
 //            "{it.object.name.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
 
-        var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
-            ".as('x').outE.filter{it.label != 'additional_gene_association'}" +
-            ".filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
-            ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
-            ".inV.loop('x'){it.loops < 15}" +
-            "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
+            var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
+                ".as('x').outE.filter{it.label != 'additional_gene_association'}.filter{it.label != 'additional_parent_of'}" +
+                ".filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
+                ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
+                ".inV.loop('x'){it.loops < 15}" +
+                "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
 
-        console.log("NEXO found: " + nexoUrl);
+            console.log("NEXO found: " + nexoUrl);
 
-        request.get(nexoUrl, function (err, rest_res, body) {
-            if (!err) {
-                var results = JSON.parse(body);
-                var resultArray = results.results;
-                if (resultArray !== undefined && resultArray.length !== 0) {
-//                    var graph = graphUtil.graphGenerator(resultArray);
-                    var pathList = graphUtil.edgeListGenerator(resultArray);
-                    res.json(pathList);
-                } else {
-                    res.json(EMPTY_ARRAY);
+            request.get(nexoUrl, function (err, rest_res, body) {
+                if (!err) {
+                    var results = JSON.parse(body);
+                    var resultArray = results.results;
+                    if (resultArray !== undefined && resultArray.length !== 0) {
+                        callback(null, graphUtil.edgeListGenerator(resultArray));
+                    } else {
+                        callback(null,EMPTY_ARRAY);
+                    }
                 }
-            }
-        });
-    } else {
-        var getNamespaceUrl = BASE_URL + "indices/Vertex?key=name&value=" + id + "&rexster.returnKeys=[namespace]";
+            });
+        } else {
+            var getNamespaceUrl = BASE_URL + "indices/Vertex?key=name&value=" + id + "&rexster.returnKeys=[namespace]";
 
-        request.get(getNamespaceUrl, function (err, rest_res, body) {
-            if (!err) {
+            request.get(getNamespaceUrl, function (err, rest_res, body) {
+                if (!err) {
 
-                var results = {};
-                try {
-                    results = JSON.parse(body);
-                } catch(ex) {
-                    console.log(ex);
-                    res.json(EMPTY_ARRAY);
-                    return;
-                }
+                    var results = {};
+                    try {
+                        results = JSON.parse(body);
+                    } catch(ex) {
+                        console.log(ex);
+                        callback(null,EMPTY_ARRAY);
+                    }
 
-                var resultObj = results.results;
-                if (resultObj !== undefined && resultObj.length === 1) {
+                    var resultObj = results.results;
+                    if (resultObj !== undefined && resultObj.length === 1) {
 
-                    var nameSpace = resultObj[0].namespace;
-                    var startNodeId = resultObj[0]._id;
+                        var nameSpace = resultObj[0].namespace;
+                        var startNodeId = resultObj[0]._id;
 
-                    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
-                    rootNode = nameSpace;
+                        var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+                        rootNode = nameSpace;
 
-                    getGraphUrl = getGraphUrl + "g.v(" + startNodeId + ")" +
-                        ".as('x').outE.inV.loop('x'){it.loops < 20}" +
-                        "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
+                        getGraphUrl = getGraphUrl + "g.v(" + startNodeId + ")" +
+                            ".as('x').outE.inV.loop('x'){it.loops < 20}" +
+                            "{it.object.'term name'.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
 
-                    console.log("Final URL: " + getGraphUrl);
+                        console.log("Final URL: " + getGraphUrl);
 
-                    request.get(getGraphUrl, function (err_in, rest_res_in, body_in) {
-                        if (!err_in) {
-                            var results = JSON.parse(body_in);
-                            var resultArray = results.results;
-                            if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
-                                var pathList = graphUtil.edgeListGenerator(resultArray);
-                                res.json(pathList);
-                            } else {
-                                res.json(EMPTY_ARRAY);
+                        request.get(getGraphUrl, function (err_in, rest_res_in, body_in) {
+                            if (!err_in) {
+                                var results = JSON.parse(body_in);
+                                var resultArray = results.results;
+                                if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
+                                    callback(null, graphUtil.edgeListGenerator(resultArray));
+                                } else {
+                                    callback(null,EMPTY_ARRAY);
+                                }
                             }
-                        }
-                    });
-                } else {
-                    res.json(EMPTY_ARRAY);
+                        });
+                    } else {
+                        callback(null,EMPTY_ARRAY);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 };
 
