@@ -271,8 +271,10 @@ exports.getByID = function (req, res) {
 exports.getByQuery = function (req, res) {
     "use strict";
 
+    var nameSpace = req.params.namespace;
     var rawQuery = req.params.query;
     console.log('Query = ' + rawQuery);
+    console.log('NameSpace = ' + nameSpace);
 
     // Validate
     if(validator.validateQuery(rawQuery) === false ) {
@@ -327,11 +329,26 @@ exports.getByQuery = function (req, res) {
 
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
-            var results = JSON.parse(body);
+            try {
+                var results = JSON.parse(body);
+            } catch(ex) {
+                console.log("Could not parse JSON: " + ex);
+                res.json(EMPTY_ARRAY);
+                return;
+            }
+
             var resultArray = results.results;
             if (resultArray !== null && resultArray !== undefined && resultArray.length !== 0) {
-                resultArray.unshift({queryArray:queryArray});
-                res.json(resultArray);
+                // Filter result
+                var filteredResults = [];
+                _.each(resultArray, function(entry) {
+                    if(entry.name.indexOf(nameSpace) !== -1) {
+                       filteredResults.push(entry);
+                    }
+                });
+
+                filteredResults.unshift({queryArray:queryArray});
+                res.json(filteredResults);
             } else {
                 res.json(EMPTY_ARRAY);
             }
@@ -507,10 +524,10 @@ exports.getPath = function (req, res) {
 //            "{it.object.name.equals('" + rootNode + "')}.path&rexster.returnKeys=[name]";
 
         var nexoUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
-            ".as('x').outE.filter{it.label != 'raw_interaction'}" +
+            ".as('x').outE.filter{it.label != 'additional_gene_association'}" +
             ".filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
             ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
-            ".inV.loop('x'){it.loops < 20}" +
+            ".inV.loop('x'){it.loops < 15}" +
             "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
 
         console.log("NEXO found: " + nexoUrl);

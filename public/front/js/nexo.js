@@ -182,9 +182,9 @@
                                 return {
                                     name: 'arbor',
                                     friction: 0.1,
-                                    nodeMass: 2
+                                    nodeMass: 2,
 //                                        repulsion: 19800,
-//                                        edgeLength: 5.5
+                                        edgeLength: 5.5
                                 }
                             }
                         })()
@@ -226,6 +226,8 @@
                     .selector(':selected')
                     .css({
                         'background-color': 'rgba(255,94,25,0.7)',
+                        'color': 'rgba(255,94,25,0.9)',
+                        'font-size': '8px',
                         'line-color': '#000',
                         'font-weight': 700
                     })
@@ -630,7 +632,6 @@
             var validPaths = [];
             var targetNodes = {};
             _.each(pathArray, function (path) {
-                console.log(path);
                 targetNodes[path[1]] = true;
                 // neighbours are always valid.
                 var isValidPath = true;
@@ -857,6 +858,7 @@
 
                 // Listening to the current network view change event.
                 self.listenTo(self.model, "change:currentNetworkView", self.networkViewSwitched);
+                eventHelper.listenTo(self.model, "change:currentNetworkView", _.bind(searchView.currentNetworkChanged, searchView));
 
                 // For interactions
                 eventHelper.listenTo(eventHelper, "subnetworkRendered", _.bind(summaryView.interactionRenderer, summaryView));
@@ -972,6 +974,8 @@
 
         isDisplay: false,
 
+        nameSpace: "NEXO",
+
         events: {
             "click #search-button": "searchButtonPressed",
             "click #clear-button": "clearButtonPressed",
@@ -999,6 +1003,15 @@
 
         searchModeChanged: function (mode) {
             console.log(mode);
+        },
+
+        currentNetworkChanged: function(e) {
+            var networkName = e.get("currentNetwork").get("name");
+            var parts = networkName.split(" ");
+            var nameSpace =parts[0].toUpperCase();
+            console.log("Current Namespace = " + nameSpace);
+            this.nameSpace = nameSpace;
+
         },
 
 
@@ -1066,8 +1079,10 @@
             if (searchByGenes) {
                 searchUrl = "/search/genes/" + query;
             } else {
-                searchUrl = "/search/" + query;
+                searchUrl = "/search/" + this.nameSpace + "/" +  query;
             }
+
+            console.log("NS = " + this.nameSpace);
 
             $.getJSON(searchUrl, function (searchResult) {
                 if (searchResult !== undefined && searchResult.length !== 0) {
@@ -1391,10 +1406,8 @@
                         title: {
                             text: "Term Robustness",
                             style: {
-                                fontSize: '18px',
                                 fontFamily: 'Roboto',
-                                color: '#343434',
-                                fontWeight: 300
+                                color: '#FF5E19'
                             }
                         },
                         labels: {
