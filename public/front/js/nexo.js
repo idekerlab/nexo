@@ -27,6 +27,16 @@
 
     var DEFAULT_NETWORK = "NeXO";
 
+    var WAITING_BAR = '<div id="fadingBarsG">' +
+        '<div id="fadingBarsG_1" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_2" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_3" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_4" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_5" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_6" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_7" class="fadingBarsG"></div>' +
+        '<div id="fadingBarsG_8" class="fadingBarsG"></div></div>';
+
     var CATEGORY_MAP = {
         bp: "Biological Process",
         cc: "Cellular Component",
@@ -128,15 +138,6 @@
     });
 
 
-    var waiting = '<div id="fadingBarsG"><div id="fadingBarsG_1" class="fadingBarsG"></div><div id="fadingBarsG_2" class="fadingBarsG">'+
-            '</div><div id="fadingBarsG_3" class="fadingBarsG"></div>' +
-            '<div id="fadingBarsG_4" class="fadingBarsG"></div>' +
-            '<div id="fadingBarsG_5" class="fadingBarsG"></div>' +
-            '<div id="fadingBarsG_6" class="fadingBarsG"></div>' +
-            '<div id="fadingBarsG_7" class="fadingBarsG"></div>' +
-            '<div id="fadingBarsG_8" class="fadingBarsG"></div></div>';
-
-//    var waiting = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
     /*
      Sub-network view by cytoscape.js
      */
@@ -174,7 +175,7 @@
 
         loadData: function () {
             var self = this;
-            $("#cyjs").append(waiting);
+            $("#cyjs").append(WAITING_BAR);
             this.model.fetch({
                 success: function (data) {
 
@@ -196,7 +197,7 @@
                                     friction: 0.1,
                                     nodeMass: 2,
 //                                        repulsion: 19800,
-                                        edgeLength: 5.5
+                                    edgeLength: 5.5
                                 }
                             }
                         })()
@@ -269,12 +270,10 @@
 
     // Network object stored as Cytoscape.js style
     var Network = Backbone.Model.extend({
-
         // Only for getting data from fixed file location
         urlRoot: "/front/data",
 
         initialize: function () {
-
             var networkConfig = this.get("config");
             this.id = networkConfig.networkData;
 
@@ -423,11 +422,9 @@
 
             SIGMA_RENDERER.bind("upnodes", function (nodes) {
                 var selectedNodeId = nodes.content[0];
-                var selectedNode = SIGMA_RENDERER._core.graph.nodesIndex[selectedNodeId];
                 var networkName = self.model.get("name");
                 // TODO: use current network name
                 if (networkName === $("#network-title").text()) {
-                    console.log(networkName + " Firing Event &&&&&&&&&&&&&& " + selectedNodeId);
                     self.findPath(selectedNodeId);
                     self.trigger(NODE_SELECTED, selectedNodeId);
                 }
@@ -1017,10 +1014,10 @@
             console.log(mode);
         },
 
-        currentNetworkChanged: function(e) {
+        currentNetworkChanged: function (e) {
             var networkName = e.get("currentNetwork").get("name");
             var parts = networkName.split(" ");
-            var nameSpace =parts[0].toUpperCase();
+            var nameSpace = parts[0].toUpperCase();
             console.log("Current Namespace = " + nameSpace);
             this.nameSpace = nameSpace;
 
@@ -1091,27 +1088,29 @@
             if (searchByGenes) {
                 searchUrl = "/search/genes/" + query;
             } else {
-                searchUrl = "/search/" + this.nameSpace + "/" +  query;
+                searchUrl = "/search/" + this.nameSpace + "/" + query;
             }
 
             console.log("NS = " + this.nameSpace);
 
             $.getJSON(searchUrl, function (searchResult) {
                 if (searchResult !== undefined && searchResult.length !== 0) {
-                    var keySet = [];
-                    for (var i = 0; i < searchResult.length; i++) {
-                        var node = searchResult[i];
-                        var name = node.name;
-                        if(!_.contains(keySet, name)) {
-                            self.collection.add(node);
-                        }
-                        keySet.push(name);
-                    }
-
+                    self.filter(searchResult, self);
                     self.collection.trigger(NODES_SELECTED, self.collection.models);
                 }
 
                 self.render();
+            });
+        },
+
+        filter: function (results, self) {
+            var keySet = [];
+            _.each(results, function (result) {
+                var name = result.name;
+                if (!_.contains(keySet, name)) {
+                    self.collection.add(result);
+                }
+                keySet.push(name);
             });
         },
 
@@ -1193,6 +1192,8 @@
             "hover #genes": "showHover",
             "hover #interactions": "showHover"
         },
+
+        isDisplayed: false,
 
         initialize: function () {
             this.model = new NodeDetails();
@@ -1649,11 +1650,24 @@
         },
 
         show: function () {
-            this.$el.show(400, "swing");
+            var self = this;
+            this.$el.show(400, "swing", function () {
+                if (!self.isDisplayed) {
+                    var newWidth = $(document).width() - 550;
+                    SIGMA_RENDERER.resize(newWidth, $(document).height()).draw();
+                    SIGMA_RENDERER.position(0, 0, 1).draw();
+                    self.isDisplayed = true;
+                }
+            });
         },
 
         hide: function () {
-            this.$el.hide(400, "swing");
+            var self = this;
+            this.$el.hide(400, "swing", function () {
+                SIGMA_RENDERER.resize($(document).width(), $(document).height()).draw();
+                SIGMA_RENDERER.position(0, 0, 1).draw();
+                self.isDisplayed = false;
+            });
         }
     });
 
