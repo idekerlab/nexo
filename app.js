@@ -40,8 +40,9 @@ app.get('/:id', nexo.getByID);
 app.get('/:id/interactions', nexo.getRawInteractions);
 app.get('/:id/path', nexo.getPath);
 
-app.get('/nexoview/:id', nexoView.showSummary);
-
+/**
+ * Start server
+ */
 http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
+  console.log('NeXO App server listening on port ' + app.get('port'));
 });

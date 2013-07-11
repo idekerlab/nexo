@@ -223,11 +223,8 @@ Validator.prototype = {
     },
 
     validateQuery: function(id) {
-        if (id === undefined || id === null || id === "") {
-            return false;
-        }
-
-        return true;
+        "use strict";
+        return !(id === undefined || id === "");
     }
 
 };
@@ -242,7 +239,6 @@ var validator = new Validator();
  * @param res
  */
 exports.getByID = function (req, res) {
-
     "use strict";
 
     var id = req.params.id;
@@ -267,6 +263,7 @@ exports.getByID = function (req, res) {
                 res.json(EMPTY_OBJ);
             }
         }
+        res.json(EMPTY_OBJ);
     });
 };
 
@@ -392,6 +389,7 @@ exports.getByNames = function (req, res) {
     });
 };
 
+
 exports.getByGeneQuery = function (req, res) {
 
     "use strict";
@@ -434,7 +432,6 @@ exports.getByGeneQuery = function (req, res) {
 };
 
 exports.getRawInteractions = function (req, res) {
-
     "use strict";
 
     var id = req.params.id;
@@ -446,7 +443,6 @@ exports.getRawInteractions = function (req, res) {
 
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
-
             var results = [];
             try {
                 results = JSON.parse(body);
@@ -497,7 +493,6 @@ exports.getRawInteractions = function (req, res) {
             }
         }
     });
-
 };
 
 exports.getPath = function (req, res) {
@@ -505,7 +500,6 @@ exports.getPath = function (req, res) {
 
     var id = req.params.id;
 
-    console.log("2############### ID = " + id);
     if (!validator.validate(id)) {
         res.json(EMPTY_ARRAY);
         return;
