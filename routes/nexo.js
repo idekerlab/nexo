@@ -475,7 +475,14 @@ exports.getRawInteractions = function (req, res) {
                 console.log("URL == " + nextUrl);
                 request.get(nextUrl, function (err2, rest_res2, body2) {
                     if (!err2) {
-                        var results = JSON.parse(body2);
+                        var results = [];
+                        try {
+                            results = JSON.parse(body2);
+                        } catch(ex2) {
+                            res.json(EMPTY_CYNETWORK);
+                            return;
+                        }
+
                         var resultArray = results.results;
                         if (resultArray.length !== 0) {
                             var graph = graphUtil.generateInteractions(resultArray);
