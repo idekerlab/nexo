@@ -699,10 +699,25 @@ exports.getGeneNames = function (req, res) {
 };
 
 exports.enrich = function(req, res) {
-    var genes = req.body.genes;
+    'use strict';
 
+    var genes = req.body.genes;
     console.log(genes);
 
-    res.json({});
+    request.post("http://malbec.ucsd.edu:5000/enrich",
+        {form:{'genes':genes, 'alpha': 0.01}},
+        function (err, rest_res, body) {
+        if (!err) {
+            console.log(body);
+
+            var returnedObj = JSON.parse(body);
+
+            var first = returnedObj.results[0];
+            console.log("GOT post result: " + first.genes[0]);
+            console.log(first);
+            res.json(EMPTY_ARRAY);
+        }
+    });
+
 
 };
