@@ -697,3 +697,12 @@ exports.getGeneNames = function (req, res) {
         }
     });
 };
+
+exports.enrich = function(req, res) {
+    var genes = req.body.genes;
+
+    console.log(genes);
+
+    res.json({});
+
+};

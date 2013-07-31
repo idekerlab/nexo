@@ -40,6 +40,9 @@ app.get('/:id', nexo.getByID);
 app.get('/:id/interactions', nexo.getRawInteractions);
 app.get('/:id/path', nexo.getPath);
 
+// Term enrichment (by POST)
+app.post('/enrich', nexo.enrich);
+
 /**
  * Start server
  */
