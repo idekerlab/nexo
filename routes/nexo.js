@@ -14,6 +14,7 @@ var async = require('async');
 var _ = require("underscore");
 
 var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
+var ENRICH_URL = "http://malbec.ucsd.edu:5000/enrich";
 
 var ROOTS = {
     nexo: "NEXO:joining_root",
@@ -702,22 +703,47 @@ exports.enrich = function(req, res) {
     'use strict';
 
     var genes = req.body.genes;
-    console.log(genes);
+    var alphaStr = req.body.alpha;
+    var min = req.body['min-assigned'];
 
-    request.post("http://malbec.ucsd.edu:5000/enrich",
-        {form:{'genes':genes, 'alpha': 0.01}},
+    var alpha = 0.01;
+
+    if(alphaStr === undefined) {
+        alpha = 0.01;
+    } else {
+        alpha = parseFloat(alphaStr);
+    }
+
+    var parameter = {
+        form:{
+            'genes':genes,
+            'alpha': alpha,
+            'min-assigned': min
+        }
+    };
+
+    request.post(
+        ENRICH_URL,
+        parameter,
         function (err, rest_res, body) {
         if (!err) {
             console.log(body);
+            var resultObj = {};
+            try {
+                resultObj = JSON.parse(body);
+            } catch(ex) {
+                console.warn("Could not parse enrich result: " + resultObj);
+                res.json(EMPTY_OBJ);
+                return;
+            }
 
-            var returnedObj = JSON.parse(body);
+            console.log(resultObj);
 
-            var first = returnedObj.results[0];
-            console.log("GOT post result: " + first.genes[0]);
-            console.log(first);
-            res.json(EMPTY_ARRAY);
+            if(resultObj === undefined) {
+                res.json(EMPTY_OBJ);
+            } else {
+                res.json(resultObj);
+            }
         }
     });
-
-
 };
