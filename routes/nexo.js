@@ -14,7 +14,7 @@ var async = require('async');
 var _ = require("underscore");
 
 var BASE_URL = "http://localhost:8182/graphs/nexo-dag/";
-var ENRICH_URL = "http://malbec.ucsd.edu:5000/enrich";
+var ENRICH_URL = "http://localhost:5000/enrich";
 
 var ROOTS = {
     nexo: "NEXO:joining_root",
