@@ -704,6 +704,8 @@ exports.enrich = function(req, res) {
 
     var genes = req.body.genes;
     var alphaStr = req.body.alpha;
+    var ontologyType = req.body.type;
+
     var min = req.body['min-assigned'];
 
     var alpha = 0.01;
@@ -714,11 +716,16 @@ exports.enrich = function(req, res) {
         alpha = parseFloat(alphaStr);
     }
 
+    if(ontologyType === undefined) {
+        ontologyType = 'NEXO';
+    }
+
     var parameter = {
         form:{
             'genes':genes,
             'alpha': alpha,
-            'min-assigned': min
+            'min-assigned': min,
+            'type': ontologyType
         }
     };
 
