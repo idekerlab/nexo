@@ -33,7 +33,7 @@ var EMPTY_CYNETWORK = {
 };
 
 var ITR_TYPES = [
-  "physical", "genetic", "co-expression", "yeastNet"
+    "physical", "genetic", "co-expression", "yeastNet"
 ];
 
 // TODO: change to interaction TH.
@@ -58,7 +58,7 @@ GraphUtil.prototype = {
 
         for (var i = 0; i < pathLength; i++) {
             var path = paths[i];
-            var interactionType = ITR_TYPES[i%4];
+            var interactionType = ITR_TYPES[i % 4];
             for (var j = 0; j < path.length; j++) {
                 var edge = path[j];
                 var source = edge[0];
@@ -88,7 +88,7 @@ GraphUtil.prototype = {
 
                 var newEdge = {
                     data: {
-                        id: sourceId + "(" + interactionType +") " + targetId,
+                        id: sourceId + "(" + interactionType + ") " + targetId,
                         source: sourceId,
                         target: targetId,
                         interaction: interactionType
@@ -139,7 +139,7 @@ GraphUtil.prototype = {
     parseEdge: function (path) {
         var nodeList = [];
 
-        _.each(path, function(graphObject) {
+        _.each(path, function (graphObject) {
             if (graphObject['_type'] === "vertex") {
                 nodeList.push(graphObject.name);
             }
@@ -214,16 +214,16 @@ Validator.prototype = {
         }
 
         var parts = id.split(":");
-        if(parts.length === 2) {
+        if (parts.length === 2) {
             return true;
-        } else if(id.match(/S/)) {
-           return true;
+        } else if (id.match(/S/)) {
+            return true;
         }
 
         return false;
     },
 
-    validateQuery: function(id) {
+    validateQuery: function (id) {
         "use strict";
         return !(id === undefined || id === "");
     }
@@ -245,26 +245,26 @@ exports.getByID = function (req, res) {
     var id = req.params.id;
 
     if (!validator.validate(id)) {
-        console.log("INVALID: " +  id);
+        console.log("INVALID: " + id);
         res.json(EMPTY_OBJ);
         return;
     }
 
     var fullUrl = BASE_URL + "indices/Vertex?key=name&value=" + id.toUpperCase();
-
-    console.log("URL = " + fullUrl);
-
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
             var results = JSON.parse(body);
             var resultArray = results.results;
+
             if (resultArray instanceof Array && resultArray.length !== 0) {
                 res.json(resultArray[0]);
             } else {
                 res.json(EMPTY_OBJ);
             }
+        } else {
+            console.warn('Could not get data for: ' + id);
+            res.json(EMPTY_OBJ);
         }
-        res.json(EMPTY_OBJ);
     });
 };
 
@@ -277,7 +277,7 @@ exports.getByQuery = function (req, res) {
     console.log('NameSpace = ' + nameSpace);
 
     // Validate
-    if(validator.validateQuery(rawQuery) === false ) {
+    if (validator.validateQuery(rawQuery) === false) {
         res.json(EMPTY_ARRAY);
         return;
     }
@@ -289,7 +289,7 @@ exports.getByQuery = function (req, res) {
 
     var queryString = "";
     var wordsString = rawQuery;
-    _.each(phrase, function(entry) {
+    _.each(phrase, function (entry) {
         console.log("PH =: " + entry);
         var noQ = entry.replace(/\"/g, "");
         queryArray.push(noQ);
@@ -305,10 +305,10 @@ exports.getByQuery = function (req, res) {
     var words = wordsString.split(/ +/);
     var wordsCount = words.length;
     var idx = 0;
-    _.each(words, function(word){
-        if(word !== "") {
+    _.each(words, function (word) {
+        if (word !== "") {
             queryArray.push(word);
-            if(idx === 0 && queryString === "") {
+            if (idx === 0 && queryString === "") {
                 queryString = queryString + "*" + word + "* ";
             } else {
                 queryString = queryString + "AND *" + word + "* ";
@@ -331,7 +331,7 @@ exports.getByQuery = function (req, res) {
         if (!err) {
             try {
                 var results = JSON.parse(body);
-            } catch(ex) {
+            } catch (ex) {
                 console.log("Could not parse JSON: " + ex);
                 res.json(EMPTY_ARRAY);
                 return;
@@ -341,13 +341,13 @@ exports.getByQuery = function (req, res) {
             if (resultArray !== null && resultArray !== undefined && resultArray.length !== 0) {
                 // Filter result
                 var filteredResults = [];
-                _.each(resultArray, function(entry) {
-                    if(entry.name.indexOf(nameSpace) !== -1) {
-                       filteredResults.push(entry);
+                _.each(resultArray, function (entry) {
+                    if (entry.name.indexOf(nameSpace) !== -1) {
+                        filteredResults.push(entry);
                     }
                 });
 
-                filteredResults.unshift({queryArray:queryArray});
+                filteredResults.unshift({queryArray: queryArray});
                 res.json(filteredResults);
             } else {
                 res.json(EMPTY_ARRAY);
@@ -363,31 +363,103 @@ exports.getByQuery = function (req, res) {
 exports.getByNames = function (req, res) {
 
     "use strict";
+    var TH = 500;
 
     var names = req.params.names;
-    var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + names + "')" + "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
+    var nameList = names.split(' ');
+    var numberOfNames = nameList.length;
 
-    request.get(fullUrl, function (err, rest_res, body) {
-        if (!err) {
-            var results = {};
-            try {
-                results = JSON.parse(body);
-            } catch(ex) {
-                console.error("Parse error: " + ex);
-                res.json(EMPTY_ARRAY);
-                return;
+    var taskArray = [];
+
+    if (numberOfNames > TH) {
+        var blocks = Math.floor(numberOfNames / TH);
+        var mod = numberOfNames % TH;
+
+        var idx = 0;
+        for (var i = 1; i <= blocks; i++) {
+            var nameBlock = '';
+            var maxIdx = i * TH;
+            for (idx; idx < maxIdx; idx++) {
+
+                nameBlock += nameList[idx] + ' ';
             }
 
-            var resultArray = results.results;
-            if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
-                res.json(resultArray);
-            } else {
-                res.json(EMPTY_ARRAY);
-            }
-        } else {
-            console.error("ERROR! " + err.toString());
+            var blockUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + nameBlock + "')" +
+                "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
+            taskArray.push(
+                function (callback) {
+                    fetch(blockUrl, callback);
+                }
+            );
         }
-    });
+
+        var lastBlock = '';
+        for(idx; idx<numberOfNames; idx++) {
+            lastBlock += nameList[idx] + ' ';
+        }
+
+        var lastUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + lastBlock + "')" +
+            "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
+        taskArray.push(
+            function (callback) {
+                fetch(lastUrl, callback);
+            }
+        );
+
+
+    } else {
+        var fullUrl = BASE_URL + "tp/gremlin?script=g.idx('Vertex').query('name', '" + names + "')" +
+            "&rexster.returnKeys=[name,Assigned Genes,Assigned Orfs]";
+        taskArray.push(
+            function (callback) {
+                fetch(fullUrl, callback);
+            }
+        );
+    }
+
+
+    async.parallel(
+
+        taskArray,
+
+        function (err, results) {
+            if (err) {
+                console.log(err);
+                res.json(EMPTY_ARRAY);
+            } else {
+                var genes = [];
+                _.each(results, function(result) {
+                    genes = genes.concat(result);
+                });
+
+                res.json(genes);
+            }
+        });
+
+
+    function fetch(fullUrl, callback) {
+        request.get(fullUrl, function (err, rest_res, body) {
+            if (!err) {
+                var results = {};
+                try {
+                    results = JSON.parse(body);
+                } catch (ex) {
+                    console.error("Parse error: " + ex);
+                    callback(null, EMPTY_ARRAY);
+                }
+
+                var resultArray = results.results;
+                if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
+                    callback(null, resultArray);
+                } else {
+                    callback(null, EMPTY_ARRAY);
+                }
+            } else {
+                console.error("ERROR! " + err.toString());
+                callback(null, EMPTY_ARRAY);
+            }
+        });
+    }
 };
 
 
@@ -399,7 +471,7 @@ exports.getByGeneQuery = function (req, res) {
     console.log('Query = ' + rawQuery);
 
     // Validate
-    if(validator.validateQuery(rawQuery) === false ) {
+    if (validator.validateQuery(rawQuery) === false) {
         res.json(EMPTY_ARRAY);
         return;
     }
@@ -407,8 +479,8 @@ exports.getByGeneQuery = function (req, res) {
     var geneIds = rawQuery.split(/ +/g);
     var query = "";
 
-    for(var i=0; i<geneIds.length; i++) {
-        if(i === geneIds.length -1) {
+    for (var i = 0; i < geneIds.length; i++) {
+        if (i === geneIds.length - 1) {
             query += "*" + geneIds[i] + "*";
         } else {
             query += "*" + geneIds[i] + "* AND ";
@@ -417,8 +489,6 @@ exports.getByGeneQuery = function (req, res) {
 
     var fullUrl = BASE_URL + "tp/gremlin?params={query='" + query + "'}&script=search()&load=[bygene]" +
         "&rexster.returnKeys=[name,label,Assigned Genes,Assigned Orfs,Assigned Gene Synonyms]";
-    console.log(geneIds);
-    console.log('FULL URL = ' + fullUrl);
     request.get(fullUrl, function (err, rest_res, body) {
         if (!err) {
             var results = JSON.parse(body);
@@ -436,10 +506,6 @@ exports.getRawInteractions = function (req, res) {
     "use strict";
 
     var id = req.params.id;
-
-    // Query should be list of genes
-    console.log('ID = ' + id);
-
     var fullUrl = BASE_URL + "indices/Vertex?key=name&value=" + id + "&rexster.returnKeys=[name,Assigned Genes]";
 
     request.get(fullUrl, function (err, rest_res, body) {
@@ -447,7 +513,7 @@ exports.getRawInteractions = function (req, res) {
             var results = [];
             try {
                 results = JSON.parse(body);
-            } catch(ex) {
+            } catch (ex) {
                 res.json(EMPTY_CYNETWORK);
             }
             var resultArray = results.results;
@@ -455,8 +521,6 @@ exports.getRawInteractions = function (req, res) {
                 var geneArray = resultArray[0]["Assigned Genes"];
 
                 var geneString = geneArray.toString();
-                console.log("STR: " + geneString);
-
                 var genes = geneString.replace(/,/g, " ");
 
                 // Too many results
@@ -473,13 +537,12 @@ exports.getRawInteractions = function (req, res) {
                     "'}&script=getRawInteractions()&load=[getinteractions]" +
                     "&rexster.returnKeys=[name,Assigned Genes]";
 
-                console.log("URL == " + nextUrl);
                 request.get(nextUrl, function (err2, rest_res2, body2) {
                     if (!err2) {
                         var results = [];
                         try {
                             results = JSON.parse(body2);
-                        } catch(ex2) {
+                        } catch (ex2) {
                             res.json(EMPTY_CYNETWORK);
                             return;
                         }
@@ -514,7 +577,7 @@ exports.getPath = function (req, res) {
     }
 
     var ns = "";
-    if(id.match(/S/)) {
+    if (id.match(/S/)) {
         ns = "NEXO";
     } else {
         ns = id.split(":")[0];
@@ -527,7 +590,7 @@ exports.getPath = function (req, res) {
             findPath(callback);
         },
         function (callback) {
-            getNeighbor(callback)
+            getNeighbor(callback);
         }
     ], function (err, results) {
         if (err) {
@@ -535,7 +598,7 @@ exports.getPath = function (req, res) {
             res.json(EMPTY_ARRAY);
         } else {
             var mainPath = results[0];
-            _.each(results[1], function(neighbor) {
+            _.each(results[1], function (neighbor) {
                 mainPath.push([id, neighbor]);
             });
             res.json(mainPath);
@@ -556,12 +619,12 @@ exports.getPath = function (req, res) {
                 if (resultArray !== undefined && resultArray.length !== 0) {
                     // Simply extract node IDs.  Those are 1st neighbor.
                     var neighborList = [];
-                    _.each(resultArray, function(neighbor) {
+                    _.each(resultArray, function (neighbor) {
                         neighborList.push(neighbor.name);
                     });
                     callback(null, neighborList);
                 } else {
-                    callback(null,EMPTY_ARRAY);
+                    callback(null, EMPTY_ARRAY);
                 }
             }
         });
@@ -584,8 +647,6 @@ exports.getPath = function (req, res) {
                 ".inV.loop('x'){it.loops < 15}" +
                 "{it.object.name=='" + rootNode + "'}.path&rexster.returnKeys=[name]";
 
-            console.log("NEXO found: " + nexoUrl);
-
             request.get(nexoUrl, function (err, rest_res, body) {
                 if (!err) {
                     var results = JSON.parse(body);
@@ -593,7 +654,7 @@ exports.getPath = function (req, res) {
                     if (resultArray !== undefined && resultArray.length !== 0) {
                         callback(null, graphUtil.edgeListGenerator(resultArray));
                     } else {
-                        callback(null,EMPTY_ARRAY);
+                        callback(null, EMPTY_ARRAY);
                     }
                 }
             });
@@ -606,9 +667,9 @@ exports.getPath = function (req, res) {
                     var results = {};
                     try {
                         results = JSON.parse(body);
-                    } catch(ex) {
+                    } catch (ex) {
                         console.log(ex);
-                        callback(null,EMPTY_ARRAY);
+                        callback(null, EMPTY_ARRAY);
                     }
 
                     var resultObj = results.results;
@@ -633,12 +694,12 @@ exports.getPath = function (req, res) {
                                 if (resultArray !== undefined && resultArray instanceof Array && resultArray.length !== 0) {
                                     callback(null, graphUtil.edgeListGenerator(resultArray));
                                 } else {
-                                    callback(null,EMPTY_ARRAY);
+                                    callback(null, EMPTY_ARRAY);
                                 }
                             }
                         });
                     } else {
-                        callback(null,EMPTY_ARRAY);
+                        callback(null, EMPTY_ARRAY);
                     }
                 }
             });
@@ -676,6 +737,37 @@ exports.getAllParents = function (req, res) {
 exports.getGeneNames = function (req, res) {
     "use strict";
 
+    console.log('@@@@@@@ GET GENES @@@@@@@@');
+
+    var id = req.params.id;
+    var getGraphUrl = BASE_URL + "tp/gremlin?script=";
+
+    getGraphUrl = getGraphUrl + "g.V.has('name', '" + id + "')" +
+        ".as('x').outE.filter{it.label != 'raw_interaction'}.filter{it.label != 'additional_gene_association'}" +
+        ".inV&rexster.returnKeys=[name]";
+
+    console.log('@@@@@@@ ger genes URL = ' + getGraphUrl);
+
+    request.get(getGraphUrl, function (err, rest_res, body) {
+        if (!err) {
+            var results = JSON.parse(body);
+            var resultArray = results.results;
+            if (resultArray !== undefined && resultArray.length !== 0) {
+                res.json(resultArray);
+            } else {
+                res.json(EMPTY_ARRAY);
+            }
+        }
+    });
+};
+
+
+//
+// Handle POST for list of genes.
+//
+exports.getGeneNamesByPost = function (req, res) {
+    'use strict';
+
     var id = req.params.id;
 
     var getGraphUrl = BASE_URL + "tp/gremlin?script=";
@@ -699,7 +791,8 @@ exports.getGeneNames = function (req, res) {
     });
 };
 
-exports.enrich = function(req, res) {
+
+exports.enrich = function (req, res) {
     'use strict';
 
     var genes = req.body.genes;
@@ -710,19 +803,19 @@ exports.enrich = function(req, res) {
 
     var alpha = 0.01;
 
-    if(alphaStr === undefined) {
+    if (alphaStr === undefined) {
         alpha = 0.01;
     } else {
         alpha = parseFloat(alphaStr);
     }
 
-    if(ontologyType === undefined) {
+    if (ontologyType === undefined) {
         ontologyType = 'NEXO';
     }
 
     var parameter = {
-        form:{
-            'genes':genes,
+        form: {
+            'genes': genes,
             'alpha': alpha,
             'min-assigned': min,
             'type': ontologyType
@@ -733,24 +826,24 @@ exports.enrich = function(req, res) {
         ENRICH_URL,
         parameter,
         function (err, rest_res, body) {
-        if (!err) {
-            console.log(body);
-            var resultObj = {};
-            try {
-                resultObj = JSON.parse(body);
-            } catch(ex) {
-                console.warn("Could not parse enrich result: " + resultObj);
-                res.json(EMPTY_OBJ);
-                return;
-            }
+            if (!err) {
+                console.log(body);
+                var resultObj = {};
+                try {
+                    resultObj = JSON.parse(body);
+                } catch (ex) {
+                    console.warn("Could not parse enrich result: " + resultObj);
+                    res.json(EMPTY_OBJ);
+                    return;
+                }
 
-            console.log(resultObj);
+                console.log(resultObj);
 
-            if(resultObj === undefined) {
-                res.json(EMPTY_OBJ);
-            } else {
-                res.json(resultObj);
+                if (resultObj === undefined) {
+                    res.json(EMPTY_OBJ);
+                } else {
+                    res.json(resultObj);
+                }
             }
-        }
-    });
+        });
 };
