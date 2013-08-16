@@ -26,9 +26,11 @@ var ROOTS = {
 var EMPTY_OBJ = {};
 var EMPTY_ARRAY = [];
 var EMPTY_CYNETWORK = {
-    elements: {
-        nodes: [],
-        edges: []
+    graph: {
+        elements: {
+            nodes: [],
+            edges: []
+        }
     }
 };
 
@@ -548,7 +550,7 @@ exports.getRawInteractions = function (req, res) {
                         }
 
                         var resultArray = results.results;
-                        if (resultArray.length !== 0) {
+                        if (resultArray !== undefined && resultArray.length !== 0) {
                             var graph = graphUtil.generateInteractions(resultArray);
                             var returnValue = {
                                 graph: graph
@@ -557,11 +559,16 @@ exports.getRawInteractions = function (req, res) {
                         } else {
                             res.json(EMPTY_CYNETWORK);
                         }
+                    } else {
+                        res.json(EMPTY_CYNETWORK);
                     }
                 });
             } else {
                 res.json(EMPTY_CYNETWORK);
             }
+        } else {
+            console.error("Error loading raw interactions.");
+            res.json(EMPTY_CYNETWORK);
         }
     });
 };
