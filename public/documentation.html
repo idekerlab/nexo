@@ -96,32 +96,34 @@
                     the current selection and re-zoom the ontology to fit the page.
                 </p>
             </div>
-            <div class="span8">
-                <img src="front/images/ss1.png"/>
+            <div class="span12">
+                <img src="images/ss1.png"/>
             </div>
         </div>
         <div class="row-fluid">
-            <div class="span5">
+            <div class="span12">
                 <h4>Basic navigation buttons</h4>
                 Use the navigation buttons (lower left) to zoom-in and out of the ontology,
                 fit the ontology layout to screen and select the ontology to be visualized (NeXO or GO).
             </div>
-            <div class="span7">
-                <ul>
-                    <li><img src="front/images/zoominSS.png">Zoom-in</img></li>
-                    <li><img src="front/images/zoomoutSS.png">Zoom-out</img></li>
-                    <li><img src="front/images/fitSS.png">Fit to Screen</img></li>
-                    <li><img src="front/images/switchSS.png">Ontology selector: choose which ontology to visualize</img>
-                    </li>
-                </ul>
-            </div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="span6"><img src="front/images/zoominSS.png">Zoom-in</img></div>
+            <div class="span6"><img src="front/images/zoomoutSS.png">Zoom-out</img></div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="span6"><img src="front/images/fitSS.png">Fit to Screen</img></div>
+            <div class="span6"><img src="front/images/switchSS.png">Ontology selector: choose which ontology to
+                visualize</img></div>
         </div>
 
         <h3>Search</h3>
 
         <div class="row-fluid">
             <div class="span5">
-                <img src="front/images/searchSS.png"/>
+                <img src="images/searchSS.png"/>
             </div>
             <div class="span7">
                 <p>
@@ -176,16 +178,36 @@
         </div>
 
         <div class="row-fluid">
+            <h4>Raw Interaction view</h4>
+        </div>
+        <div class="row-fluid">
             <div class="span7">
                 <img src="front/images/networkSS.png"/>
             </div>
             <div class="span5">
                 The genes annotated to the NeXO term and the interactions between them are also displayed
                 in the form of a dynamic network which allows zooming and interactive inspection of gene
-                names and interactions.
+                names and interactions.  Click genes in the interaction view to find them in the main tree.
             </div>
         </div>
 
+        <h3>Term Enrichment</h3>
+
+        <div class="row-fluid">
+            <div class="span12">
+                <img src="images/enrichSS.png"/>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="span12">
+                <p>
+                    NeXO web app supports term enrichment for yeast genes.  Simply enter list of genes
+                    of your interest in the text box.  Default p-value cutoff is 0.01, and minimum number
+                    of genes assigned to the term is 2.  Currently, SGD ID, ORF name, and gene symbol are
+                    supported as input.
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 
