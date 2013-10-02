@@ -322,9 +322,11 @@ h4 {
 }
 
 
-/*
-****************************************************
-*/
+/*****************************************************
+*
+* For top page
+*
+******************************************************/
 .container {
     background-size: 100%;
     font-family: Roboto;
@@ -367,19 +369,23 @@ h4 {
 
 #about {
    margin-top: 380px;
+   background-color: #4387E9;
+}
+
+#start {
+    background-color: rgb(255,94,25);
+}
+
+#download {
     background-color: #4387E9;
+    font-weight: 700;
 }
 
-#doc,#start {
-   margin-top:10px;
+.top-nav-button {
+    margin-top:10px;
 }
 
-#doc {
-    background-color: #4387E9;
-}
-
-
-.topPage .flat-button a, a:hover {
+.topPage .flat-button a {
     color: #f1f1f1;
 }
 

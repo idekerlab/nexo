@@ -61,6 +61,7 @@ GraphUtil.prototype = {
         for (var i = 0; i < pathLength; i++) {
             var path = paths[i];
             var interactionType = ITR_TYPES[i % 4];
+
             for (var j = 0; j < path.length; j++) {
                 var edge = path[j];
                 var source = edge[0];
@@ -68,10 +69,14 @@ GraphUtil.prototype = {
                 var sourceId = source["Assigned Genes"];
                 var targetId = target["Assigned Genes"];
 
+                var sourceSGD = source['name'];
+                var targetSGD = target['name'];
+
                 if (_.contains(nodes, sourceId) == false) {
                     var sourceNode = {
                         data: {
-                            id: sourceId
+                            id: sourceId,
+                            sgd: sourceSGD
                         }
                     };
                     graph.elements.nodes.push(sourceNode);
@@ -81,7 +86,8 @@ GraphUtil.prototype = {
                 if (_.contains(nodes, targetId) == false) {
                     var targetNode = {
                         data: {
-                            id: targetId
+                            id: targetId,
+                            sgd: targetSGD
                         }
                     };
                     graph.elements.nodes.push(targetNode);
