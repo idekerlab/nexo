@@ -1,6 +1,9 @@
 #!/opt/local/bin/python
 import json
 
+# data directory
+SOURCE_DIR = "../data/info_gain_trees_with_genes/"
+
 # Input data files
 inFiles = ["biological_process.info_gain.gene_term.json","cellular_component.size.json","molecular_function.size.json" ];
 outFiles = ["bp-info.json","cc-info.json","mf-info.json"]

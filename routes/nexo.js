@@ -596,6 +596,8 @@ exports.getPath = function (req, res) {
         ns = id.split(":")[0];
     }
 
+    console.log("Name Space = " + ns);
+    console.log("ID = " + id);
 
     var self = this;
     async.parallel([
