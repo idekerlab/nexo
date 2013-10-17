@@ -23,7 +23,9 @@
             <ul class="nav">
                 <li><a href="about.html">About</a></li>
                 <li><a href="documentation.html">User Manual</a></li>
+                <li><a href="policy.html">Policy</a></li>
                 <li><a href="#">Download</a></li>
+                <li><a href="team.html">Team</a></li>
             </ul>
         </div>
     </div>
@@ -34,7 +36,7 @@
 <div class="page-header">
     <h1>
         Download NeXO Database
-        <small>Release 1.0 (Oct. 3 2013)</small>
+        <small>Release 1.0</small>
     </h1>
 </div>
 
@@ -42,141 +44,84 @@
     <div class="span12">
         <div class="page-header">
             <h2>
-                NeXO
+                Network-eXtracted Ontology (NeXO)
             </h2>
         </div>
-        <h3>Ontologies</h3>
-
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Full Ontology Directed Acyclic Graph (DAG)
+                    NeXO OBO
                 </h4>
             </div>
             <div class="span5">
-                <a href="data/ontology_dag_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
+                <a href="data/NeXO_1_0.obo">
+                    <button class="btn btn-primary" type="button">Download OBO</button>
+                </a>
+		<a href="data/NeXO_1_0_obo_manual.pdf">
+                    <button class="btn btn-warning" type="button">Download Manual</button>
+		</a>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="span7">
+                <h4>
+                    Yeast Gene Association File
+                </h4>
+            </div>
+            <div class="span5">
+                <a href="data/NeXO_gene_assoc_1_0.tab">
+                    <button class="btn btn-primary" type="button">Download Gene Associations</button>
                 </a>
             </div>
         </div>
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Tree Version Ontology
+                    NeXO Tree (for layout purposes)
                 </h4>
             </div>
             <div class="span5">
                 <a href="data/ontology_tree_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
+                    <button class="btn btn-primary" type="button">Download Table</button>
                 </a>
             </div>
         </div>
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    All Versions in a Cytoscape-Readable Format
+                    NeXO DAG and Tree as a Cytoscape session file
                 </h4>
             </div>
             <div class="span5">
-                <a href="data/full_dag_NeXO_release_1_0.cys">
-                    <button class="btn btn-warning" type="button">Download Cytoscape 3 Session</button>
+                <a href="data/NeXO_1_0.cys">
+                    <button class="btn btn-primary" type="button">Download Cytoscape 3 Session</button>
                 </a>
-            </div>
+                <a href="data/NeXO_1_0_cys_manual.pdf">
+                    <button class="btn btn-warning" type="button">Download Manual</button>
+                </a>
+           </div>
         </div>
 
-        <h3>Raw Interactions</h3>
-
-        <div class="row-fluid">
-            <div class="span7">
-
-                <h4>
-                    Physical Protein-Protein Interactions from
-                    <a href="http://thebiogrid.org/">BioGRID</a>
-                </h4>
-            </div>
-            <div class="span5">
-                <a href="data/physical_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
-                </a>
-                <a href="data/physical_NeXO_release_1_0.txt">
-                    <button class="btn" type="button">Download Table</button>
-                </a>
-            </div>
-        </div>
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Synthetic-Lethal and Epistatic Genetic Interactions from
-                    <a href="http://drygin.ccbr.utoronto.ca/">DRYGIN</a>
-                </h4>
-            </div>
-            <div class="span5">
-                <a href="data/genetic_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
-                </a>
-                <a href="data/genetic_NeXO_release_1_0.txt">
-                    <button class="btn" type="button">Download Table</button>
-                </a>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span7">
-                <h4>
-                    Co-Expression Relationships from
-                    <a href="http://smd.princeton.edu/">Stanford Microarray Database</a>
-                </h4>
-            </div>
-            <div class="span5">
-                <a href="data/coex_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
-                </a>
-                <a href="data/coex_NeXO_release_1_0.txt">
-                    <button class="btn" type="button">Download Table</button>
-                </a>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span7">
-                <h4>
-                    Integrated Functional Network from
-                    <a href="http://www.yeastnet.org/">YeastNet</a>
-                </h4>
-            </div>
-            <div class="span5">
-                <a href="data/yeastnet_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
-                </a>
-                <a href="data/yeastnet_NeXO_release_1_0.txt">
-                    <button class="btn" type="button">Download Table</button>
-                </a>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span7">
-                <h4>
-                    All Raw Interactions
+                    Raw interaction data used to construct NeXO
                 </h4>
             </div>
             <div class="span5">
                 <a href="data/interactome_NeXO_release_1_0.sif">
-                    <button class="btn btn-primary" type="button">Download SIF</button>
+                    <button class="btn btn-primary" type="button">Download Table</button>
                 </a>
-                <a href="data/raw_interactions_NeXO_release_1_0.cys">
-                    <button class="btn btn-warning" type="button">Download Cytoscape 3 Session</button>
-                </a>
-            </div>
+             </div>
         </div>
 
         <div class="page-header">
             <h2>Gene Ontology (GO)</h2>
         </div>
-
-        <h3>Original Ontology DAG and Annotations</h3>
-
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Full Gene Ontology
+                    Gene Ontology OBO
                 </h4>
             </div>
             <div class="span5">
@@ -193,43 +138,39 @@
             </div>
             <div class="span5">
                 <a href="data/gene_association.sgd.12.17">
-                    <button class="btn btn-primary" type="button">Download Gene Association</button>
+                    <button class="btn btn-primary" type="button">Download Gene Associations</button>
                 </a>
             </div>
         </div>
 
-        <h3>Ontologies (Tree Version)</h3>
-
-        <p>(Tree versions are derived from GO daily release Dec. 17, 2011)</p>
-
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Biological Process
+                    Biological Process Tree (for layout purposes)
                 </h4>
             </div>
             <div class="span5">
-                <button class="btn btn-primary disabled" type="button">Download SIF</button>
+                <button class="btn btn-primary" type="button">Download Table</button>
             </div>
         </div>
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Cellular Component
+                    Cellular Component Tree (for layout purposes)
                 </h4>
             </div>
             <div class="span5">
-                <button class="btn btn-primary disabled" type="button">Download SIF</button>
+                <button class="btn btn-primary" type="button">Download Table</button>
             </div>
         </div>
         <div class="row-fluid">
             <div class="span7">
                 <h4>
-                    Molecular Function
+                    Molecular Function Tree (for layout purposes)
                 </h4>
             </div>
             <div class="span5">
-                <button class="btn btn-primary disabled" type="button">Download SIF</button>
+                <button class="btn btn-primary" type="button">Download Table</button>
             </div>
         </div>
     </div>
@@ -241,8 +182,7 @@
         <p>
             <small>
                 Documentation under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
-                By University of California, San Diego School of Medicine <a
-                    href="http://idekerlab.ucsd.edu/Pages/default.aspx">Trey Ideker Lab</a>.
+                By <a href="team.html">The NeXO Ontology Team</a>. University of California, San Diego School of Medicine. <a href="http://idekerlab.ucsd.edu/Pages/default.aspx">Trey Ideker Lab</a>.
             </small>
         </p>
     </div>
