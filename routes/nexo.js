@@ -612,20 +612,31 @@ exports.getPath = function (req, res) {
             console.log(err);
             res.json(EMPTY_ARRAY);
         } else {
+            // Shortest path to the root.
             var mainPath = results[0];
+
+            // First neighbours
             _.each(results[1], function (neighbor) {
-                mainPath.push([id, neighbor]);
+                mainPath.push([neighbor, id]);
             });
             res.json(mainPath);
         }
     });
 
+    /**
+     * Get parents and children.  This includes both child term(s) and additional_gene_association
+     * edges.
+     *
+     * @param callback
+     */
     function getNeighbor(callback) {
 
         var url = BASE_URL + "tp/gremlin?script=g.idx('Vertex')[[name: '" + id + "']]" +
-            ".outE.filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
+            ".bothE.filter{it.label != 'raw_interaction_physical'}.filter{it.label != 'raw_interaction_genetic'}" +
             ".filter{it.label != 'raw_interaction_co_expression'}.filter{it.label != 'raw_interaction_yeastNet'}" +
-            ".inV&rexster.returnKeys=[name]";
+            ".bothV&rexster.returnKeys=[name]";
+
+        console.log(url);
 
         request.get(url, function (err, rest_res, body) {
             if (!err) {
